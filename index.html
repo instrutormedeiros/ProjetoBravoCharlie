@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Projeto Bravo Charlie | Formação Profissional</title>
+<meta name="description" content="Curso completo de formação Bombeiro Civil e Brigadista. Projeto Bravo Charlie.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#b30000">
+<script src="https://cdn.tailwindcss.com"></script>
+<script> tailwind.config = { darkMode: 'class' } </script>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="antialiased">
+
+<header class="fixed top-0 left-0 w-full z-40 backdrop-blur bg-white/70 dark:bg-gray-900/70 shadow-md">
+  <div class="container mx-auto px-4 py-4 max-w-7xl flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <div class="bg-gradient-to-tr from-red-600 to-orange-500 p-2 rounded-full">
+        <i class="fas fa-shield-alt text-white text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold">Projeto Bravo Charlie</h1>
+        <p class="text-sm text-gray-600">Formando Profissionais de Elite</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="hidden lg:flex items-center gap-4">
+        <div class="bg-gray-100 dark:bg-gray-800 py-2 px-4 rounded-full text-sm font-semibold">
+          <i class="fas fa-book-open mr-2 text-orange-500"></i>
+          <span id="course-modules-count">...</span> Módulos
+        </div>
+      </div>
+      <button id="mobile-menu-button" class="lg:hidden text-2xl"><i class="fas fa-bars"></i></button>
+    </div>
+  </div>
+</header>
+
+<main class="pt-28 container mx-auto px-4 max-w-7xl">
+  <div class="flex flex-col lg:flex-row gap-8">
+    <aside class="hidden lg:block w-1/3">
+      <div class="sticky top-28">
+        <div id="desktop-module-container" class="space-y-2"></div>
+      </div>
+    </aside>
+
+    <section class="w-full lg:w-2/3">
+      <div id="welcome-greeting-container" class="mb-6 p-4 bg-white dark:bg-gray-800 rounded shadow">
+        <h2 id="welcome-greeting" class="text-2xl font-bold">Carregando...</h2>
+        <p class="text-gray-600">Continue de onde parou ou explore um novo módulo.</p>
+      </div>
+
+      <div id="breadcrumb-container" class="mb-4 text-sm text-gray-600"></div>
+
+      <div id="loading-spinner" class="hidden p-6 bg-white dark:bg-gray-800 rounded shadow text-center">
+        <div class="loader mx-auto"></div>
+        <p class="mt-4">Carregando Módulo...</p>
+      </div>
+
+      <article class="bg-white dark:bg-gray-800 rounded shadow p-6">
+        <div id="content-area"></div>
+      </article>
+    </section>
+  </div>
+</main>
+
+<!-- Access overlay -->
+<div id="access-overlay" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:2000;">
+  <div id="access-card" style="width:96%;max-width:520px;background:#fff;padding:20px;border-radius:12px;">
+    <h2 style="font-family:'Lora',serif;margin:0 0 8px 0;">Projeto Bravo Charlie</h2>
+    <p style="margin:0 0 12px 0;color:#666;">Cadastre-se com nome e e-mail e ganhe 30 dias grátis.</p>
+    <div>
+      <input id="ac-name" placeholder="Seu nome" style="width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #ddd;">
+      <input id="ac-email" placeholder="Seu e-mail" style="width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #ddd;">
+      <div class="flex gap-2 mt-2">
+        <button id="ac-register" class="py-2 px-4 bg-green-600 text-white rounded">Criar conta (30 dias grátis)</button>
+        <button id="ac-login" class="py-2 px-4 bg-gray-700 text-white rounded">Entrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="mt-12 py-8 text-white bg-gray-800">
+  <div class="container mx-auto px-4 max-w-7xl">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-semibold">Formação Bombeiro Civil / Brigadista</h3>
+        <p class="text-gray-400">Capacitação profissional de excelência.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold">Contato</h3>
+        <a href="https://www.instagram.com/coordenadormedeiros/" target="_blank">@coordenadormedeiros</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script src="firebase-init.js" defer></script>
+<script src="data.js" defer></script>
+<script src="quizzes.js" defer></script>
+<script src="course.js" defer></script>
+<script src="app.js" defer></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW error',e));
+}
+</script>
+
+</body>
+</html>

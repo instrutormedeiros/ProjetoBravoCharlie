@@ -1,0 +1,905 @@
+:root {
+    --primary: #c1121f; --primary-dark: #a4161a; --secondary: #003049; --accent: #f77f00;
+    --dark-text: #1a202c; --light-text: #2d3748; --light-bg: #f8f9fa; --success: #2a9d8f;
+    --info-bg: #e6f4ff; --info-border: #90cdf4; --panel-bg: #ffffff; --border-color: #e2e8f0;
+}
+.dark {
+    --primary: #d90429; --primary-dark: #c1121f; --secondary: #1d3557; --accent: #ff9e00;
+    --dark-text: #edf2f4; --light-text: #d1d5db; --light-bg: #111827; --success: #2a9d8f;
+    --info-bg: #1e3a8a; --info-border: #3b82f6; --panel-bg: #1f2937; --border-color: #374151;
+}
+
+body { font-family: 'Lato', sans-serif; scroll-behavior: smooth; background-color: var(--light-bg); color: var(--dark-text); padding-bottom: 70px; transition: background-color 0.3s, color 0.3s; }
+@media (min-width: 1024px) { body { padding-bottom: 0; } }
+h1, h2, h3 { font-family: 'Lora', serif; }
+.floating { animation: floating 3s ease-in-out infinite; }
+@keyframes floating { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+
+/* === BARRA DE PROGRESSO MINIMALISTA (Request) === */
+@keyframes progress-gradient-flow {
+  0% { background-position: 200% center; }
+  100% { background-position: 0% center; }
+}
+
+/* O container que "gruda" no topo, logo abaixo do header */
+.sticky-progress-wrapper {
+    position: sticky;
+    top: 5.5rem; /* 88px (altura APROXIMADA do header principal) */
+    
+    /* *** CORREÇÃO DE Z-INDEX (Mobile) *** */
+    /* Rebaixado para '39' (abaixo do header 'z-40' e da sidebar 'z-51') */
+    z-index: 39; 
+    
+    padding: 0.75rem 0; 
+    
+    /* Efeito translúcido */
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    /* Sombra suave para separar do conteúdo */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    
+    /* Cor do texto */
+    color: var(--light-text);
+    
+    /* Garante que a barra minimalista fique contida */
+    position: relative;
+}
+
+.dark .sticky-progress-wrapper {
+    background-color: rgba(17, 24, 39, 0.85);
+    color: var(--light-text);
+}
+
+/* A barra visual minimalista */
+#progress-bar-minimal {
+    position: absolute; /* Posição absoluta EM RELAÇÃO AO WRAPPER */
+    bottom: 0;          /* Grudada no fim do wrapper */
+    left: 0;
+    width: 0%;          /* Começa com 0% */
+    height: 4px;        /* Super fina */
+    background: linear-gradient(90deg, var(--accent), var(--primary), var(--accent));
+    background-size: 200% auto;
+    transition: width 0.5s ease;
+    z-index: 40; /* Acima do seu wrapper (39) */
+    animation: progress-gradient-flow 3s linear infinite;
+    box-shadow: 0 0 10px var(--accent);
+}
+
+.dark #progress-bar-minimal {
+     box-shadow: 0 0 12px var(--accent);
+}
+
+/* O card de texto do progresso (que agora não é mais 'sticky') */
+.progress-text-container {
+    /* Esta classe não é mais usada para o progresso sticky, mas pode ser usada em outro lugar */
+    background-color: var(--panel-bg);
+    padding: 0.75rem 1.25rem; 
+    border-radius: 1rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+    border: 1px solid var(--border-color);
+}
+/* === FIM DA CORREÇÃO === */
+
+
+#off-canvas-sidebar { background-color: var(--panel-bg); }
+#off-canvas-sidebar.open { transform: translateX(0); }
+.sidebar-overlay { transition: opacity 0.3s; }
+.sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+.sidebar { background: var(--panel-bg); padding: 1.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.07); border: 1px solid var(--border-color); }
+/* ==== BOTÕES PREMIUM ==== */
+.action-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #c1121f, #f77f00);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.85rem 2rem;
+  border-radius: 0.6rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.5s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  background: linear-gradient(90deg, #f77f00, #c1121f);
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+.action-button:disabled {
+  background: #bdbdbd;
+  color: #6c757d;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ==== EFEITO RIPPLE ==== */
+.action-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-button .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-effect 0.6s linear;
+  pointer-events: none;
+}
+
+/* Cor no modo claro */
+:root .action-button .ripple {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Cor no modo escuro */
+.dark .action-button .ripple {
+  background: rgba(247, 127, 0, 0.45); /* tom de laranja suave */
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+/* === EFEITO RIPPLE NAS PERGUNTAS === */
+.quiz-option {
+  position: relative;
+  overflow: hidden;
+}
+
+.quiz-option .ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-effect 0.6s linear;
+  pointer-events: none;
+}
+
+/* Cores dinâmicas */
+:root .quiz-option .ripple {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.dark .quiz-option .ripple {
+  background: rgba(247, 127, 0, 0.35);
+}
+
+.quiz-option { 
+    cursor: pointer; 
+    padding: 1rem; 
+    border-radius: 0.5rem; 
+    margin-bottom: 0.75rem; 
+    transition: all 0.3s ease; 
+    background-color: #f8f9fa; 
+    border: 2px solid #e9ecef; 
+    color: var(--dark-text); 
+    display: flex;
+    align-items: flex-start;
+}
+.dark .quiz-option { 
+    background-color: #374151; 
+    border-color: #4b5563; 
+    color: var(--dark-text); 
+}
+.quiz-option:hover { 
+    background-color: #e9ecef; 
+    transform: translateX(5px); 
+}
+.dark .quiz-option:hover { 
+    background-color: #4b5563; 
+}
+
+/* NOVO: Estilo para a chave da opção (A), B), C), etc.) */
+.quiz-option .option-key {
+    font-weight: 700;
+    margin-right: 0.75rem;
+    color: var(--secondary);
+}
+.dark .quiz-option .option-key {
+    color: var(--accent);
+}
+
+.quiz-option.correct { 
+    background-color: var(--success) !important; 
+    color: white !important; 
+    border-color: var(--success) !important; 
+}
+.quiz-option.incorrect { 
+    background-color: var(--primary) !important; 
+    color: white !important; 
+    border-color: var(--primary) !important; 
+}
+/* Força as chaves de cor na resposta correta e incorreta */
+.quiz-option.correct .option-key,
+.quiz-option.incorrect .option-key {
+    color: white !important;
+}
+
+/* Feedback Aprimorado (Area) */
+.feedback-area {
+    margin-top: -0.5rem; /* Puxa para cima para ficar mais próximo da questão */
+    margin-bottom: 1rem;
+}
+
+.explanation { 
+    padding: 1rem; 
+    margin-top: 0.5rem; 
+    margin-bottom: 1.5rem; 
+    border-radius: 0.5rem; 
+    background-color: var(--info-bg); 
+    color: #1e40af; 
+    border-left: 4px solid var(--info-border); 
+    animation: fadeIn 0.5s ease; 
+}
+.dark .explanation { 
+    background-color: var(--info-bg); 
+    color: #93c5fd; 
+    border-color: var(--info-border); 
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.module-nav { background-color: var(--panel-bg); border-top: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; padding: 1rem; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 35; border-radius: 0 0 1rem 1rem; }
+.achievement { background: var(--panel-bg); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 5px 15px rgba(0,0,0,0.08); text-align: center; transition: all 0.3s ease; border: 2px solid transparent; }
+.achievement.unlocked { border-color: var(--accent); transform: scale(1.05); background: linear-gradient(135deg, #fffbeb, #fff); }
+.dark .achievement.unlocked { background: linear-gradient(135deg, #4b5563, #374151); }
+.achievement-icon { font-size: 3rem; color: #ced4da; margin-bottom: 1rem; transition: color 0.5s ease; }
+.dark .achievement-icon { color: #4b5563; }
+.achievement.unlocked .achievement-icon { color: var(--accent); animation: pulse 1.5s infinite; }
+
+.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); z-index: 100; background-color: var(--panel-bg); padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; max-width: 32rem; width: 90%; opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+.modal.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 48, 73, 0.7); backdrop-filter: blur(5px); z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+.accordion-button { width: 100%; text-align: left; background-color: #f8f9fa; color: var(--dark-text); cursor: pointer; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; transition: background-color 0.3s ease; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.dark .accordion-button { background-color: #374151; border-color: #374151; }
+.accordion-button:hover, .accordion-button.active { background-color: #e9ecef; }
+.dark .accordion-button:hover, .dark .accordion-button.active { background-color: var(--secondary); }
+.accordion-button .fas { transition: transform 0.3s ease; }
+.accordion-button.active .fas { transform: rotate(180deg); }
+.accordion-panel { padding: 0 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+/* ==== MÓDULOS E CARDS (Refinando para mobile) ==== */
+.module-list-item {
+  position: relative; /* Adicionado para o ícone de check funcionar */
+  padding: 1rem 1.25rem;
+  margin: 0.5rem 0; /* Espaçamento reduzido no mobile */
+  border-radius: 0.75rem;
+  background: linear-gradient(145deg, #ffffff, #f7f7f7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  color: var(--dark-text);
+  font-weight: 500;
+}
+
+.dark .module-list-item {
+  background: linear-gradient(145deg, #1f2937, #111827);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #e5e7eb;
+}
+
+.module-list-item:hover {
+  transform: translateY(-2px); /* Efeito menor no hover */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent);
+  background: linear-gradient(145deg, #fff9f3, #ffffff);
+}
+.module-list-item.active {
+  background: linear-gradient(145deg, #fef6e4, #ffffff);
+  border: 2px solid var(--accent);
+  color: var(--dark-text);
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(247, 127, 0, 0.2);
+}
+
+
+.dark .module-list-item:hover {
+  background: linear-gradient(145deg, #374151, #1f2937);
+  border-color: var(--accent);
+}
+
+.dark .module-list-item.active {
+  background: linear-gradient(145deg, #2d3748, #1f2937);
+  border: 2px solid var(--accent);
+  color: #fff;
+}
+.module-list-item .completion-icon {
+    margin-left: auto;
+    font-size: 1rem;
+    color: var(--success);
+}
+
+
+#content-area { background-color: var(--panel-bg); color: var(--light-text); }
+#content-area h3 { color: var(--secondary); border-bottom: 2px solid var(--border-color); }
+#content-area h4 { color: var(--secondary); }
+#content-area p { color: var(--light-text); }
+#content-area ul, #content-area li { color: var(--light-text); }
+#content-area p.font-semibold { color: var(--secondary); }
+#content-area strong { color: var(--secondary); font-weight: 700; }
+
+.dark #content-area h3 { color: var(--accent); }
+.dark #content-area h4 { color: #93c5fd; }
+.dark #content-area p, .dark #content-area ul, .dark #content-area li { color: var(--light-text); }
+.dark #content-area p.font-semibold { color: #a5b4fc; }
+.dark #content-area strong { color: var(--accent); }
+
+.key-concept { background-color: var(--info-bg); border-left: 4px solid var(--info-border); padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; }
+.key-concept h5 { color: #2c5282; font-weight: 700; }
+.dark .key-concept h5 { color: #bfdbfe; }
+.warning-box { background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; color: #b45309; }
+.dark .warning-box { background-color: #451a03; border-color: #d97706; color: #fdba74; }
+.custom-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+.custom-table th, .custom-table td { border: 1px solid var(--border-color); padding: 0.75rem; text-align: left; }
+.custom-table th { background-color: #e9ecef; font-weight: bold; }
+.dark .custom-table th { background-color: #374151; }
+.dark .custom-table th, .dark .custom-table td { border-color: #4b5563; }
+
+nav { background-color: var(--panel-bg); border-color: var(--border-color); }
+.dark nav { background-color: #1f2937; }
+/* Removido: nav button { color: #4b5563; } */
+/* Removido: .dark nav button { color: #9ca3af; } */
+#toast-container { position: fixed; top: 1.25rem; right: 1.25rem; z-index: 1000; }
+.toast { background-color: #1f2937; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; margin-bottom: 1rem; opacity: 0; transform: translateX(100%); animation: toast-in 0.5s forwards, toast-out 0.5s 4s forwards; }
+.toast i { color: var(--accent); font-size: 1.5rem; margin-right: 0.75rem; }
+@keyframes toast-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes toast-out { to { opacity: 0; transform: translateX(100%); } }
+
+@keyframes blink-animation {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    50% { opacity: 0.7; transform: scale(1.03); box-shadow: 0 6px 12px rgba(247, 127, 0, 0.4); }
+}
+.blinking-button {
+    animation: blink-animation 1.2s infinite ease-in-out;
+    box-shadow: 0 0 10px var(--primary-dark);
+}
+.dark .blinking-button {
+    box-shadow: 0 0 10px var(--accent);
+}
+
+@keyframes gradient-flow {
+    0% { background-position: 200% center; }
+    100% { background-position: 0% center; }
+}
+.developer-credit {
+    font-weight: bold;
+    font-family: 'Lora', serif;
+    font-size: 1rem;
+    background: linear-gradient(90deg, var(--accent), var(--light-text), var(--accent));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-flow 6s linear infinite;
+}
+.dark .developer-credit {
+    background: linear-gradient(90deg, var(--accent), #fff, var(--accent));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-flow 6s linear infinite;
+}
+
+/* --- INÍCIO: NOVOS AJUSTES DE ESTILO (Mobile Médio / Desktop Grande) --- */
+
+/* 1. Ajuste de Espaçamento (Padrão/Mobile) */
+#content-area > div > p,
+#content-area > div > ul,
+#content-area > div > ol,
+#content-area > div > .key-concept,
+#content-area > div > .warning-box {
+    margin-bottom: 1.25rem; /* 20px (Um bom "respiro" no mobile) */
+}
+
+/* Espaço entre conteúdo e exercícios (Padrão/Mobile) */
+#content-area > div > hr {
+    margin-top: 2.5rem;    /* 40px (Bom espaço no mobile) */
+    margin-bottom: 2rem; /* 32px */
+    border-color: var(--border-color);
+}
+
+#content-area > div > ul, 
+#content-area > div > ol {
+    padding-left: 1.75rem; 
+    list-style-type: disc; 
+}
+ #content-area > div > ol {
+    list-style-type: decimal;
+ }
+ 
+/* Tamanho do texto principal (Padrão/Mobile) */
+#content-area > div > p:not(.text-lg),
+#content-area > div > ul li,
+#content-area > div > ol li {
+    font-size: 0.925rem; /* 15px (Reduzido para mobile) */
+    line-height: 1.6;  /* Ajusta a altura da linha para o novo tamanho */
+}
+
+/* 6. Tamanho dos Subtítulos (Padrão/Mobile) */
+#content-area > div > h4 {
+    font-size: 1.375rem; /* 22px (Reduzido para mobile) */
+    font-weight: 700;
+    margin-top: 2rem; 
+    margin-bottom: 0.75rem; 
+}
+#content-area > div > h5 {
+    font-size: 1.2rem; /* 19.2px (Reduzido para mobile) */
+    font-weight: 700;
+    margin-top: 1.75rem; 
+    margin-bottom: 0.5rem; 
+}
+
+/* Tamanhos Maiores (APENAS DESKTOP - a partir de 1024px) */
+@media (min-width: 1024px) {
+    /* Retorna o texto principal ao tamanho padrão no desktop */
+    #content-area > div > p:not(.text-lg),
+    #content-area > div > ul li,
+    #content-area > div > ol li {
+        font-size: 1rem; /* 16px (Padrão) */
+        line-height: 1.75;
+    }
+
+    #content-area > div > h4 {
+        font-size: 1.75rem; /* 28px (Grande no desktop) */
+        margin-top: 2.25rem; 
+        margin-bottom: 1rem; 
+    }
+    #content-area > div > h5 {
+        font-size: 1.5rem; /* 24px (Grande no desktop) */
+        margin-top: 2rem; 
+        margin-bottom: 0.75rem; 
+    }
+    
+    /* Aumenta o espaço do <hr> APENAS no desktop */
+    #content-area > div > hr {
+        margin-top: 4rem;    /* 64px */
+        margin-bottom: 3rem; /* 48px */
+    }
+}
+
+/* Garante que o primeiro elemento não tenha espaço no topo */
+#content-area > div > h4:first-child {
+    margin-top: 0;
+}
+
+/* Mantém o H5 dentro de key-concept com seu estilo original */
+.key-concept h5 {
+    font-size: 1.125rem !important; /* 18px */
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* --- FIM: NOVOS AJUSTES DE ESTILO --- */
+
+
+@media print {
+    body > *:not(#print-watermark) {
+        display: none !important;
+    }
+    #print-watermark {
+        display: block !important; 
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: white; 
+        color: #000; 
+        font-family: 'Arial', sans-serif;
+        font-size: 8vw; 
+        font-weight: bold;
+        opacity: 0.15; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        transform: rotate(-30deg); 
+        line-height: 1.2;
+        letter-spacing: 2px;
+        z-index: 99999; 
+    }
+}
+
+.notes-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid var(--border-color);
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    transition: all 0.3s ease;
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    user-select: auto;
+}
+.notes-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(247, 127, 0, 0.3);
+}
+.dark .notes-textarea {
+    background-color: #1a202c;
+    border-color: var(--border-color);
+    color: var(--light-text);
+}
+.dark .notes-textarea:focus {
+     border-color: var(--accent);
+     box-shadow: 0 0 0 3px rgba(255, 158, 0, 0.3);
+}
+
+/* --- CORREÇÃO (Request Minimalista - Modo Foco) --- */
+#focus-menu-desktop { 
+    display: none;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+}
+#focus-nav-bar { display: none; }
+
+/* Oculta tudo MENOS o conteúdo e os menus de foco */
+body.focus-mode header,
+body.focus-mode footer,
+body.focus-mode nav:not(#focus-nav-bar), 
+body.focus-mode #back-to-top,
+body.focus-mode #welcome-greeting-container,
+body.focus-mode aside, 
+body.focus-mode #sticky-progress-wrapper /* <-- Oculta o NOVO wrapper de progresso */
+{
+    display: none;
+}
+/* --- FIM DA CORREÇÃO --- */
+
+body.focus-mode #focus-nav-bar {
+    display: block;
+}
+@media (min-width: 1024px) {
+    body.focus-mode #focus-menu-desktop {
+        display: flex;
+    }
+    body.focus-mode #focus-nav-bar {
+        display: none; 
+    }
+    
+    body.focus-mode #sidebar-overlay {
+        display: block;
+    }
+}
+
+/* Ajustes de layout para o Modo Foco */
+body.focus-mode .container.mx-auto { 
+    padding-top: 2rem !important; /* Reduz drásticamente o padding do topo */
+}
+body.focus-mode .lg\:w-2\/3 {
+    width: 100% !important; /* Força a área de conteúdo a ocupar o espaço */
+    max-width: 80rem; /* Mantém uma largura máxima de leitura */
+    margin: 0 auto;
+}
+/* --- FIM --- */
+
+body.focus-mode #main-wrapper { padding-bottom: 2rem; }
+body.focus-mode { padding-bottom: 70px; } 
+@media (min-width: 1024px) {
+     body.focus-mode { padding-bottom: 0; } 
+}
+
+/* --- Animação do Modal de Conquista --- */
+#achievement-modal-overlay { z-index: 101; } 
+#achievement-modal { z-index: 102; }
+#ach-modal-icon-container i {
+    font-size: 5rem;
+    color: var(--accent);
+    animation: pop-glow 1s ease-out;
+    filter: drop-shadow(0 0 10px rgba(247, 127, 0, 0.5));
+}
+.dark #ach-modal-icon-container i {
+     filter: drop-shadow(0 0 15px var(--accent));
+}
+
+@keyframes pop-glow {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 25px var(--accent)); }
+    100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(247, 127, 0, 0.5)); }
+}
+/* ==== HEADER PREMIUM ==== */
+#main-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* A borda sumiu pois a barra de progresso está no wrapper separado */
+}
+
+#main-header.scrolled {
+  background-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dark #main-header.scrolled {
+  background-color: rgba(17, 24, 39, 0.85);
+}
+/* ==== MICROANIMAÇÃO DE SUCESSO ==== */
+.quiz-option.correct {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Brilho suave */
+.quiz-option.correct::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0));
+  transform: skewX(-20deg);
+  animation: shine 0.8s ease-in-out forwards;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  50% { left: 0%; }
+  100% { left: 100%; opacity: 0; }
+}
+
+
+/* Partículas douradas */
+@keyframes sparkle {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-30px) scale(0); opacity: 0; }
+}
+
+.spark {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #f77f00 0%, rgba(255,255,255,0) 80%);
+  border-radius: 50%;
+  animation: sparkle 0.8s ease-out forwards;
+  pointer-events: none;
+  z-index: 10;
+}
+/* ==== MICROANIMAÇÃO DE SUCESSO (PARTÍCULAS + CONFETTI) ==== */
+.gold-particles-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4000;
+}
+
+.gold-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff7d6, #ffd700);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.9);
+  opacity: 0.95;
+  will-change: transform, opacity;
+}
+
+/* NOVO: Loader (Spinner) */
+.loader {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+.dark .loader {
+    border-left-color: var(--accent);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+/* FIM NOVO: Loader */
+
+/* === BOTÃO DE TEMA (PREMIUM) - V4 (FINAL) === */
+
+/* 1. Estilo do Slider no DESKTOP (Botão é o trilho) */
+/* Remove classes de cor e tamanho do HTML */
+#dark-mode-toggle-desktop {
+    background-color: var(--secondary);
+    border: none;
+    width: 50px; height: 28px; border-radius: 14px;
+    padding: 0; position: relative; cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* PREMIUM: Sombra interna (profundidade) */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* O <i> é o knob (botão deslizante) */
+#dark-mode-toggle-desktop i {
+    background-color: white;
+    color: var(--secondary); 
+    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 14px; 
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 3px; left: 3px;
+    
+    /* PREMIUM: Sombra externa (flutuação) */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    
+    /* PREMIUM: Animação de rotação + translação */
+    transform: rotate(0deg); 
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efeito de pressionar */
+#dark-mode-toggle-desktop:active i {
+    transform: scale(0.9);
+}
+.dark #dark-mode-toggle-desktop:active i {
+    transform: translateX(22px) scale(0.9);
+}
+
+/* Estado DARK (Desktop) */
+.dark #dark-mode-toggle-desktop {
+    background-color: var(--accent);
+}
+
+.dark #dark-mode-toggle-desktop i {
+    /* PREMIUM: Desliza E GIRA */
+    transform: translateX(22px) rotate(360deg);
+    color: var(--accent);
+}
+    
+/* 2. Estilo do Slider no MOBILE (CORRIGIDO E PREMIUM) */
+
+/* O botão container mantem o layout flex-col */
+/* Remove classes de cor do HTML */
+#bottom-nav-theme {
+   position: relative;
+   overflow: visible;
+   color: #4b5563; 
+}
+.dark #bottom-nav-theme {
+    color: #9ca3af;
+}
+
+
+/* 3. O "Trilho" (Rail) é o <i> */
+/* O <i> original é transformado no trilho */
+#bottom-nav-theme i {
+    background-color: var(--secondary);
+    width: 50px; /* Largura do trilho */
+    height: 28px; /* Altura do trilho */
+    border-radius: 14px;
+    position: relative;
+    transition: background-color 0.3s ease;
+    font-size: 0; /* Esconde o ícone original */
+    color: transparent; /* Esconde o ícone original */
+    margin-bottom: 4px; /* Adiciona espaço para o texto "Tema" abaixo */
+    /* PREMIUM: Sombra interna (profundidade) */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* 4. O "Botão Deslizante" (Knob) é o ::after do <i> */
+#bottom-nav-theme i::after {
+    content: '\f186'; /* Ícone de Lua (padrão) */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    
+    background-color: white;
+    color: var(--secondary); /* Cor do ícone (lua) */
+    width: 22px; 
+    height: 22px; 
+    border-radius: 50%;
+    font-size: 14px; 
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    position: absolute;
+    top: 3px;
+    left: 3px;
+
+    /* PREMIUM: Sombra externa (flutuação) */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+
+    /* PREMIUM: Animação de rotação + translação */
+    transform: rotate(0deg); 
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efeito de pressionar (Mobile) */
+#bottom-nav-theme:active i::after {
+    transform: scale(0.9);
+}
+.dark #bottom-nav-theme:active i::after {
+    transform: translateX(22px) scale(0.9);
+}
+
+/* 5. O texto "Tema" (Span) */
+/* O span.text-xs já está correto no HTML e não precisa de override */
+
+/* 6. Estilo do Modo DARK (Mobile) */
+.dark #bottom-nav-theme i {
+    background-color: var(--accent); /* Trilho muda para cor de destaque */
+}
+
+.dark #bottom-nav-theme i::after {
+    content: '\f185'; /* Ícone de Sol */
+    /* PREMIUM: Desliza E GIRA */
+    transform: translateX(22px) rotate(360deg); 
+    color: var(--accent); /* Cor do ícone (sol) */
+}
+
+
+/* === MÓDULOS EM GRADE (DESKTOP E MOBILE) === */
+
+/* 1. Aplica a grade aos DOIS containers (mobile e desktop) */
+#mobile-module-container .accordion-panel,
+#desktop-module-container .accordion-panel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    padding: 0; 
+    gap: 0.75rem; /* 12px */
+    padding-top: 0.75rem;
+}
+
+/* 2. Remove a margem vertical antiga dos itens */
+#mobile-module-container .module-list-item,
+#desktop-module-container .module-list-item {
+    margin: 0; 
+}
+
+/* 3. Ajusta o layout dos cards para Ícone em Cima e Centralizado */
+#mobile-module-container .module-list-item,
+#desktop-module-container .module-list-item {
+    flex-direction: column; 
+    align-items: center; 
+    padding: 0.625rem; /* 10px */
+    font-size: 0.875rem; /* 14px */
+    min-height: 75px; 
+    word-break: break-word;
+    text-align: center; 
+    justify-content: center; 
+}
+
+/* Ajuste no ícone (agora em cima) */
+#mobile-module-container .module-list-item .module-icon,
+#desktop-module-container .module-list-item .module-icon {
+    margin-right: 0;
+    margin-bottom: 0.5rem; 
+    font-size: 1.25rem; 
+    align-self: center; 
+}
+
+/* Ajuste no ícone de 'concluído' (check) */
+#mobile-module-container .module-list-item .completion-icon,
+#desktop-module-container .module-list-item .completion-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* Added by assistant: overlay styles */
+
+/* Access overlay specific tweaks */
+#access-overlay input { box-sizing: border-box; }
+#access-overlay .action-button { padding:10px 14px; border-radius:8px; font-weight:700; }
