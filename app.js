@@ -1,101 +1,935 @@
-/* app.js - login and access logic (uses firebase initialized by firebase-init.js) */
-const auth = firebase.auth();
-const db = firebase.firestore();
-const usersCollection = db.collection('users');
+/* === ARQUIVO app.js (CORREÇÃO DE LÓGICA DO QUIZ) === */
 
-const overlay = document.getElementById('access-overlay');
-const card = document.getElementById('access-card');
-const btnRegister = document.getElementById('ac-register');
-const btnLogin = document.getElementById('ac-login');
-const inputName = document.getElementById('ac-name');
-const inputEmail = document.getElementById('ac-email');
-
-const PAY_LINK = "https://pay.infinitepay.io/pixmedeiros/VC1D-2Eb9WDMcOj-49,90";
-const PIX_KEY = "61998300711";
-
-function showAlert(msg){ alert(msg); }
-
-function validateEmail(email){
-  const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return re.test(String(email).toLowerCase());
-}
-
-// Ensure DOM elements exist before adding listeners
 document.addEventListener('DOMContentLoaded', () => {
 
-  // auth state listener
-  auth.onAuthStateChanged(userAuth => {
-    if (userAuth) {
-      checkUserStatus(userAuth.uid, userAuth.email);
-    } else {
-      if (overlay) overlay.style.display = 'flex';
-    }
-  });
+    // --- SELETOR DE CONTEÚDO (MOVIDO PARA CIMA) ---
+    const contentArea = document.getElementById('content-area');
 
-  if (!btnLogin || !btnRegister) {
-    console.error('Login elements not found');
-    return;
+    // --- VERIFICAÇÃO DE SEGURANÇA (MELHORADA) ---
+    if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined' || typeof questionSources === 'undefined') {
+        
+        document.getElementById('main-header')?.classList.add('hidden');
+        document.querySelector('footer')?.classList.add('hidden');
+        document.querySelector('nav.lg\\:hidden')?.classList.add('hidden');
+        document.getElementById('welcome-greeting-container')?.classList.add('hidden');
+        document.getElementById('breadcrumb-container')?.classList.add('hidden');
+        document.getElementById('sticky-progress-wrapper')?.classList.add('hidden');
+
+        if (contentArea) {
+            contentArea.innerHTML = `
+                <div class="text-center py-10 px-6">
+                    <div class="inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6 floating">
+                        <i class="fas fa-exclamation-triangle text-6xl text-red-600"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold mb-4 text-red-700 dark:text-red-300">Erro Crítico de Carregamento</h2>
+                    <p class="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+                        O arquivo de dados essencial (<code>data.js</code> ou <code>course.js</code>) não foi encontrado ou está corrompido. 
+                        Verifique se os arquivos estão na mesma pasta que o <code>index.html</code> e se as variáveis estão globais.
+                    </p>
+                    <button onclick="location.reload()" class="action-button pulse text-lg">
+                        <i class="fas fa-sync-alt mr-2"></i> Tentar Recarregar
+                    </button>
+                </div>`;
+            
+            contentArea.closest('.bg-white')?.classList.remove('hidden');
+            document.getElementById('loading-spinner')?.classList.add('hidden');
+        }
+        
+        console.error("Erro: Arquivo data.js ou course.js não carregado ou incompleto (moduleContent, moduleCategories, ou questionSources ausente).");
+        return; 
+    }
+    // --- FIM DA VERIFICAÇÃO DE SEGURANÇA ---
+
+
+    // --- VARIÁVEIS GLOBAIS DO APP ---
+    const totalModules = Object.keys(moduleContent).length;
+    let completedModules = JSON.parse(localStorage.getItem('gateBombeiroCompletedModules_v3')) || [];
+    let notifiedAchievements = JSON.parse(localStorage.getItem('gateBombeiroNotifiedAchievements_v3')) || [];
+    let currentModuleId = null;
+    let cachedQuestionBanks = {}; 
+
+    // --- SELETORES DO DOM ---
+    const toastContainer = document.getElementById('toast-container');
+    const sidebar = document.getElementById('off-canvas-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const printWatermark = document.getElementById('print-watermark');
+    const achievementModal = document.getElementById('achievement-modal');
+    const achievementOverlay = document.getElementById('achievement-modal-overlay');
+    const closeAchButton = document.getElementById('close-ach-modal');
+    const breadcrumbContainer = document.getElementById('breadcrumb-container');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    
+    const resetModal = document.getElementById('reset-modal');
+    const resetOverlay = document.getElementById('reset-modal-overlay');
+    const confirmResetButton = document.getElementById('confirm-reset-button');
+    const cancelResetButton = document.getElementById('cancel-reset-button');
+
+    // --- FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO ---
+    function init() {
+        setupProtection();
+        setupTheme();
+        handlePersonalGreeting();
+        document.getElementById('total-modules').textContent = totalModules;
+        document.getElementById('course-modules-count').textContent = totalModules;
+        populateModuleLists();
+        updateProgress();
+        addEventListeners();
+        handleInitialLoad();
+        setupPrintWatermarkContent();
+    }
+
+    // --- Lógica de Carregamento Inicial ---
+    function handleInitialLoad() {
+        const lastModule = localStorage.getItem('gateBombeiroLastModule');
+        if (lastModule) {
+            loadModuleContent(lastModule);
+        } else {
+            goToHomePage();
+        }
+    }
+
+    // --- LAZY LOADING DE PERGUNTAS (Estável) ---
+    // <<< INÍCIO DA CORREÇÃO >>>
+    // Esta função foi substituída para ler do QUIZ_DATA global (de quizzes.js)
+    // em vez de carregar scripts dinamicamente.
+    async function loadQuestionBank(moduleId) {
+        // 1. Check cache first
+        if (cachedQuestionBanks[moduleId]) {
+            return cachedQuestionBanks[moduleId];
+        }
+
+        // 2. Check if the global QUIZ_DATA (from quizzes.js) exists
+        if (typeof QUIZ_DATA === 'undefined') {
+            console.error("Erro fatal: quizzes.js não carregou ou 'QUIZ_DATA' não está definido.");
+            return null; // Isso vai disparar o erro no 'loadModuleContent'
+        }
+
+        // 3. Get the specific questions from the global object
+        const questions = QUIZ_DATA[moduleId];
+
+        // 4. Check if questions for this module exist
+        if (!questions || !Array.isArray(questions) || questions.length === 0) {
+            console.warn(`Nenhum quiz encontrado em QUIZ_DATA para o módulo: ${moduleId}`);
+            return null; // Isso vai disparar o erro no 'loadModuleContent'
+        }
+
+        // 5. Save to cache and return
+        cachedQuestionBanks[moduleId] = questions;
+        return questions;
+    }
+    // <<< FIM DA CORREÇÃO >>>
+
+    // --- FUNÇÃO DE CARREGAR MÓDULO (COM SCROLL CORRIGIDO) ---
+    async function loadModuleContent(id) {
+        if (!id || !moduleContent[id]) return;
+        currentModuleId = id;
+        localStorage.setItem('gateBombeiroLastModule', id);
+        
+        const d = moduleContent[id];
+        
+        // *** CORREÇÃO DO CRASH TYPO ***
+        // Removido o '_' extra de 'note-'_ + id'
+        const savedNote = localStorage.getItem('note-' + id) || ''; 
+        
+        const categoryColor = getCategoryColor(id);
+        
+        contentArea.style.opacity = '0';
+        loadingSpinner.classList.remove('hidden');
+        contentArea.classList.add('hidden'); 
+
+        let allQuestions = null;
+        // O nome do arquivo agora é apenas para depuração
+        const scriptFileName = questionSources[id] || 'Arquivo não mapeado (course.js)';
+        
+        try {
+            // Agora chama a nova função 'loadQuestionBank' corrigida
+            allQuestions = await loadQuestionBank(id);
+        } catch(error) {
+             console.error("Erro no carregamento do quiz:", error);
+        }
+        
+        // --- Renderização do Conteúdo ---
+        setTimeout(() => {
+            loadingSpinner.classList.add('hidden');
+            contentArea.classList.remove('hidden'); 
+
+            let html = `
+                <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${categoryColor} fa-fw"></i>${d.title}</h3>
+                <div>${d.content}</div>
+            `;
+
+            if (allQuestions && allQuestions.length > 0) {
+                
+                const questionsToDisplay = 4;
+                const count = Math.min(allQuestions.length, questionsToDisplay); 
+                
+                const shuffledQuestions = shuffleArray(allQuestions);
+                const selectedQuestions = shuffledQuestions.slice(0, count);
+
+                let quizHtml = `<hr><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Exercícios de Fixação</h3>`;
+                
+                selectedQuestions.forEach((q, index) => {
+                    const questionNumber = index + 1;
+                    quizHtml += `<div class="quiz-block" data-question-id="${q.id}">
+                                    <p class="font-semibold mt-4 mb-2 text-gray-700 dark:text-gray-200">${questionNumber}. ${q.question}</p>
+                                    <div class="quiz-options-group space-y-2 mb-4">`;
+                    
+                    for (const key in q.options) {
+                        quizHtml += `<div class="quiz-option" data-module="${id}" data-question-id="${q.id}" data-answer="${key}">
+                                        <span class="option-key">${key.toUpperCase()})</span> ${q.options[key]}
+                                    </div>`;
+                    }
+                    
+                    quizHtml += `</div><div id="feedback-${q.id}" class="feedback-area hidden"></div></div>`;
+                });
+                
+                html += quizHtml;
+            } else {
+                // Mensagem de erro se 'allQuestions' for nulo ou vazio
+                console.error(`Falha ao carregar quiz: 'QUIZ_DATA.${id}' está indefinido ou vazio.`);
+                html += `<div class="warning-box mt-8">
+                            <p><strong><i class="fas fa-exclamation-triangle mr-2"></i> Exercícios não encontrados.</strong></p>
+                            <p>Não foi possível encontrar as perguntas de fixação para este módulo no arquivo <code>quizzes.js</code>. Verifique se <code>QUIZ_DATA['${id}']</code> existe e não está vazio.</p>
+                         </div>`;
+            }
+
+            html += `
+                <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-right">
+                    <button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button>
+                </div>
+                <div class="mt-10 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <h4 class="text-xl font-bold mb-3 text-secondary dark:text-gray-200"><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Suas notas para este módulo. Elas são salvas automaticamente no seu navegador.</p>
+                    <textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${savedNote}</textarea>
+                </div>
+            `;
+
+            contentArea.innerHTML = html;
+            
+            setupQuizListeners();
+            setupConcludeButtonListener();
+            setupNotesListener(id);
+            
+            contentArea.style.opacity = '1';
+            contentArea.style.transition = 'opacity 0.3s ease';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            updateActiveModuleInList();
+            updateNavigationButtons();
+            updateBreadcrumbs(d.title);
+            
+            document.getElementById('module-nav').classList.remove('hidden');
+            closeSidebar();
+            document.getElementById('next-module')?.classList.remove('blinking-button');
+
+        }, 300);
+    }
+
+    // --- FUNÇÃO DE QUIZ (FEEDBACK APRIMORADO) ---
+    function handleQuizOptionClick(e) {
+        const o = e.currentTarget;
+        if (o.disabled) return;
+
+        const moduleId = o.dataset.module;
+        const questionId = o.dataset.questionId;
+        const selectedAnswer = o.dataset.answer;
+
+        const questionData = cachedQuestionBanks[moduleId]?.find(q => q.id === questionId);
+        if (!questionData) {
+            console.error(`Pergunta ${questionId} não encontrada no cache.`);
+            return; 
+        }
+
+        const correctAnswer = questionData.answer;
+        const explanationText = questionData.explanation || 'Nenhuma explicação disponível.';
+        
+        const optionsGroup = o.closest('.quiz-options-group');
+        const feedbackArea = document.getElementById(`feedback-${questionId}`);
+
+        optionsGroup.querySelectorAll(`.quiz-option[data-question-id="${questionId}"]`).forEach(opt => {
+            opt.disabled = true;
+            if (opt.dataset.answer === correctAnswer) {
+                opt.classList.add('correct');
+            }
+        });
+
+        let feedbackContent = '';
+        if (selectedAnswer === correctAnswer) {
+            o.classList.add('correct');
+            feedbackContent = `<strong class="font-semibold text-green-700 dark:text-green-400"><i class="fas fa-check-circle mr-2"></i> Correto!</strong> ${explanationText}`;
+            
+            try {
+                if (typeof triggerSuccessParticles === 'function') {
+                    triggerSuccessParticles(e, o);
+                }
+            } catch (err) {
+                console.error('Erro ao executar triggerSuccessParticles:', err);
+            }
+
+        } else {
+            o.classList.add('incorrect');
+            
+            feedbackContent = `<strong class="font-semibold text-red-700 dark:text-red-400"><i class="fas fa-times-circle mr-2"></i> Incorreto.</strong> ${explanationText} 
+                                <span class="text-sm italic block mt-1"> (Dica: A resposta correta foi destacada em verde.)</span>`;
+        }
+        
+        if (feedbackArea) {
+            feedbackArea.innerHTML = `<div class="explanation mt-2">${feedbackContent}</div>`;
+            feedbackArea.classList.remove('hidden');
+        }
+    }
+    
+    // --- FUNÇÃO DE BREADCRUMBS (NAVEGAÇÃO APRIMORADA) ---
+    function updateBreadcrumbs(moduleTitle = 'Início') {
+        const homeLink = `<a href="#" id="home-breadcrumb" class="text-blue-600 dark:text-blue-400 hover:text-orange-500 transition-colors"><i class="fas fa-home mr-1"></i> Início</a>`;
+        
+        if (!currentModuleId) {
+            breadcrumbContainer.innerHTML = homeLink;
+            return;
+        }
+
+        const category = Object.values(moduleCategories).find(cat => {
+            const moduleNum = parseInt(currentModuleId.replace('module', ''));
+            return moduleNum >= cat.range[0] && moduleNum <= cat.range[1];
+        });
+
+        if (category) {
+            const categoryLink = `<span class="mx-2 text-gray-400">/</span> <span class="font-bold text-gray-700 dark:text-gray-300">${category.title}</span>`;
+            const moduleSpan = `<span class="mx-2 text-gray-400">/</span> <span class="text-orange-500">${moduleTitle}</span>`;
+            
+            breadcrumbContainer.innerHTML = `${homeLink} ${categoryLink} ${moduleSpan}`;
+        } else {
+            breadcrumbContainer.innerHTML = `${homeLink} <span class="mx-2 text-gray-400">/</span> ${moduleTitle}`;
+        }
+        
+        document.getElementById('home-breadcrumb')?.addEventListener('click', goToHomePage);
+    }
+    
+    // --- FUNÇÕES DE UTILIDADE ---
+    function setupNotesListener(id) {
+        const notesTextarea = document.getElementById(`notes-module-${id}`);
+        if (notesTextarea) {
+            notesTextarea.style.userSelect = 'auto';
+            notesTextarea.style.webkitUserSelect = 'auto';
+            notesTextarea.style.mozUserSelect = 'auto';
+            notesTextarea.style.msUserSelect = 'auto';
+            
+            notesTextarea.addEventListener('keyup', () => {
+                localStorage.setItem('note-' + id, notesTextarea.value);
+            });
+        }
+    }
+
+
+    // --- FUNÇÕES REUTILIZÁVEIS ---
+
+    function goToHomePage() {
+        localStorage.removeItem('gateBombeiroLastModule'); 
+        
+        contentArea.innerHTML = getWelcomeContent();
+        document.getElementById('module-nav').classList.add('hidden');
+        document.querySelectorAll('.module-list-item.active').forEach(i => i.classList.remove('active'));
+        currentModuleId = null;
+        closeSidebar();
+        document.getElementById('next-module')?.classList.remove('blinking-button');
+
+        const btn = document.getElementById('start-course');
+        if (btn) {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', () => {
+                loadModuleContent('module1');
+                const firstAccordionButton = document.querySelector('#desktop-module-container .accordion-button');
+                if(firstAccordionButton) {
+                     const firstPanel = firstAccordionButton.nextElementSibling;
+                     if (firstPanel) {
+                         firstAccordionButton.classList.add('active');
+                         firstPanel.style.maxHeight = firstPanel.scrollHeight + "px";
+                     }
+                }
+            });
+        }
+        updateBreadcrumbs(); // Atualiza breadcrumb para "Início"
+    }
+
+    function getWelcomeContent() {
+        return `<div class="text-center py-8">
+                        <div class="floating inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6"><i class="fas fa-fire-extinguisher text-6xl text-red-600"></i></div>
+                        <h2 class="text-4xl font-bold mb-4 text-blue-900 dark:text-white">Torne-se um Profissional de Elite</h2>
+                        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">
+                            Bem-vindo ao <strong class="font-bold text-orange-500 dark:text-orange-400">Curso de Formação para Bombeiro Civil e Brigadista</strong>.
+                        </p>
+                        <button id="start-course" class="action-button pulse text-lg"><i class="fas fa-play-circle mr-2"></i> Iniciar Curso Agora</button>
+                    </div>`;
+    }
+
+    function setupProtection() {
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
+        document.body.style.mozUserSelect = 'none';
+        document.body.style.msUserSelect = 'none';
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+          if (e.ctrlKey || e.metaKey) {
+            if (['c','a','x','v','s','p','u'].includes(e.key.toLowerCase())) e.preventDefault();
+          }
+          if (e.key === 'F12') e.preventDefault();
+          if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) e.preventDefault();
+          if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            e.preventDefault();
+            console.warn('Impressão desativada para proteger o conteúdo.'); 
+          }
+        });
+        document.querySelectorAll('img').forEach(img => {
+          img.draggable = false;
+          img.addEventListener('dragstart', e => e.preventDefault());
+        });
+    }
+
+    function setupTheme() {
+        const isDark = localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
+        updateThemeIcons();
+    }
+    function toggleTheme() {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        updateThemeIcons();
+    }
+    function updateThemeIcons() {
+        const icon = document.documentElement.classList.contains('dark') ? 'fa-sun' : 'fa-moon';
+        document.querySelectorAll('#dark-mode-toggle-desktop i, #bottom-nav-theme i').forEach(i => i.className = `fas ${icon} text-2xl`);
+    }
+
+    function shuffleArray(array) {
+        let newArray = [...array]; 
+        for (let i = newArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        }
+        return newArray;
+    }
+    
+    function getCategoryColor(moduleId) {
+        if (!moduleId) return 'text-gray-500'; 
+        const num = parseInt(moduleId.replace('module', ''));
+        
+        for (const key in moduleCategories) {
+            const cat = moduleCategories[key];
+            if (num >= cat.range[0] && num <= cat.range[1]) {
+                switch (key) {
+                    case 'rh': return 'text-orange-500'; 
+                    case 'legislacao': return 'text-orange-500'; 
+                    case 'salvamento': return 'text-blue-500'; 
+                    case 'pci': return 'text-red-500'; 
+                    case 'aph': return 'text-green-500'; 
+                    case 'phtls': return 'text-teal-500'; 
+                    case 'nr35': return 'text-indigo-500'; 
+                    default: return 'text-gray-500';
+                }
+            }
+        }
+        return 'text-gray-500';
+    }
+    
+    function handlePersonalGreeting() {
+        const nameModal = document.getElementById('name-prompt-modal');
+        const nameOverlay = document.getElementById('name-modal-overlay');
+        const saveButton = document.getElementById('save-name-button');
+        const nameInput = document.getElementById('name-input');
+        const greetingEl = document.getElementById('welcome-greeting');
+        
+        if (!nameModal || !nameOverlay || !saveButton || !nameInput || !greetingEl) return;
+
+        const studentName = localStorage.getItem('studentName');
+        if (!studentName) {
+            nameModal.classList.add('show');
+            nameOverlay.classList.add('show');
+            nameInput.focus();
+            saveButton.onclick = () => {
+                const name = nameInput.value.trim() || "Aluno(a)";
+                localStorage.setItem('studentName', name);
+                greetingEl.textContent = `Olá, ${name}!`;
+                nameModal.classList.remove('show');
+                nameOverlay.classList.remove('show');
+                setupPrintWatermarkContent();
+            };
+            nameInput.onkeydown = e => { if (e.key === 'Enter') saveButton.click(); };
+        } else {
+            greetingEl.textContent = `Olá, ${studentName}!`;
+        }
+    }
+    function setupPrintWatermarkContent() {
+        const studentName = localStorage.getItem('studentName') || 'Aluno(a)';
+        if (printWatermark) {
+            printWatermark.textContent = `Conteúdo Exclusivo de ${studentName} - Proibida a Reprodução`;
+        }
+    }
+    function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('open');
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('show');
+            setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
+        }
+    }
+    function openSidebar() {
+        if (sidebar) sidebar.classList.add('open');
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('hidden');
+            setTimeout(() => sidebarOverlay.classList.add('show'), 10);
+        }
+    }
+    function populateModuleLists() {
+        document.getElementById('desktop-module-container').innerHTML = getModuleListHTML();
+        document.getElementById('mobile-module-container').innerHTML = getModuleListHTML();
+    }
+    function getModuleListHTML() {
+    let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2>
+                    <div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div>
+                    <div class="module-accordion-container space-y-2">`;
+
+    for (const k in moduleCategories) {
+        const cat = moduleCategories[k];
+        html += `<div><button class="accordion-button"><span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title}</span><i class="fas fa-chevron-down"></i></button><div class="accordion-panel">`;
+        for (let i = cat.range[0]; i <= cat.range[1]; i++) {
+            const m = moduleContent[`module${i}`];
+            if (m) {
+                const isDone = Array.isArray(completedModules) && completedModules.includes(m.id);
+                html += `<div class="module-list-item${isDone ? ' completed' : ''}" data-module="${m.id}">
+                            <i class="${m.iconClass} module-icon"></i>
+                            <span style="flex:1">${m.title}</span>
+                            ${isDone ? '<i class="fas fa-check-circle completion-icon" aria-hidden="true"></i>' : ''}
+                         </div>`;
+            }
+        }
+        html += `</div></div>`;
+    }
+
+    html += `</div>`;
+    html += `<div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Conquistas por Área</h3><div id="achievements-grid" class="grid grid-cols-2 gap-4">`;
+    for (const key in moduleCategories) {
+        const cat = moduleCategories[key];
+        html += `<div id="ach-cat-${key}" class="achievement" title="Conclua a área para ganhar: ${cat.achievementTitle}"><div class="achievement-icon"><i class="${cat.icon}"></i></div><p class="text-sm font-bold text-gray-700 dark:text-gray-300">${cat.achievementTitle}</p></div>`;
+    }
+    html += `</div></div>`;
+    return html;
+}
+
+    // --- CORREÇÃO (Request Minimalista) ---
+    function updateProgress() {
+        const p = (completedModules.length / totalModules) * 100;
+        
+        // Atualiza o texto DENTRO do wrapper sticky
+        document.getElementById('progress-text').textContent = `${p.toFixed(0)}%`;
+        document.getElementById('completed-modules-count').textContent = completedModules.length;
+        
+        // Atualiza a barra minimalista DENTRO do wrapper sticky
+        const progressBarMinimal = document.getElementById('progress-bar-minimal');
+        if (progressBarMinimal) {
+            progressBarMinimal.style.width = `${p}%`;
+        }
+        
+        updateModuleListStyles();
+        checkAchievements();
+        if (totalModules > 0 && completedModules.length === totalModules) showCongratulations();
+    }
+    // --- FIM DA CORREÇÃO ---
+
+
+    function showCongratulations() {
+        document.getElementById('congratulations-modal').classList.add('show');
+        document.getElementById('modal-overlay').classList.add('show');
+        if(typeof confetti === 'function') {
+            confetti({particleCount:150, spread:90, origin:{y:0.6},zIndex:200});
+        }
+    }
+    function showAchievementToast(title) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fas fa-trophy"></i><div><p class="font-bold">Módulo Concluído!</p><p class="text-sm">${title}</p></div>`;
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 4500);
+    }
+    function updateModuleListStyles() {
+        document.querySelectorAll('.module-list-item').forEach(i => i.classList.toggle('completed', completedModules.includes(i.dataset.module)));
+    }
+    function checkAchievements() {
+        let newNotification = false;
+        for(const key in moduleCategories) {
+            const cat = moduleCategories[key];
+            let allComplete = true;
+            for(let i = cat.range[0]; i <= cat.range[1]; i++) {
+                if (!moduleContent[`module${i}`] || !completedModules.includes(`module${i}`)) {
+                    allComplete = false; break;
+                }
+            }
+            
+            if (allComplete && !notifiedAchievements.includes(key)) {
+                showAchievementModal(cat.achievementTitle, cat.icon);
+                notifiedAchievements.push(key);
+                newNotification = true;
+            }
+            
+            document.querySelectorAll(`#ach-cat-${key}`).forEach(el => el.classList.toggle('unlocked', allComplete));
+        }
+        if (newNotification) {
+            localStorage.setItem('gateBombeiroNotifiedAchievements_v3', JSON.stringify(notifiedAchievements));
+        }
+    }
+    function showAchievementModal(title, iconClass) {
+        const iconContainer = document.getElementById('ach-modal-icon-container');
+        const titleEl = document.getElementById('ach-modal-title');
+        if (!achievementModal || !achievementOverlay || !iconContainer || !titleEl) return;
+
+        iconContainer.innerHTML = `<i class="${iconClass}"></i>`;
+        titleEl.textContent = `Conquista: ${title}`;
+        achievementModal.classList.add('show');
+        achievementOverlay.classList.add('show');
+        
+        if(typeof confetti === 'function') {
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, zIndex: 103 });
+        }
+    }
+    function hideAchievementModal() {
+        achievementModal?.classList.remove('show');
+        achievementOverlay?.classList.remove('show');
+    }
+    
+    function toggleFocusMode() {
+        const isEnteringFocusMode = !document.body.classList.contains('focus-mode');
+        document.body.classList.toggle('focus-mode');
+        
+        if (!isEnteringFocusMode) {
+            closeSidebar();
+        }
+    }
+
+    function setupConcludeButtonListener() {
+        if (!currentModuleId) return;
+        const b = document.querySelector(`.conclude-button[data-module="${currentModuleId}"]`);
+        if(b) {
+            if (concludeButtonClickListener) {
+                b.removeEventListener('click', concludeButtonClickListener);
+            }
+
+            if(completedModules.includes(currentModuleId)){
+                b.disabled=true;
+                b.innerHTML='<i class="fas fa-check-circle mr-2"></i> Concluído';
+            } else {
+                b.disabled = false;
+                b.innerHTML = 'Concluir Módulo';
+                concludeButtonClickListener = () => handleConcludeButtonClick(b);
+                b.addEventListener('click', concludeButtonClickListener);
+            }
+        }
+    }
+    let concludeButtonClickListener = null;
+    function handleConcludeButtonClick(b) {
+        const id = b.dataset.module;
+        if (id && !completedModules.includes(id)) {
+            completedModules.push(id);
+            localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
+            updateProgress();
+            b.disabled = true;
+            b.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Concluído';
+            showAchievementToast(moduleContent[id].title);
+            if(typeof confetti === 'function') {
+                confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 }, zIndex: 2000 });
+            }
+
+            setTimeout(() => {
+                const navContainer = document.getElementById('module-nav');
+                const nextButton = document.getElementById('next-module');
+                if (navContainer) {
+                    navContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (nextButton && !nextButton.disabled) {
+                        nextButton.classList.add('blinking-button');
+                    }
+                }
+            }, 700);
+        }
+    }
+    function updateActiveModuleInList() {
+        document.querySelectorAll('.module-list-item').forEach(i => i.classList.toggle('active', i.dataset.module === currentModuleId));
+    }
+    function updateNavigationButtons() {
+        if (!currentModuleId) {
+             document.getElementById('prev-module').disabled = true;
+             document.getElementById('next-module').disabled = true;
+             return;
+        }
+        const n = parseInt(currentModuleId.replace('module',''));
+        document.getElementById('prev-module').disabled = (n === 1);
+        document.getElementById('next-module').disabled = (n === totalModules);
+    }
+    function setupQuizListeners() {
+        document.querySelectorAll('.quiz-option').forEach(o => o.addEventListener('click', handleQuizOptionClick));
+    }
+    
+    // --- FUNÇÃO ADDEVENTLISTENERS (COM LÓGICA DO MODAL DE RESET) ---
+    function addEventListeners() {
+        const nextButton = document.getElementById('next-module');
+        const prevButton = document.getElementById('prev-module');
+        const homeButtonDesktop = document.getElementById('home-button-desktop');
+        const homeButtonBottom = document.getElementById('bottom-nav-home');
+        
+        document.body.addEventListener('click', e => {
+            const moduleItem = e.target.closest('.module-list-item');
+            if (moduleItem) {
+                loadModuleContent(moduleItem.dataset.module);
+                nextButton?.classList.remove('blinking-button');
+            }
+            if (e.target.closest('.accordion-button')) {
+                const b = e.target.closest('.accordion-button');
+                const p = b.nextElementSibling;
+                if (!p) return;
+                const isActive = b.classList.contains('active');
+                const allPanels = b.closest('.module-accordion-container, .sidebar, #mobile-module-container').querySelectorAll('.accordion-panel');
+                allPanels.forEach(op => {
+                    if (op !== p && op.previousElementSibling) {
+                         op.style.maxHeight = null;
+                         op.previousElementSibling.classList.remove('active');
+                    }
+                });
+                if (!isActive) {
+                    b.classList.add('active');
+                    p.style.maxHeight = p.scrollHeight + "px";
+                } else {
+                    b.classList.remove('active');
+                    p.style.maxHeight = null;
+                }
+            }
+        });
+        
+        prevButton?.addEventListener('click', () => {
+            if (!currentModuleId) return;
+            const n = parseInt(currentModuleId.replace('module',''));
+            if(n > 1) loadModuleContent(`module${n-1}`);
+            nextButton?.classList.remove('blinking-button');
+        });
+        nextButton?.addEventListener('click', () => {
+            if (!currentModuleId) return;
+            const n = parseInt(currentModuleId.replace('module',''));
+            if(n < totalModules) loadModuleContent(`module${n+1}`);
+            nextButton?.classList.remove('blinking-button');
+        });
+        
+        document.getElementById('mobile-menu-button')?.addEventListener('click', openSidebar);
+        document.getElementById('close-sidebar-button')?.addEventListener('click', closeSidebar);
+        sidebarOverlay?.addEventListener('click', closeSidebar);
+        
+        homeButtonDesktop?.addEventListener('click', goToHomePage);
+        homeButtonBottom?.addEventListener('click', goToHomePage);
+        
+        document.getElementById('bottom-nav-modules')?.addEventListener('click', openSidebar);
+        document.getElementById('bottom-nav-theme')?.addEventListener('click', toggleTheme);
+        document.getElementById('dark-mode-toggle-desktop')?.addEventListener('click', toggleTheme);
+        
+        document.getElementById('focus-mode-toggle')?.addEventListener('click', toggleFocusMode);
+        document.getElementById('bottom-nav-focus')?.addEventListener('click', toggleFocusMode);
+        document.getElementById('focus-menu-modules')?.addEventListener('click', openSidebar);
+        document.getElementById('focus-menu-exit')?.addEventListener('click', toggleFocusMode);
+        document.getElementById('focus-nav-modules')?.addEventListener('click', openSidebar);
+        document.getElementById('focus-nav-exit')?.addEventListener('click', toggleFocusMode);
+
+        const congratsModal = document.getElementById('congratulations-modal');
+        const modalOverlay = document.getElementById('modal-overlay');
+        
+        document.getElementById('close-congrats')?.addEventListener('click', () => {
+            if (congratsModal) congratsModal.classList.remove('show');
+            if (modalOverlay) modalOverlay.classList.remove('show');
+        });
+        modalOverlay?.addEventListener('click', () => {
+            if (congratsModal) congratsModal.classList.remove('show');
+            if (modalOverlay) modalOverlay.classList.remove('show');
+        });
+        
+        closeAchButton?.addEventListener('click', hideAchievementModal);
+        achievementOverlay?.addEventListener('click', hideAchievementModal);
+
+
+        document.body.addEventListener('input', e => {
+            if(e.target.matches('.module-search')) {
+                const s = e.target.value.toLowerCase();
+                const container = e.target.closest('div.relative');
+                if (container) {
+                    const accordionContainer = container.nextElementSibling;
+                    if (accordionContainer) {
+                         accordionContainer.querySelectorAll('.module-list-item').forEach(i => {
+                            i.style.display = i.textContent.toLowerCase().includes(s) ? 'flex' : 'none';
+                        });
+                    }
+                }
+            }
+        });
+
+        const resetButton = document.getElementById('reset-progress');
+        resetButton?.addEventListener('click', () => {
+             resetModal?.classList.add('show');
+             resetOverlay?.classList.add('show');
+        });
+        
+        cancelResetButton?.addEventListener('click', () => {
+            resetModal?.classList.remove('show');
+            resetOverlay?.classList.remove('show');
+        });
+
+        confirmResetButton?.addEventListener('click', () => {
+            localStorage.removeItem('studentName');
+            localStorage.removeItem('gateBombeiroCompletedModules_v3');
+            localStorage.removeItem('gateBombeiroNotifiedAchievements_v3');
+            
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('note-')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            alert('Progresso resetado. Por favor, insira seu nome novamente.');
+            location.reload();
+        });
+        
+        const backToTopButton = document.getElementById('back-to-top');
+        if (backToTopButton) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTopButton.style.display = 'flex';
+                    setTimeout(() => {
+                        backToTopButton.style.opacity = '1';
+                        backToTopButton.style.transform = 'translateY(0)';
+                    }, 10);
+                } else {
+                    backToTopButton.style.opacity = '0';
+                    backToTopButton.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        backToTopButton.style.display = 'none';
+                    }, 300);
+                }
+            });
+
+            backToTopButton.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    }
+    
+    // --- MICRO ANIMAÇÃO DE SUCESSO ---
+    function triggerSuccessParticles(clickEvent, element) {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 28,
+          spread: 70,
+          startVelocity: 45,
+          origin: {
+            x: (clickEvent && clickEvent.clientX) ? clickEvent.clientX / window.innerWidth : 0.5,
+            y: (clickEvent && clickEvent.clientY) ? clickEvent.clientY / window.innerHeight : 0.5
+          },
+          colors: ['#FFD700', '#FFCF66', '#F7A325'],
+          zIndex: 3000
+        });
+      }
+
+      const container = document.createElement('div');
+      container.className = 'gold-particles-container';
+      container.style.position = 'fixed'; 
+      container.style.left = '0';
+      container.style.top = '0';
+      container.style.pointerEvents = 'none';
+      container.style.width = '100%';
+      container.style.height = '100%';
+      container.style.zIndex = '4000';
+      document.body.appendChild(container);
+
+      const rect = (element && element.getBoundingClientRect) ? element.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+      const cx = rect.left + (rect.width / 2);
+      const cy = rect.top + (rect.height / 2);
+
+      for (let i = 0; i < 12; i++) {
+        const p = document.createElement('div');
+        p.className = 'gold-particle';
+        p.style.left = `${cx}px`;
+        p.style.top = `${cy}px`;
+        p.style.transform = 'translate(-50%, -50%)';
+        container.appendChild(p);
+
+        const dx = (Math.random() - 0.5) * 180;
+        const dy = -Math.random() * 150 - 20;
+        const rot = Math.random() * 360;
+
+        p.animate(
+          [
+            { transform: `translate(-50%, -50%) translate(0px, 0px) rotate(0deg)`, opacity: 1 },
+            { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity: 0 }
+          ],
+          {
+            duration: 900 + Math.random() * 400,
+            easing: 'cubic-bezier(.2,.7,.2,1)'
+          }
+        );
+
+        setTimeout(() => p.remove(), 1500);
+      }
+
+      setTimeout(() => { if (container && container.parentNode) container.remove(); }, 1800);
+    }
+
+    // --- INICIALIZAÇÃO DO APP ---
+    init();
+});
+// ===== HEADER SCROLL EFFECT =====
+document.addEventListener('DOMContentLoaded', () => {
+  const header = document.getElementById('main-header');
+
+  if (header) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    });
   }
+ // ==== BOTÕES: EFEITO RIPPLE ====
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.action-button');
+  if (!btn) return;
 
-  btnLogin.addEventListener('click', async () => {
-    const email = inputEmail.value.trim().toLowerCase();
-    if (!validateEmail(email)) return showAlert('E-mail inválido.');
-    try {
-      await auth.signInWithEmailAndPassword(email, 'default_password_bc');
-    } catch (err) {
-      showAlert('Erro de Login. Tente criar conta.');
-    }
-  });
+  // Remove qualquer ripple anterior
+  const oldRipple = btn.querySelector('.ripple');
+  if (oldRipple) oldRipple.remove();
 
-  btnRegister.addEventListener('click', async () => {
-    const name = inputName.value.trim();
-    const email = inputEmail.value.trim().toLowerCase();
-    if (!name || !validateEmail(email)) return showAlert('Preencha nome e e-mail válidos.');
-    try {
-      const userCredential = await auth.createUserWithEmailAndPassword(email, 'default_password_bc');
-      const uid = userCredential.user.uid;
-      const expiry = new Date(); expiry.setDate(expiry.getDate()+30);
-      const userData = { name, email, status: 'free_trial', acesso_ate: expiry.toISOString() };
-      await usersCollection.doc(uid).set(userData);
-    } catch (err) {
-      console.error('Register error', err);
-      showAlert('Erro ao criar conta.');
-    }
-  });
+  // Cria o novo círculo de onda
+  const ripple = document.createElement('span');
+  ripple.classList.add('ripple');
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+  ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
 
+  // Adiciona e remove após animação
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
+// ==== PERGUNTAS: EFEITO RIPPLE ====
+document.addEventListener('click', function (e) {
+  const option = e.target.closest('.quiz-option');
+  if (!option) return;
+
+  // Remove qualquer ripple anterior
+  const oldRipple = option.querySelector('.ripple');
+  if (oldRipple) oldRipple.remove();
+
+  // Cria o novo círculo de onda
+  const ripple = document.createElement('span');
+  ripple.classList.add('ripple');
+  const rect = option.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+  ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+
+  // Adiciona e remove após animação
+  option.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
 });
 
-
-async function checkUserStatus(uid, email){
-  try {
-    const doc = await usersCollection.doc(uid).get();
-    if (doc.exists) {
-      const userData = doc.data();
-      const expiry = new Date(userData.acesso_ate);
-      const status = userData.status;
-      if (status === 'premium' || expiry > new Date()) {
-        startCourse(userData);
-      } else {
-        showExpiredOverlay(userData);
-      }
-    } else {
-      showAlert('Conta sem registro no banco. Faça login novamente.');
-      await auth.signOut();
-      if (overlay) overlay.style.display = 'flex';
-    }
-  } catch(e) {
-    console.error('checkUserStatus error', e);
-    showAlert('Erro de conexão com banco.');
-    await auth.signOut();
-    if (overlay) overlay.style.display = 'flex';
-  }
-}
-
-function showExpiredOverlay(userData){
-  if (!card) return;
-  card.innerHTML = '<h3>Acesso expirado</h3><p>Renove via PIX</p><button onclick="window.openPayLink()">Renovar</button>';
-  if (overlay) overlay.style.display = 'flex';
-}
-
-window.openPayLink = function(){ window.open(PAY_LINK, '_blank'); };
-window.openPixWhats = function(){ window.open('https://wa.me/55'+PIX_KEY); };
+});

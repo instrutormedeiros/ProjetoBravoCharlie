@@ -897,9 +897,3 @@ body.focus-mode { padding-bottom: 70px; }
     right: 0.75rem;
     font-size: 0.875rem;
 }
-
-/* Added by assistant: overlay styles */
-
-/* Access overlay specific tweaks */
-#access-overlay input { box-sizing: border-box; }
-#access-overlay .action-button { padding:10px 14px; border-radius:8px; font-weight:700; }

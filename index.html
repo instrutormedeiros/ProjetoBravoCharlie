@@ -1,117 +1,237 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Projeto Bravo Charlie | Formação Profissional</title>
-<meta name="description" content="Curso completo de formação Bombeiro Civil e Brigadista. Projeto Bravo Charlie.">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#b30000">
-<script src="https://cdn.tailwindcss.com"></script>
-<script> tailwind.config = { darkMode: 'class' } </script>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso de Formação | Bombeiro Civil e Brigadista</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: 'class' }
+    </script>
+
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="antialiased">
 
-<header class="fixed top-0 left-0 w-full z-40 backdrop-blur bg-white/70 dark:bg-gray-900/70 shadow-md">
-  <div class="container mx-auto px-4 py-4 max-w-7xl flex justify-between items-center">
-    <div class="flex items-center gap-4">
-      <div class="bg-gradient-to-tr from-red-600 to-orange-500 p-2 rounded-full">
-        <i class="fas fa-shield-alt text-white text-2xl"></i>
-      </div>
-      <div>
-        <h1 class="text-xl md:text-2xl font-bold">Projeto Bravo Charlie</h1>
-        <p class="text-sm text-gray-600">Formando Profissionais de Elite</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-4">
-      <div class="hidden lg:flex items-center gap-4">
-        <div class="bg-gray-100 dark:bg-gray-800 py-2 px-4 rounded-full text-sm font-semibold">
-          <i class="fas fa-book-open mr-2 text-orange-500"></i>
-          <span id="course-modules-count">...</span> Módulos
+    <div id="print-watermark" style="display: none;"></div>
+
+    <div id="toast-container"></div>
+    
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 opacity-0 pointer-events-none sidebar-overlay lg:hidden"></div>
+    
+    <div id="off-canvas-sidebar" class="fixed top-0 left-0 h-full w-4/5 max-w-sm z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="p-0 h-full flex flex-col">
+            <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-xl font-semibold flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo</h2>
+                <button id="close-sidebar-button" class="text-2xl text-gray-500 dark:text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 flex-grow overflow-y-auto" id="mobile-module-container"></div>
         </div>
-      </div>
-      <button id="mobile-menu-button" class="lg:hidden text-2xl"><i class="fas fa-bars"></i></button>
     </div>
-  </div>
-</header>
+    
+    <div id="main-wrapper">
+        
+        <header id="main-header" class="fixed top-0 left-0 w-full z-40 backdrop-blur-lg bg-white/70 dark:bg-gray-900/70 shadow-md transition-all duration-500">
+            <div class="container mx-auto px-4 md:px-6 max-w-7xl">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-gradient-to-tr from-red-600 to-orange-500 p-2 md:p-3 rounded-full shadow-md">
+                            <i class="fas fa-shield-alt text-2xl md:text-3xl text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">Projeto Bravo Charlie</h1>
+                            <p class="text-gray-700 dark:text-gray-300 text-sm md:text-lg">Formando Profissionais de Elite</p>
+                        </div>
+                    </div>
 
-<main class="pt-28 container mx-auto px-4 max-w-7xl">
-  <div class="flex flex-col lg:flex-row gap-8">
-    <aside class="hidden lg:block w-1/3">
-      <div class="sticky top-28">
-        <div id="desktop-module-container" class="space-y-2"></div>
-      </div>
-    </aside>
+                    <div class="hidden lg:flex items-center space-x-6">
+                        <button id="home-button-desktop" title="Voltar ao Início" class="text-gray-800 dark:text-gray-100 text-2xl hover:text-orange-500 transition-colors">
+                            <i class="fas fa-home"></i>
+                        </button>
+                        <div class="bg-gray-100/60 dark:bg-gray-800/60 py-2 px-4 rounded-full text-sm font-semibold border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+                            <i class="fas fa-book-open mr-2 text-orange-500"></i>
+                            <span id="course-modules-count">...</span> Módulos
+                        </div>
+                        <button id="focus-mode-toggle" title="Modo Revisão" class="text-2xl text-gray-800 dark:text-gray-100 hover:text-orange-500 transition-colors">
+                            <i class="fas fa-book-reader"></i>
+                        </button>
+                        
+                        <button id="dark-mode-toggle-desktop" title="Mudar Tema">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        
+                    </div>
 
-    <section class="w-full lg:w-2/3">
-      <div id="welcome-greeting-container" class="mb-6 p-4 bg-white dark:bg-gray-800 rounded shadow">
-        <h2 id="welcome-greeting" class="text-2xl font-bold">Carregando...</h2>
-        <p class="text-gray-600">Continue de onde parou ou explore um novo módulo.</p>
-      </div>
+                    <div class="lg:hidden">
+                        <button id="mobile-menu-button" class="text-gray-900 dark:text-white text-3xl hover:text-orange-500 transition-colors">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </header>
 
-      <div id="breadcrumb-container" class="mb-4 text-sm text-gray-600"></div>
+        <div id="sticky-progress-wrapper" class="sticky-progress-wrapper">
+            <div class="container mx-auto px-4 md:px-6 max-w-7xl">
+                <div class="flex justify-between items-center text-sm">
+                    <p class="font-semibold flex-shrink-0">Progresso: <span id="progress-text">0%</span></p>
+                    <span class="font-semibold flex-shrink-0"><span id="completed-modules-count">0</span>/<span id="total-modules">0</span> módulos</span>
+                </div>
+            </div>
+            <div id="progress-bar-minimal" class="progress-bar-minimal"></div> 
+        </div>
 
-      <div id="loading-spinner" class="hidden p-6 bg-white dark:bg-gray-800 rounded shadow text-center">
-        <div class="loader mx-auto"></div>
-        <p class="mt-4">Carregando Módulo...</p>
-      </div>
+        <div class="container mx-auto px-4 md:px-6 pt-36 pb-10 flex flex-col lg:flex-row gap-8">
+            <aside class="w-full lg:w-1/3 hidden lg:block">
+                <div class="sidebar sticky top-36 max-h-[calc(100vh-10rem)] overflow-y-auto">
+                    <div id="desktop-module-container"></div>
+                </div>
+            </aside>
+            <div class="w-full lg:w-2/3">
+                 
+                 <div id="welcome-greeting-container" class="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <h2 id="welcome-greeting" class="text-2xl font-bold text-blue-900 dark:text-white">Carregando...</h2>
+                    <p class="text-gray-600 dark:text-gray-300">Continue de onde parou ou explore um novo módulo.</p>
+                </div>
+                
+                <div id="breadcrumb-container" class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                    </div>
+                <div id="loading-spinner" class="hidden text-center p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-lg font-semibold text-blue-600 dark:text-blue-400">Carregando Módulo...</p>
+                </div>
+                
+                <main>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <div id="content-area" class="p-6 md:p-10"></div>
+                        <div id="module-nav" class="module-nav hidden">
+                            <div class="flex justify-between">
+                                <button id="prev-module" class="action-button" disabled><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                                <button id="next-module" class="action-button">Próximo <i class="fas fa-arrow-right ml-2"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+        
+        <div id="reset-modal" class="modal">
+            <div class="floating inline-block p-4 bg-red-100 dark:bg-red-900 rounded-full mb-4">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-600 dark:text-red-300"></i>
+            </div>
+            <h2 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Resetar Progresso</h2>
+            <p class="text-lg mb-6 text-gray-600 dark:text-gray-300">
+                Você tem certeza que deseja resetar todo o seu progresso?
+                <br>Seu nome, anotações e módulos concluídos serão apagados.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-reset-button" class="action-button" style="background: var(--success);"><i class="fas fa-times mr-2"></i> Cancelar</button>
+                <button id="confirm-reset-button" class="action-button" style="background: var(--primary);"><i class="fas fa-trash-alt mr-2"></i> Confirmar Reset</button>
+            </div>
+        </div>
+        <div id="reset-modal-overlay" class="modal-overlay"></div>
+        
+        <div id="congratulations-modal" class="modal">
+            <div class="floating inline-block p-4 bg-yellow-100 rounded-full mb-4"><i class="fas fa-trophy text-4xl text-yellow-600"></i></div>
+            <h2 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Parabéns!</h2>
+            <p class="text-lg mb-6 text-gray-600 dark:text-gray-300">Você concluiu o curso com sucesso!</p>
+            <button id="close-congrats" class="action-button" style="background: var(--secondary);"><i class="fas fa-times mr-2"></i> Fechar</button>
+        </div>
+        <div id="modal-overlay" class="modal-overlay"></div>
+        
+        <div id="achievement-modal" class="modal">
+            <div id="ach-modal-icon-container" class="mb-4">
+                </div>
+            <h2 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Conquista Desbloqueada!</h2>
+            <p id="ach-modal-title" class="text-lg mb-6 text-gray-600 dark:text-gray-300">Categoria: ...</p>
+            <button id="close-ach-modal" class="action-button" style="background: var(--success);"><i class="fas fa-check mr-2"></i> Continuar</button>
+        </div>
+        <div id="achievement-modal-overlay" class="modal-overlay"></div>
 
-      <article class="bg-white dark:bg-gray-800 rounded shadow p-6">
-        <div id="content-area"></div>
-      </article>
-    </section>
-  </div>
-</main>
 
-<!-- Access overlay -->
-<div id="access-overlay" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);z-index:2000;">
-  <div id="access-card" style="width:96%;max-width:520px;background:#fff;padding:20px;border-radius:12px;">
-    <h2 style="font-family:'Lora',serif;margin:0 0 8px 0;">Projeto Bravo Charlie</h2>
-    <p style="margin:0 0 12px 0;color:#666;">Cadastre-se com nome e e-mail e ganhe 30 dias grátis.</p>
-    <div>
-      <input id="ac-name" placeholder="Seu nome" style="width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #ddd;">
-      <input id="ac-email" placeholder="Seu e-mail" style="width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #ddd;">
-      <div class="flex gap-2 mt-2">
-        <button id="ac-register" class="py-2 px-4 bg-green-600 text-white rounded">Criar conta (30 dias grátis)</button>
-        <button id="ac-login" class="py-2 px-4 bg-gray-700 text-white rounded">Entrar</button>
-      </div>
+        <div id="name-prompt-modal" class="modal">
+            <div class="floating inline-block p-4 bg-blue-100 dark:bg-blue-900 rounded-full mb-4">
+                <i class="fas fa-id-card text-4xl text-blue-600 dark:text-blue-300"></i>
+            </div>
+            <h2 class="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Boas-vindas!</h2>
+            <p class="text-lg mb-6 text-gray-600 dark:text-gray-300">Para uma experiência mais pessoal, como gostaria de ser chamado?</p>
+            <input type="text" id="name-input" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 text-center text-lg text-gray-900 dark:text-white" placeholder="Digite seu nome aqui...">
+            <button id="save-name-button" class="action-button w-full mt-4"><i class="fas fa-check mr-2"></i> Salvar e Iniciar</button>
+        </div>
+        <div id="name-modal-overlay" class="modal-overlay"></div>
+
+        <footer class="bg-gray-800 dark:bg-black text-white py-10 mt-12">
+            <div class="container mx-auto px-4 md:px-6 max-w-7xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div><h3 class="text-xl font-semibold mb-4 text-white">Formação Bombeiro Civil / Brigadista</h3><p class="text-gray-400">Capacitação profissional de excelência.</p></div>
+                    <div><h3 class="text-xl font-semibold mb-4 text-white">Contato e Realização</h3><div class="flex flex-col space-y-3"><a href="https://www.instagram.com/coordenadormedeiros/" class="flex items-center text-gray-300 social-link" target="_blank"><i class="fab fa-instagram w-6"></i> @coordenadormedeiros</a><a href="https://www.linkedin.com/in/chefemedeiros/" class="flex items-center text-gray-300 social-link" target="_blank"><i class="fab fa-linkedin w-6"></i> chefemedeiros</a><a href="https://instrutormedeiros.github.io/fardamento-acampamento/" class="flex items-center text-gray-300 social-link" target="_blank"><i class="fas fa-shirt w-6"></i> Artigos Militares</a></div></div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+                    <p class="developer-credit mb-2">Desenvolvido por Instrutor Medeiros</p>
+                    <p>© 2013-2025 Curso de Formação Profissional. Todos os direitos reservados.</p>
+                    <div class="mt-4">
+                        <button id="reset-progress" class="text-xs text-red-500 underline hover:text-red-400 transition mx-2">
+                            Resetar Progresso
+                        </button>
+                        <button onclick="alert('Obrigado por proteger o conteúdo original!')" class="text-xs underline hover:text-white transition mx-2">
+                            Denunciar cópia não autorizada
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
-  </div>
-</div>
+    
+    <button id="back-to-top" class="action-button" style="position: fixed; bottom: 80px; right: 20px; z-index: 50; width: 50px; height: 50px; padding: 0; border-radius: 50%; display: none; transition: opacity 0.3s, transform 0.3s; opacity: 0; transform: translateY(20px); justify-content: center; align-items: center;">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
-<footer class="mt-12 py-8 text-white bg-gray-800">
-  <div class="container mx-auto px-4 max-w-7xl">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <h3 class="font-semibold">Formação Bombeiro Civil / Brigadista</h3>
-        <p class="text-gray-400">Capacitação profissional de excelência.</p>
-      </div>
-      <div>
-        <h3 class="font-semibold">Contato</h3>
-        <a href="https://www.instagram.com/coordenadormedeiros/" target="_blank">@coordenadormedeiros</a>
-      </div>
+    <nav class="lg:hidden fixed bottom-0 left-0 w-full z-40">
+        <div class="flex justify-around items-center h-16 bg-white dark:bg-gray-800 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] dark:border-t dark:border-gray-700">
+            <button id="bottom-nav-home" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 w-full h-full"><i class="fas fa-home text-2xl"></i><span class="text-xs">Início</span></button>
+            <button id="bottom-nav-modules" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 w-full h-full"><i class="fas fa-list-ul text-2xl"></i><span class="text-xs">Módulos</span></button>
+            <button id="bottom-nav-focus" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 w-full h-full">
+                <i class="fas fa-book-reader text-2xl"></i><span class="text-xs">Revisão</span>
+            </button>
+            
+            <button id="bottom-nav-theme" class="flex flex-col items-center justify-center w-full h-full">
+                <i class="fas fa-moon"></i>
+                <span class="text-xs">Tema</span>
+            </button>
+            
+        </div>
+    </nav>
+    
+    <nav id="focus-nav-bar" class="lg:hidden fixed bottom-0 left-0 w-full z-40">
+        <div class="flex justify-around items-center h-16 bg-white dark:bg-gray-800 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] dark:border-t dark:border-gray-700">
+            <button id="focus-nav-modules" class="flex flex-col items-center justify-center text-gray-600 dark:text-gray-300 w-full h-full">
+                <i class="fas fa-list-ul text-2xl"></i><span class="text-xs">Módulos</span>
+            </button>
+            <button id="focus-nav-exit" class="flex flex-col items-center justify-center text-red-500 dark:text-red-400 w-full h-full">
+                <i class="fas fa-times-circle text-2xl"></i><span class="text-xs">Sair</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="focus-menu-desktop" class="items-center space-x-2">
+         <button id="focus-menu-modules" title="Módulos" class="action-button" style="width: 50px; height: 50px; padding: 0; border-radius: 50%; background: var(--primary);">
+            <i class="fas fa-list-ul"></i>
+         </button>
+         <button id="focus-menu-exit" title="Sair do Modo Revisão" class="action-button" style="width: 50px; height: 50px; padding: 0; border-radius: 50%; background: var(--secondary);">
+            <i class="fas fa-times"></i>
+         </button>
     </div>
-  </div>
-</footer>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-<script src="firebase-init.js" defer></script>
-<script src="data.js" defer></script>
+    
+<!-- Ordem correta dos scripts -->
 <script src="quizzes.js" defer></script>
-<script src="course.js" defer></script>
+<script src="data.js" defer></script>
 <script src="app.js" defer></script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW error',e));
-}
-</script>
-
 </body>
 </html>

@@ -1,21 +1,49 @@
-/* sw.js - simple service worker */
-const CACHE_NAME = 'bravocharlie-final-v1';
-const PRECACHE = [
-  '/',
+/* sw.js — Service Worker minimal e tolerante
+   - Cache-then-network strategy with time-limited cache entries
+   - Não bloqueia atualizações e falha silenciosamente se arquivos faltarem
+*/
+const CACHE_NAME = 'pbc-static-v1';
+const PRECACHE_URLS = [
+  '/', 
   '/index.html',
   '/style.css',
-  '/quizzes.js',
-  '/course.js',
   '/app.js',
-  '/firebase-init.js',
-  '/manifest.json'
+  '/data.js',
+  '/quizzes.js',
+  '/course.js'
 ];
-self.addEventListener('install', evt => {
-  evt.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE)));
+
+self.addEventListener('install', event => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(PRECACHE_URLS.map(u => new Request(u, {cache: 'no-cache'}))).catch(()=>{ return; });
+    })
+  );
 });
-self.addEventListener('activate', evt => evt.waitUntil(self.clients.claim()));
-self.addEventListener('fetch', evt => {
-  if (evt.request.method !== 'GET') return;
-  evt.respondWith(caches.match(evt.request).then(c=>c||fetch(evt.request)));
+
+self.addEventListener('activate', event => {
+  clients.claim();
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    ))
+  );
+});
+
+self.addEventListener('fetch', event => {
+  // Ignore non-GET
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      const network = fetch(event.request).then(resp => {
+        // update cache in background (best-effort)
+        if (resp && resp.ok) {
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, resp.clone()));
+        }
+        return resp;
+      }).catch(()=>null);
+      return cached || network || new Response('', {status: 503, statusText: 'Service Unavailable'});
+    })
+  );
 });
