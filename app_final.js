@@ -1,11 +1,10 @@
-/* === ARQUIVO app.js (CORREÇÃO DE LÓGICA DO QUIZ) === */
+/* === ARQUIVO app.js (CORREÇÃO FINAL DE TIMING) === */
 
+// ESPERA O HTML ESTAR 100% CARREGADO ANTES DE EXECUTAR QUALQUER COISA
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- SELETOR DE CONTEÚDO (MOVIDO PARA CIMA) ---
-    const contentArea = document.getElementById('content-area');
-
-    // --- VERIFICAÇÃO DE SEGURANÇA (MELHORADA) ---
+    // --- VERIFICAÇÃO DE SEGURANÇA (Primeira coisa a rodar) ---
+    // (Verifica se data.js e course.js carregaram)
     if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined' || typeof questionSources === 'undefined') {
         
         document.getElementById('main-header')?.classList.add('hidden');
@@ -15,8 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('breadcrumb-container')?.classList.add('hidden');
         document.getElementById('sticky-progress-wrapper')?.classList.add('hidden');
 
-        if (contentArea) {
-            contentArea.innerHTML = `
+        const contentAreaError = document.getElementById('content-area');
+        if (contentAreaError) {
+            contentAreaError.innerHTML = `
                 <div class="text-center py-10 px-6">
                     <div class="inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6 floating">
                         <i class="fas fa-exclamation-triangle text-6xl text-red-600"></i>
@@ -31,17 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>`;
             
-            contentArea.closest('.bg-white')?.classList.remove('hidden');
+            contentAreaError.closest('.bg-white')?.classList.remove('hidden');
             document.getElementById('loading-spinner')?.classList.add('hidden');
         }
         
         console.error("Erro: Arquivo data.js ou course.js não carregado ou incompleto (moduleContent, moduleCategories, ou questionSources ausente).");
-        return; 
+        return; // Interrompe a execução
     }
     // --- FIM DA VERIFICAÇÃO DE SEGURANÇA ---
 
 
     // --- VARIÁVEIS GLOBAIS DO APP ---
+    // (Agora estão seguras dentro do DOMContentLoaded)
+    const contentArea = document.getElementById('content-area');
     const totalModules = Object.keys(moduleContent).length;
     let completedModules = JSON.parse(localStorage.getItem('gateBombeiroCompletedModules_v3')) || [];
     let notifiedAchievements = JSON.parse(localStorage.getItem('gateBombeiroNotifiedAchievements_v3')) || [];
@@ -68,14 +70,157 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         setupProtection();
         setupTheme();
-        handlePersonalGreeting();
+        
+        // --- INICIALIZAÇÃO DO FIREBASE ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDNet1QC72jr79u8JpnFMLBoPI26Re6o3g",
+          authDomain: "projeto-bravo-charlie-app.firebaseapp.com",
+          projectId: "projeto-bravo-charlie-app",
+          storageBucket: "projeto-bravo-charlie-app.appspot.com",
+          messagingSenderId: "26745008470",
+          appId: "1:26745008470:web:5f25965524c646b3e666f7"
+        };
+        
+        if (typeof FirebaseCourse === 'undefined') {
+            console.error("Firebase-init.js não foi carregado a tempo.");
+            alert("Erro ao carregar o sistema de login. Verifique sua conexão e tente recarregar.");
+            return;
+        }
+
+        FirebaseCourse.init(firebaseConfig);
+        
+        // Configura os botões de Login/Cadastro
+        setupAuthEventListeners(); 
+        
+        // Adiciona listener para o botão de Sair (Logout)
+        document.getElementById('logout-button')?.addEventListener('click', FirebaseCourse.signOutUser);
+        document.getElementById('logout-expired-button')?.addEventListener('click', FirebaseCourse.signOutUser);
+
+        // O checkAuth agora controla o início do app
+        FirebaseCourse.checkAuth((user, userData) => {
+            onLoginSuccess(user, userData);
+        });
+        
+        // Configura os listeners de UI que não dependem de login
+        setupHeaderScroll();
+        setupRippleEffects();
+    }
+    
+    // --- NOVA FUNÇÃO: INICIA O APP APÓS LOGIN VÁLIDO ---
+    function onLoginSuccess(user, userData) {
+        console.log(`Login bem-sucedido. Iniciando app para ${userData.name}`);
+        
+        // 1. Esconde o modal de login
+        document.getElementById('name-prompt-modal')?.classList.remove('show');
+        document.getElementById('name-modal-overlay')?.classList.remove('show');
+        
+        // 2. Define a saudação (lógica do antigo handlePersonalGreeting)
+        const greetingEl = document.getElementById('welcome-greeting');
+        if(greetingEl) greetingEl.textContent = `Olá, ${userData.name}!`;
+        
+        // 3. Define a marca d'água (lógica do antigo setupPrintWatermarkContent)
+        if (printWatermark) {
+            printWatermark.textContent = `Conteúdo Exclusivo de ${userData.name} - Proibida a Reprodução`;
+        }
+
+        // 4. Inicia o resto do app (lógica do antigo init())
+        // ESTES SÃO OS ELEMENTOS QUE ESTAVAM DANDO 'null'
         document.getElementById('total-modules').textContent = totalModules;
         document.getElementById('course-modules-count').textContent = totalModules;
+        
         populateModuleLists();
         updateProgress();
-        addEventListeners();
+        addEventListeners(); // Adiciona os listeners principais do app
         handleInitialLoad();
-        setupPrintWatermarkContent();
+    }
+
+    // --- NOVA FUNÇÃO: GERENCIA OS BOTÕES DE LOGIN/CADASTRO ---
+    function setupAuthEventListeners() {
+        const nameField = document.getElementById('name-field-container');
+        const nameInput = document.getElementById('name-input');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const feedback = document.getElementById('auth-feedback');
+        
+        const loginGroup = document.getElementById('login-button-group');
+        const signupGroup = document.getElementById('signup-button-group');
+        const authTitle = document.getElementById('auth-title');
+        const authMsg = document.getElementById('auth-message');
+
+        const btnShowLogin = document.getElementById('show-login-button');
+        const btnShowSignup = document.getElementById('show-signup-button');
+        const btnLogin = document.getElementById('login-button');
+        const btnSignup = document.getElementById('signup-button');
+
+        // Alternar para modo CADASTRO
+        btnShowSignup?.addEventListener('click', () => {
+            loginGroup.classList.add('hidden');
+            signupGroup.classList.remove('hidden');
+            nameField.classList.remove('hidden');
+            authTitle.textContent = "Criar Nova Conta";
+            authMsg.textContent = "Preencha seus dados para iniciar o trial de 30 dias.";
+            feedback.textContent = "";
+        });
+        
+        // Alternar para modo LOGIN
+        btnShowLogin?.addEventListener('click', () => {
+            loginGroup.classList.remove('hidden');
+            signupGroup.classList.add('hidden');
+            nameField.classList.add('hidden');
+            authTitle.textContent = "Acessar Plataforma";
+            authMsg.textContent = "Entre com seu e-mail e senha para continuar.";
+            feedback.textContent = "";
+        });
+        
+        // Ação de LOGIN
+        btnLogin?.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                feedback.textContent = "Por favor, preencha e-mail e senha.";
+                return;
+            }
+            feedback.textContent = "Entrando...";
+            try {
+                await FirebaseCourse.signInWithEmail(email, password);
+                feedback.textContent = "Login com sucesso! Carregando...";
+            } catch (error) {
+                console.error("Erro de Login:", error.code);
+                if (error.code === 'auth/invalid-credential') {
+                    feedback.textContent = "E-mail ou senha inválidos.";
+                } else {
+                    feedback.textContent = "Erro ao tentar fazer login.";
+                }
+            }
+        });
+        
+        // Ação de CADASTRO
+        btnSignup?.addEventListener('click', async () => {
+            const name = nameInput.value;
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            if (!name || !email || !password) {
+                feedback.textContent = "Por favor, preencha nome, e-mail e senha.";
+                return;
+            }
+            if (password.length < 6) {
+                feedback.textContent = "A senha deve ter no mínimo 6 caracteres.";
+                return;
+            }
+            feedback.textContent = "Criando conta...";
+            try {
+                await FirebaseCourse.signUpWithEmail(name, email, password);
+                feedback.textContent = "Conta criada! Carregando...";
+            } catch (error) {
+                console.error("Erro de Cadastro:", error.code);
+                if (error.code === 'auth/email-already-in-use') {
+                    feedback.textContent = "Este e-mail já está em uso. Tente fazer login.";
+                } else {
+                    feedback.textContent = "Erro ao criar a conta.";
+                }
+            }
+        });
     }
 
     // --- Lógica de Carregamento Inicial ---
@@ -88,36 +233,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LAZY LOADING DE PERGUNTAS (Estável) ---
-    // <<< INÍCIO DA CORREÇÃO >>>
-    // Esta função foi substituída para ler do QUIZ_DATA global (de quizzes.js)
-    // em vez de carregar scripts dinamicamente.
+    // --- LAZY LOADING DE PERGUNTAS (Corrigido) ---
     async function loadQuestionBank(moduleId) {
-        // 1. Check cache first
         if (cachedQuestionBanks[moduleId]) {
             return cachedQuestionBanks[moduleId];
         }
-
-        // 2. Check if the global QUIZ_DATA (from quizzes.js) exists
         if (typeof QUIZ_DATA === 'undefined') {
             console.error("Erro fatal: quizzes.js não carregou ou 'QUIZ_DATA' não está definido.");
-            return null; // Isso vai disparar o erro no 'loadModuleContent'
+            return null;
         }
-
-        // 3. Get the specific questions from the global object
         const questions = QUIZ_DATA[moduleId];
-
-        // 4. Check if questions for this module exist
         if (!questions || !Array.isArray(questions) || questions.length === 0) {
             console.warn(`Nenhum quiz encontrado em QUIZ_DATA para o módulo: ${moduleId}`);
-            return null; // Isso vai disparar o erro no 'loadModuleContent'
+            return null; 
         }
-
-        // 5. Save to cache and return
         cachedQuestionBanks[moduleId] = questions;
         return questions;
     }
-    // <<< FIM DA CORREÇÃO >>>
 
     // --- FUNÇÃO DE CARREGAR MÓDULO (COM SCROLL CORRIGIDO) ---
     async function loadModuleContent(id) {
@@ -126,11 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('gateBombeiroLastModule', id);
         
         const d = moduleContent[id];
-        
-        // *** CORREÇÃO DO CRASH TYPO ***
-        // Removido o '_' extra de 'note-'_ + id'
         const savedNote = localStorage.getItem('note-' + id) || ''; 
-        
         const categoryColor = getCategoryColor(id);
         
         contentArea.style.opacity = '0';
@@ -138,17 +266,13 @@ document.addEventListener('DOMContentLoaded', () => {
         contentArea.classList.add('hidden'); 
 
         let allQuestions = null;
-        // O nome do arquivo agora é apenas para depuração
-        const scriptFileName = questionSources[id] || 'Arquivo não mapeado (course.js)';
         
         try {
-            // Agora chama a nova função 'loadQuestionBank' corrigida
             allQuestions = await loadQuestionBank(id);
         } catch(error) {
              console.error("Erro no carregamento do quiz:", error);
         }
         
-        // --- Renderização do Conteúdo ---
         setTimeout(() => {
             loadingSpinner.classList.add('hidden');
             contentArea.classList.remove('hidden'); 
@@ -159,10 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             if (allQuestions && allQuestions.length > 0) {
-                
                 const questionsToDisplay = 4;
                 const count = Math.min(allQuestions.length, questionsToDisplay); 
-                
                 const shuffledQuestions = shuffleArray(allQuestions);
                 const selectedQuestions = shuffledQuestions.slice(0, count);
 
@@ -185,11 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 html += quizHtml;
             } else {
-                // Mensagem de erro se 'allQuestions' for nulo ou vazio
                 console.error(`Falha ao carregar quiz: 'QUIZ_DATA.${id}' está indefinido ou vazio.`);
                 html += `<div class="warning-box mt-8">
                             <p><strong><i class="fas fa-exclamation-triangle mr-2"></i> Exercícios não encontrados.</strong></p>
-                            <p>Não foi possível encontrar as perguntas de fixação para este módulo no arquivo <code>quizzes.js</code>. Verifique se <code>QUIZ_DATA['${id}']</code> existe e não está vazio.</p>
+                            <p>Não foi possível encontrar as perguntas de fixação para este módulo no arquivo <code>quizzes.js</code>.</p>
                          </div>`;
             }
 
@@ -230,35 +351,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleQuizOptionClick(e) {
         const o = e.currentTarget;
         if (o.disabled) return;
-
         const moduleId = o.dataset.module;
         const questionId = o.dataset.questionId;
         const selectedAnswer = o.dataset.answer;
-
         const questionData = cachedQuestionBanks[moduleId]?.find(q => q.id === questionId);
         if (!questionData) {
             console.error(`Pergunta ${questionId} não encontrada no cache.`);
             return; 
         }
-
         const correctAnswer = questionData.answer;
         const explanationText = questionData.explanation || 'Nenhuma explicação disponível.';
-        
         const optionsGroup = o.closest('.quiz-options-group');
         const feedbackArea = document.getElementById(`feedback-${questionId}`);
-
         optionsGroup.querySelectorAll(`.quiz-option[data-question-id="${questionId}"]`).forEach(opt => {
             opt.disabled = true;
             if (opt.dataset.answer === correctAnswer) {
                 opt.classList.add('correct');
             }
         });
-
         let feedbackContent = '';
         if (selectedAnswer === correctAnswer) {
             o.classList.add('correct');
             feedbackContent = `<strong class="font-semibold text-green-700 dark:text-green-400"><i class="fas fa-check-circle mr-2"></i> Correto!</strong> ${explanationText}`;
-            
             try {
                 if (typeof triggerSuccessParticles === 'function') {
                     triggerSuccessParticles(e, o);
@@ -266,14 +380,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error('Erro ao executar triggerSuccessParticles:', err);
             }
-
         } else {
             o.classList.add('incorrect');
-            
             feedbackContent = `<strong class="font-semibold text-red-700 dark:text-red-400"><i class="fas fa-times-circle mr-2"></i> Incorreto.</strong> ${explanationText} 
                                 <span class="text-sm italic block mt-1"> (Dica: A resposta correta foi destacada em verde.)</span>`;
         }
-        
         if (feedbackArea) {
             feedbackArea.innerHTML = `<div class="explanation mt-2">${feedbackContent}</div>`;
             feedbackArea.classList.remove('hidden');
@@ -283,27 +394,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FUNÇÃO DE BREADCRUMBS (NAVEGAÇÃO APRIMORADA) ---
     function updateBreadcrumbs(moduleTitle = 'Início') {
         const homeLink = `<a href="#" id="home-breadcrumb" class="text-blue-600 dark:text-blue-400 hover:text-orange-500 transition-colors"><i class="fas fa-home mr-1"></i> Início</a>`;
-        
         if (!currentModuleId) {
             breadcrumbContainer.innerHTML = homeLink;
-            return;
-        }
-
-        const category = Object.values(moduleCategories).find(cat => {
-            const moduleNum = parseInt(currentModuleId.replace('module', ''));
-            return moduleNum >= cat.range[0] && moduleNum <= cat.range[1];
-        });
-
-        if (category) {
-            const categoryLink = `<span class="mx-2 text-gray-400">/</span> <span class="font-bold text-gray-700 dark:text-gray-300">${category.title}</span>`;
-            const moduleSpan = `<span class="mx-2 text-gray-400">/</span> <span class="text-orange-500">${moduleTitle}</span>`;
-            
-            breadcrumbContainer.innerHTML = `${homeLink} ${categoryLink} ${moduleSpan}`;
         } else {
-            breadcrumbContainer.innerHTML = `${homeLink} <span class="mx-2 text-gray-400">/</span> ${moduleTitle}`;
+            const category = Object.values(moduleCategories).find(cat => {
+                const moduleNum = parseInt(currentModuleId.replace('module', ''));
+                return moduleNum >= cat.range[0] && moduleNum <= cat.range[1];
+            });
+            if (category) {
+                const categoryLink = `<span class="mx-2 text-gray-400">/</span> <span class="font-bold text-gray-700 dark:text-gray-300">${category.title}</span>`;
+                const moduleSpan = `<span class="mx-2 text-gray-400">/</span> <span class="text-orange-500">${moduleTitle}</span>`;
+                breadcrumbContainer.innerHTML = `${homeLink} ${categoryLink} ${moduleSpan}`;
+            } else {
+                breadcrumbContainer.innerHTML = `${homeLink} <span class="mx-2 text-gray-400">/</span> ${moduleTitle}`;
+            }
         }
-        
-        document.getElementById('home-breadcrumb')?.addEventListener('click', goToHomePage);
+        document.getElementById('home-breadcrumb')?.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            goToHomePage();
+        });
     }
     
     // --- FUNÇÕES DE UTILIDADE ---
@@ -314,7 +423,6 @@ document.addEventListener('DOMContentLoaded', () => {
             notesTextarea.style.webkitUserSelect = 'auto';
             notesTextarea.style.mozUserSelect = 'auto';
             notesTextarea.style.msUserSelect = 'auto';
-            
             notesTextarea.addEventListener('keyup', () => {
                 localStorage.setItem('note-' + id, notesTextarea.value);
             });
@@ -327,17 +435,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function goToHomePage() {
         localStorage.removeItem('gateBombeiroLastModule'); 
         
-        contentArea.innerHTML = getWelcomeContent();
-        document.getElementById('module-nav').classList.add('hidden');
+        if (contentArea) {
+            contentArea.innerHTML = getWelcomeContent();
+        }
+        document.getElementById('module-nav')?.classList.add('hidden');
         document.querySelectorAll('.module-list-item.active').forEach(i => i.classList.remove('active'));
         currentModuleId = null;
         closeSidebar();
         document.getElementById('next-module')?.classList.remove('blinking-button');
-
+        
         const btn = document.getElementById('start-course');
         if (btn) {
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
+            
             newBtn.addEventListener('click', () => {
                 loadModuleContent('module1');
                 const firstAccordionButton = document.querySelector('#desktop-module-container .accordion-button');
@@ -350,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        updateBreadcrumbs(); // Atualiza breadcrumb para "Início"
+        updateBreadcrumbs();
     }
 
     function getWelcomeContent() {
@@ -423,8 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'legislacao': return 'text-orange-500'; 
                     case 'salvamento': return 'text-blue-500'; 
                     case 'pci': return 'text-red-500'; 
-                    case 'aph': return 'text-green-500'; 
-                    case 'phtls': return 'text-teal-500'; 
+                    case 'aph_novo': return 'text-green-500'; 
+                    case 'nr33': return 'text-teal-500';       
                     case 'nr35': return 'text-indigo-500'; 
                     default: return 'text-gray-500';
                 }
@@ -433,39 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'text-gray-500';
     }
     
-    function handlePersonalGreeting() {
-        const nameModal = document.getElementById('name-prompt-modal');
-        const nameOverlay = document.getElementById('name-modal-overlay');
-        const saveButton = document.getElementById('save-name-button');
-        const nameInput = document.getElementById('name-input');
-        const greetingEl = document.getElementById('welcome-greeting');
-        
-        if (!nameModal || !nameOverlay || !saveButton || !nameInput || !greetingEl) return;
-
-        const studentName = localStorage.getItem('studentName');
-        if (!studentName) {
-            nameModal.classList.add('show');
-            nameOverlay.classList.add('show');
-            nameInput.focus();
-            saveButton.onclick = () => {
-                const name = nameInput.value.trim() || "Aluno(a)";
-                localStorage.setItem('studentName', name);
-                greetingEl.textContent = `Olá, ${name}!`;
-                nameModal.classList.remove('show');
-                nameOverlay.classList.remove('show');
-                setupPrintWatermarkContent();
-            };
-            nameInput.onkeydown = e => { if (e.key === 'Enter') saveButton.click(); };
-        } else {
-            greetingEl.textContent = `Olá, ${studentName}!`;
-        }
-    }
-    function setupPrintWatermarkContent() {
-        const studentName = localStorage.getItem('studentName') || 'Aluno(a)';
-        if (printWatermark) {
-            printWatermark.textContent = `Conteúdo Exclusivo de ${studentName} - Proibida a Reprodução`;
-        }
-    }
     function closeSidebar() {
         if (sidebar) sidebar.classList.remove('open');
         if (sidebarOverlay) {
@@ -516,15 +594,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return html;
 }
 
-    // --- CORREÇÃO (Request Minimalista) ---
     function updateProgress() {
         const p = (completedModules.length / totalModules) * 100;
         
-        // Atualiza o texto DENTRO do wrapper sticky
-        document.getElementById('progress-text').textContent = `${p.toFixed(0)}%`;
-        document.getElementById('completed-modules-count').textContent = completedModules.length;
+        const progressTextEl = document.getElementById('progress-text');
+        if (progressTextEl) progressTextEl.textContent = `${p.toFixed(0)}%`;
         
-        // Atualiza a barra minimalista DENTRO do wrapper sticky
+        const completedCountEl = document.getElementById('completed-modules-count');
+        if (completedCountEl) completedCountEl.textContent = completedModules.length;
+        
         const progressBarMinimal = document.getElementById('progress-bar-minimal');
         if (progressBarMinimal) {
             progressBarMinimal.style.width = `${p}%`;
@@ -534,12 +612,10 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAchievements();
         if (totalModules > 0 && completedModules.length === totalModules) showCongratulations();
     }
-    // --- FIM DA CORREÇÃO ---
-
 
     function showCongratulations() {
-        document.getElementById('congratulations-modal').classList.add('show');
-        document.getElementById('modal-overlay').classList.add('show');
+        document.getElementById('congratulations-modal')?.classList.add('show');
+        document.getElementById('modal-overlay')?.classList.add('show');
         if(typeof confetti === 'function') {
             confetti({particleCount:150, spread:90, origin:{y:0.6},zIndex:200});
         }
@@ -548,7 +624,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.innerHTML = `<i class="fas fa-trophy"></i><div><p class="font-bold">Módulo Concluído!</p><p class="text-sm">${title}</p></div>`;
-        toastContainer.appendChild(toast);
+        if (toastContainer) {
+            toastContainer.appendChild(toast);
+        }
         setTimeout(() => toast.remove(), 4500);
     }
     function updateModuleListStyles() {
@@ -595,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
         achievementModal?.classList.remove('show');
         achievementOverlay?.classList.remove('show');
     }
-    
+
     function toggleFocusMode() {
         const isEnteringFocusMode = !document.body.classList.contains('focus-mode');
         document.body.classList.toggle('focus-mode');
@@ -654,19 +732,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.module-list-item').forEach(i => i.classList.toggle('active', i.dataset.module === currentModuleId));
     }
     function updateNavigationButtons() {
+        const prevModule = document.getElementById('prev-module');
+        const nextModule = document.getElementById('next-module');
+        if (!prevModule || !nextModule) return;
+
         if (!currentModuleId) {
-             document.getElementById('prev-module').disabled = true;
-             document.getElementById('next-module').disabled = true;
+             prevModule.disabled = true;
+             nextModule.disabled = true;
              return;
         }
         const n = parseInt(currentModuleId.replace('module',''));
-        document.getElementById('prev-module').disabled = (n === 1);
-        document.getElementById('next-module').disabled = (n === totalModules);
+        prevModule.disabled = (n === 1);
+        nextModule.disabled = (n === totalModules);
     }
     function setupQuizListeners() {
         document.querySelectorAll('.quiz-option').forEach(o => o.addEventListener('click', handleQuizOptionClick));
     }
-    
+
     // --- FUNÇÃO ADDEVENTLISTENERS (COM LÓGICA DO MODAL DE RESET) ---
     function addEventListeners() {
         const nextButton = document.getElementById('next-module');
@@ -776,7 +858,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         confirmResetButton?.addEventListener('click', () => {
-            localStorage.removeItem('studentName');
             localStorage.removeItem('gateBombeiroCompletedModules_v3');
             localStorage.removeItem('gateBombeiroNotifiedAchievements_v3');
             
@@ -786,8 +867,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
-            alert('Progresso resetado. Por favor, insira seu nome novamente.');
-            location.reload();
+            alert('Progresso local resetado.');
+            window.location.reload();
         });
         
         const backToTopButton = document.getElementById('back-to-top');
@@ -813,7 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    
+
     // --- MICRO ANIMAÇÃO DE SUCESSO ---
     function triggerSuccessParticles(clickEvent, element) {
       if (typeof confetti === 'function') {
@@ -829,7 +910,6 @@ document.addEventListener('DOMContentLoaded', () => {
           zIndex: 3000
         });
       }
-
       const container = document.createElement('div');
       container.className = 'gold-particles-container';
       container.style.position = 'fixed'; 
@@ -840,11 +920,9 @@ document.addEventListener('DOMContentLoaded', () => {
       container.style.height = '100%';
       container.style.zIndex = '4000';
       document.body.appendChild(container);
-
       const rect = (element && element.getBoundingClientRect) ? element.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
       const cx = rect.left + (rect.width / 2);
       const cy = rect.top + (rect.height / 2);
-
       for (let i = 0; i < 12; i++) {
         const p = document.createElement('div');
         p.className = 'gold-particle';
@@ -852,11 +930,9 @@ document.addEventListener('DOMContentLoaded', () => {
         p.style.top = `${cy}px`;
         p.style.transform = 'translate(-50%, -50%)';
         container.appendChild(p);
-
         const dx = (Math.random() - 0.5) * 180;
         const dy = -Math.random() * 150 - 20;
         const rot = Math.random() * 360;
-
         p.animate(
           [
             { transform: `translate(-50%, -50%) translate(0px, 0px) rotate(0deg)`, opacity: 1 },
@@ -867,69 +943,62 @@ document.addEventListener('DOMContentLoaded', () => {
             easing: 'cubic-bezier(.2,.7,.2,1)'
           }
         );
-
         setTimeout(() => p.remove(), 1500);
       }
-
       setTimeout(() => { if (container && container.parentNode) container.remove(); }, 1800);
     }
 
+    // ===== HEADER SCROLL EFFECT (MOVIDO) =====
+    function setupHeaderScroll() {
+        const header = document.getElementById('main-header');
+        if (header) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) header.classList.add('scrolled');
+                else header.classList.remove('scrolled');
+            });
+        }
+    }
+
+    // ===== EFEITO RIPPLE (MOVIDO) =====
+    function setupRippleEffects() {
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.action-button');
+            if (btn) {
+                const oldRipple = btn.querySelector('.ripple');
+                if (oldRipple) oldRipple.remove();
+
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+                ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            const option = e.target.closest('.quiz-option');
+            if (option) {
+                const oldRipple = option.querySelector('.ripple');
+                if (oldRipple) oldRipple.remove();
+
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                const rect = option.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+                ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
+
+                option.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+        });
+    }
+
     // --- INICIALIZAÇÃO DO APP ---
+    // A chamada init() agora está segura dentro do DOMContentLoaded.
     init();
-});
-// ===== HEADER SCROLL EFFECT =====
-document.addEventListener('DOMContentLoaded', () => {
-  const header = document.getElementById('main-header');
-
-  if (header) {
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) header.classList.add('scrolled');
-      else header.classList.remove('scrolled');
-    });
-  }
- // ==== BOTÕES: EFEITO RIPPLE ====
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.action-button');
-  if (!btn) return;
-
-  // Remove qualquer ripple anterior
-  const oldRipple = btn.querySelector('.ripple');
-  if (oldRipple) oldRipple.remove();
-
-  // Cria o novo círculo de onda
-  const ripple = document.createElement('span');
-  ripple.classList.add('ripple');
-  const rect = btn.getBoundingClientRect();
-  const size = Math.max(rect.width, rect.height);
-  ripple.style.width = ripple.style.height = size + 'px';
-  ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
-  ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
-
-  // Adiciona e remove após animação
-  btn.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-});
-// ==== PERGUNTAS: EFEITO RIPPLE ====
-document.addEventListener('click', function (e) {
-  const option = e.target.closest('.quiz-option');
-  if (!option) return;
-
-  // Remove qualquer ripple anterior
-  const oldRipple = option.querySelector('.ripple');
-  if (oldRipple) oldRipple.remove();
-
-  // Cria o novo círculo de onda
-  const ripple = document.createElement('span');
-  ripple.classList.add('ripple');
-  const rect = option.getBoundingClientRect();
-  const size = Math.max(rect.width, rect.height);
-  ripple.style.width = ripple.style.height = size + 'px';
-  ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
-  ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
-
-  // Adiciona e remove após animação
-  option.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-});
-
 });

@@ -7,10 +7,10 @@ const PRECACHE_URLS = [
   '/', 
   '/index.html',
   '/style.css',
-  '/app.js',
+  '/app_final.js', /* <<< CORRIGIDO (estava app.js) */
   '/data.js',
   '/quizzes.js',
-  '/course.js'
+  '/course.js' /* <<< CORRIGIDO (mantido para bater com o index.html) */
 ];
 
 self.addEventListener('install', event => {

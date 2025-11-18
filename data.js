@@ -1632,7 +1632,12 @@ for (let i = 1; i <= 52; i++) {
     questionSources[`module${i}`] = `module${i}-quiz.js`; 
 
 }
-
+/* === CORREÇÃO: Expor variáveis para o escopo global === */
+// Adicione estas 4 linhas no final do seu arquivo data.js
+if (typeof window !== 'undefined') {
+  window.moduleContent = moduleContent;
+  window.moduleCategories = moduleCategories;
+}
 
 
 
