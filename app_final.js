@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL - CORREÇÃO ADMIN MOBILE & BÔNUS) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL - PERGUNTAS ALEATÓRIAS CORRIGIDAS) === */
 
 // ESPERA O HTML ESTAR 100% CARREGADO ANTES DE EXECUTAR QUALQUER COISA
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelResetButton = document.getElementById('cancel-reset-button');
 
     const adminBtn = document.getElementById('admin-panel-btn');
-    const mobileAdminBtn = document.getElementById('mobile-admin-btn'); // Seletor do botão mobile
+    const mobileAdminBtn = document.getElementById('mobile-admin-btn');
     const adminModal = document.getElementById('admin-modal');
     const adminOverlay = document.getElementById('admin-modal-overlay');
     const closeAdminBtn = document.getElementById('close-admin-modal');
@@ -152,10 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
-        // --- CORREÇÃO: Lógica do Botão Admin para MOBILE e Desktop ---
+        // --- Lógica do Botão Admin ---
         if (userData.isAdmin === true) {
-            if(adminBtn) adminBtn.classList.remove('hidden'); // Desktop
-            if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden'); // Mobile
+            if(adminBtn) adminBtn.classList.remove('hidden');
+            if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
 
         checkTrialStatus(userData.acesso_ate);
@@ -502,8 +502,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (allQuestions && allQuestions.length > 0) {
                 const questionsToDisplay = 4;
                 const count = Math.min(allQuestions.length, questionsToDisplay); 
-                const shuffledQuestions = shuffleArray(allQuestions);
+                // CORREÇÃO ALEATORIEDADE: Embaralha SEMPRE a cada carregamento
+                const shuffledQuestions = shuffleArray([...allQuestions]); // Cria cópia para garantir
                 const selectedQuestions = shuffledQuestions.slice(0, count);
+                
                 let quizHtml = `<div class="quiz-section-separator"></div><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Exercícios de Fixação</h3>`;
                 selectedQuestions.forEach((q, index) => {
                     const questionNumber = index + 1;
