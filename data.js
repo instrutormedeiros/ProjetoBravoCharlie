@@ -1692,7 +1692,7 @@ const moduleContent = {
 
         <div class="key-concept">
             <h5>Como Acessar</h5>
-            <p>Clique no botão azul acima ("VER FOTOS E VÍDEOS DESTA MATÉRIA") para ser redirecionado automaticamente para a pasta segura no Google Drive.</p>
+            <p>Clique no botão azul  ("VER FOTOS E VÍDEOS DESTA MATÉRIA") para ser redirecionado automaticamente para a pasta segura no Google Drive.</p>
         </div>
         ` 
     },
@@ -1717,4 +1717,5 @@ if (typeof window !== 'undefined') {
   window.moduleContent = moduleContent;
   window.moduleCategories = moduleCategories;
 }
+
 
