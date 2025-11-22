@@ -1647,27 +1647,58 @@ const moduleContent = {
         content: `<h4>Técnicas de Resgate Simples, Complexo e Auto-Resgate</h4><p>Este módulo aborda as técnicas de resgate em alturas, divididas em três categorias, cada uma com equipamentos e procedimentos específicos:</p><h5>Resgate Simples:</h5><p>Para vítimas com lesões leves, realizado por um bombeiro. Equipamentos mínimos incluem:</p><ul><li><strong>Individuais:</strong> Cinto paraquedista, capacete, 4 mosquetões de aço, 2 de alumínio (com e sem trava), blocantes, freio oito, cordeletes, luvas, óculos e cantil.</li><li><strong>Coletivos:</strong> Cabos solteiros, lanternas, coletes refletivos, fitas zebradas, cones, binóculos, croque, maca flexível, kit de primeiros socorros, cordas estáticas, triângulo de evacuação, descensores (Rack, Stop) e roldanas.</li></ul><h5>Resgate Complexo:</h5><p>Para vítimas com lesões graves (fraturas, hemorragias, traumatismos), exigindo equipe de pelo menos quatro bombeiros. Inclui:</p><ul><li><strong>Técnicas de içamento:</strong> Usam sistemas 3:1 com roldanas e blocantes para reduzir o peso da vítima a um terço, facilitando o içamento.</li><li><strong>Técnicas de descensão:</strong> Com macas (duas cordas: principal e de segurança) ou triângulos de evacuação. Socorristas podem acompanhar a maca em terrenos acidentados, ou usar cabo-guia para evitar obstáculos.</li></ul><h5>Auto-Resgate:</h5><p>Técnicas realizadas por um socorrista sem apoio, como:</p><ul><li><strong>Corte no cabo da vítima:</strong> Socorrista na ancoragem ou descendo até a vítima, usando novo cabo de resgate e nós blocantes (prússico, machard).</li><li><strong>Preservando o cabo da vítima:</strong> Usando valdotan ou blocantes, acessando por cima ou por baixo, com procedimentos como clipagem de longes e uso de estribos.</li><li><strong>Transposição de nó:</strong> Para subir ou descer em cabos emendados, usando blocantes e longes para passar pelo nó.</li></ul>` 
     },
 'module53': { 
-    id: "module900", 
-    title: "Simulado Geral 1", 
-    iconClass: "fas fa-edit", 
-    content: "<h3>Simulado Geral 1</h3><p>Em breve disponível.</p>" 
-},
-    'module54': { 
-        id: "module901", 
-        title: "Simulado Geral 2", 
+        id: "module53", 
+        title: "53. Simulado Geral 1", 
         iconClass: "fas fa-edit", 
-        content: "<h3>Simulado Geral 2</h3><p>Em breve disponível.</p>" 
+        content: `
+        <h3>Simulado Geral de Conhecimentos</h3>
+        <p>Este simulado abrange todas as áreas do curso para testar seu nível de preparação.</p>
+        <div class="warning-box">
+            <p><strong>Instruções:</strong> Responda as questões abaixo sem consultar o material. O objetivo é avaliar sua retenção de conhecimento.</p>
+        </div>
+        ` 
     },
+    'module54': { 
+        id: "module54", 
+        title: "54. Simulado Geral 2", 
+        iconClass: "fas fa-edit", 
+        content: `
+        <h3>Simulado Geral Avançado</h3>
+        <p>Teste final para consolidar seu aprendizado.</p>
+        <div class="key-concept">
+            <h5>Dica de Ouro</h5>
+            <p>Revise os módulos onde você teve mais dificuldade antes de iniciar este simulado.</p>
+        </div>
+        ` 
+    },
+    // --- AQUI ESTÁ O MÓDULO 55 CONFIGURADO COM SEU LINK ---
     'module55': { 
-        id: "module990", 
-        title: "Material Bônus", 
+        id: "module55", 
+        title: "55. Bônus: Material Exclusivo (Drive)", 
         iconClass: "fas fa-star", 
-        content: "<h3>Conteúdo Exclusivo</h3><p>Materiais extras para assinantes.</p>" 
+        // O LINK QUE VOCÊ MANDOU VAI AQUI:
+        driveLink: "https://drive.google.com/drive/folders/1_3zurujjEjatAA6wbiHw6BMzMd7Nakch?usp=drive_link",
+        content: `
+        <h3><i class="fas fa-crown text-yellow-500 mr-2"></i> Acesso VIP à Biblioteca Digital</h3>
+        <p>Parabéns por investir na sua formação profissional! Como assinante Premium, você tem acesso vitalício à nossa biblioteca de materiais complementares.</p>
+        
+        <h4>O que você vai encontrar no Drive:</h4>
+        <ul>
+            <li><strong>Apostilas Completas em PDF:</strong> Material teórico aprofundado para leitura offline.</li>
+            <li><strong>Vídeos Práticos:</strong> Demonstrações de nós, amarrações e primeiros socorros.</li>
+            <li><strong>Banco de Imagens:</strong> Fotos reais de treinamentos e ocorrências para estudo de caso.</li>
+            <li><strong>Planilhas e Checklists:</strong> Documentos prontos para uso no seu dia a dia profissional (Checklist de Extintores, Modelos de Relatório).</li>
+        </ul>
+
+        <div class="key-concept">
+            <h5>Como Acessar</h5>
+            <p>Clique no botão azul acima ("VER FOTOS E VÍDEOS DESTA MATÉRIA") para ser redirecionado automaticamente para a pasta segura no Google Drive.</p>
+        </div>
+        ` 
     },
-    
 };
 
-/* === MAPA DAS CATEGORIAS (Foco na Navegação Aprimorada) === */
+/* === MAPA DAS CATEGORIAS === */
 const moduleCategories = { 
     rh: { id: "rh", title: "Relações Humanas", achievementTitle: "Excelente Comunicador", range: [1, 5], icon: "fas fa-users" }, 
     legislacao: { id: "legislacao", title: "Legislação Aplicada", achievementTitle: "Mestre em Leis", range: [6, 10], icon: "fas fa-gavel" }, 
@@ -1676,39 +1707,13 @@ const moduleCategories = {
     aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: "fas fa-briefcase-medical" }, 
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
     nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
-    // MUDANÇA 2: ADICIONADO isPremium: true
-    simulados: { id: "simulados", title: "Simulados Gerais", achievementTitle: "Doutorado em Testes", range: [53, 54], icon: "fas fa-clipboard-check", isPremium: true },
-    bonus: { id: "bonus", title: "Bônus Exclusivos", achievementTitle: "Caçador de Recompensas", range: [54, 55], icon: "fas fa-star", isPremium: true }
+    // CATEGORIAS PREMIUM
+    simulados: { id: "simulados", title: "Simulados Gerais", achievementTitle: "Mestre dos Testes", range: [53, 54], icon: "fas fa-clipboard-check", isPremium: true },
+    bonus: { id: "bonus", title: "Bônus Exclusivos", achievementTitle: "Caçador de Recompensas", range: [55, 55], icon: "fas fa-star", isPremium: true }
 };
-/* === NOVO: FONTE DE DADOS PARA LAZY LOADING === */
 
-/*
-    Este objeto mapeia os IDs dos módulos para o nome do arquivo 
-    JSON que contém as perguntas daquele módulo.
-    
-    EXEMPLO: module1 usará o arquivo 'module1-quiz.js'.
-    
-    O app.js buscará este arquivo apenas quando o usuário clicar no módulo.
-    
-    ESTRUTURA NECESSÁRIA DOS ARQUIVOS DE PERGUNTAS (crie 59 arquivos separados):
-    // Dentro de 'module1-quiz.js'
-    const questionBank = {
-        'module1': [
-            // TODAS AS PERGUNTAS DO MÓDULO 1
-        ]
-    }; 
-*/
-const questionSources = {};
-for (let i = 1; i <= 52; i++) {
-    questionSources[`module${i}`] = `module${i}-quiz.js`; 
-
-}
-/* === CORREÇÃO: Expor variáveis para o escopo global === */
-// Adicione estas 4 linhas no final do seu arquivo data.js
+/* === EXPORTAÇÃO === */
 if (typeof window !== 'undefined') {
   window.moduleContent = moduleContent;
   window.moduleCategories = moduleCategories;
 }
-
-
-
