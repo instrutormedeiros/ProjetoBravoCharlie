@@ -1,101 +1,116 @@
-/* === ARQUIVO data.js (SOMENTE CONTEÚDO E ESTRUTURA) === */
+/* === ARQUIVO data.js (CONTEÚDO COM LINKS DO DRIVE) === */
 
-// MAPA DE MÓDULOS (Permanece para que a navegação inicial funcione)
 const moduleContent = {
     'module1': { 
         id: "module1", 
         title: "1. RH: Fundamentos da Comunicação", 
         iconClass: "fas fa-comments", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI", // <--- ADICIONE SEUS LINKS AQUI
         content: `<h4>1.1 O que é Comunicação?</h4><p>A comunicação é o coração das nossas interações. É o processo de compartilhar ideias, emoções e informações, usando símbolos como palavras, gestos ou imagens. Ela é fundamental para criar conexões e fortalecer tanto as relações humanas quanto as culturais.</p><p>Essencial em todos os aspectos da vida, a comunicação se manifesta de diversas formas: oral, escrita, corporal e digital.</p><h4>1.2 Por que a Comunicação é Importante?</h4><p>A comunicação é a base para:</p><ul><li>Construir amizades e laços familiares sólidos.</li><li>Compartilhar conhecimento e aprender com outras culturas.</li><li>Resolver problemas de forma eficaz e colaborar em equipe.</li><li>Expressar quem somos e compreender o próximo, promovendo a empatia.</li></ul><h4>1.3 Formas de Comunicação</h4><p>Existem duas grandes formas de comunicação: Verbal e Não-verbal.</p><div class="key-concept"><h5>Comunicação Verbal</h5><p>A comunicação verbal foca na formação de frases com coerência para transmitir uma mensagem clara. Ela utiliza, principalmente, as formas orais, escritas e digitais. Exemplos incluem conversas, e-mails, mensagens de aplicativos e comandos de voz.</p></div><div class="key-concept"><h5>Comunicação Não-Verbal</h5><p>A comunicação não-verbal dispensa o uso de frases, concentrando-se em formas corporais e visuais. Exemplos incluem Libras, gestos, expressões faciais, placas de trânsito e emojis.</p></div>` 
     },
     'module2': { 
         id: "module2", 
         title: "2. RH: Processo e Tipos de Comunicação", 
         iconClass: "fas fa-sitemap", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>2.1 Elementos da Comunicação</h4><p>Para que a comunicação aconteça, alguns elementos são essenciais:</p><ul><li><strong>Emissor:</strong> Aquele que emite a mensagem (pessoa, grupo, empresa).</li><li><strong>Receptor:</strong> Quem recebe a mensagem.</li><li><strong>Canal:</strong> O meio por onde a mensagem é transmitida (jornal, TV, conversa presencial).</li><li><strong>Feedback:</strong> A resposta do receptor, indicando se a mensagem foi compreendida.</li></ul><h4>2.2 Tipos de Comunicação</h4><div class="key-concept"><h5>Comunicação Formal</h5><p>É a comunicação oficial e estruturada que segue regras e a hierarquia de um grupo.</p><ul><li><strong>Ascendente:</strong> De um nível inferior para um superior (funcionário para chefe). Serve para dar sugestões ou relatar problemas.</li><li><strong>Descendente:</strong> De um nível superior para um inferior (chefe para funcionário). Serve para dar ordens, explicar regras ou definir metas.</li><li><strong>Horizontal:</strong> Entre pessoas do mesmo nível hierárquico, para facilitar a colaboração.</li></ul></div><div class="key-concept"><h5>Comunicação Informal</h5><p>Acontece de forma espontânea, sem regras ou canais oficiais. Pode causar confusão se não for bem gerenciada. Exemplos incluem:</p><ul><li><strong>Videira:</strong> Informação que se espalha rapidamente, mas sua origem é incerta, como um boato.</li><li><strong>Rumor:</strong> Informação que circula sem confirmação de veracidade e sem fonte confiável.</li><li><strong>Mexerico (ou Fofoca):</strong> Falar sobre pessoas específicas, com informações que podem não ser verdadeiras e com fonte duvidosa.</li></ul></div>` 
     },
     'module3': { 
         id: "module3", 
         title: "3. RH: Percepção Social e Julgamento", 
         iconClass: "fas fa-balance-scale", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<p>Julgamos pessoas constantemente, muitas vezes sem perceber como somos influenciados por comparações, ideias pré-concebidas ou nossas próprias projeções.</p><h4>1. Efeito de Contraste</h4><p>É quando julgamos alguém comparando-o com outra pessoa ou situação que vimos recentemente. Essa comparação pode distorcer nossa opinião, fazendo alguém parecer melhor ou pior do que realmente é.</p><div class="key-concept"><h5>Exemplo Prático</h5><p>Em um concurso de talentos, se um participante canta muito mal, o próximo pode parecer incrível só pelo contraste, mesmo que sua performance seja apenas mediana.</p></div><h4>2. Estereótipo</h4><p>É quando julgamos alguém com base em ideias prontas e generalizadas sobre um grupo, como aparência, idade ou estilo. É como colocar um "rótulo" sem conhecer a pessoa de verdade.</p><div class="key-concept"><h5>Exemplo Prático</h5><p>Achar que uma pessoa de óculos é automaticamente "nerd" ou que alguém com cabelo colorido é "rebelde", sem saber quem ela é de fato.</p></div><h4>3. Projeção</h4><p>É quando atribuímos nossas próprias características, sentimentos ou pensamentos aos outros, como se eles fossem iguais a nós. É como usar um espelho para julgar, projetando nossas experiências internas neles.</p><div class="key-concept"><h5>Exemplo Prático</h5><p>Se você está se sentindo nervoso, pode erroneamente acreditar que todo mundo ao seu redor também está nervoso, mesmo que estejam calmos.</p></div>` 
     },
     'module4': { 
         id: "module4", 
         title: "4. RH: Liderança e Tomada de Decisão", 
         iconClass: "fas fa-user-tie", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<p>Este módulo explora a diferença entre chefiar e liderar, os diversos estilos de liderança e os processos de tomada de decisão em grupo, elementos essenciais para a gestão eficaz de equipes.</p><h4>4.1 Chefe vs. Líder</h4><p>Existe uma diferença crucial entre ser um chefe e ser um líder. Um chefe geralmente foca no controle e na execução de tarefas; ele manda. Um líder inspira, motiva, guia e desenvolve sua equipe; ele engaja e caminha junto.</p><h4>4.2 Tipos de Liderança</h4><ul><li><strong>Liderança Transformacional:</strong> O líder inspira as pessoas a abraçar uma visão, fazendo com que se sintam parte de algo maior. O foco é na ideia e no crescimento da equipe.</li><li><strong>Liderança Carismática:</strong> O líder tem uma personalidade magnética que atrai as pessoas. As pessoas o seguem por causa de sua forte influência pessoal, sendo o líder o centro.</li></ul><h4>4.3 Tipos de Líder</h4><ul><li><strong>Autoritário:</strong> O líder toma todas as decisões sozinho, sem consultar a equipe.</li><li><strong>Laissez-Faire:</strong> O líder dá total autonomia à equipe para tomar suas próprias decisões, intervindo minimamente.</li></ul><h4>4.4 Tomada de Decisão</h4><ul><li><strong>Consultiva:</strong> O líder consulta a equipe, mas a palavra final é dele.</li><li><strong>Democrática:</strong> A decisão é tomada por votação da maioria.</li><li><strong>Consenso:</strong> Todos os membros do grupo concordam com a mesma decisão, buscando total aceitação.</li></ul>` 
     },
     'module5': { 
         id: "module5", 
         title: "5. RH: Inclusão e Tipos de Deficiência", 
         iconClass: "fas fa-wheelchair", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<p>A deficiência é uma limitação ou ausência em alguma função do corpo ou da mente. Conhecer os diferentes tipos é essencial para promover a inclusão.</p><h4>1. Deficiência Física</h4><p>É a limitação no movimento ou na estrutura do corpo, como braços ou pernas, podendo afetar a mobilidade e a coordenação motora. Exemplo: uma pessoa que usa cadeira de rodas.</p><h4>2. Deficiência Visual</h4><p>É a perda parcial ou total da visão, variando desde a baixa visão até a cegueira total. Exemplo: uma pessoa cega que usa bengala para se locomover.</p><h4>3. Deficiência Auditiva</h4><p>É a perda parcial ou total da audição, incluindo desde dificuldades leves até a surdez completa. Exemplo: uma pessoa surda que usa Libras para se comunicar.</p><h4>4. Deficiência Intelectual</h4><p>É a limitação no funcionamento intelectual que afeta áreas como aprendizado, memória e raciocínio. Exemplo: uma pessoa que pode precisar de apoio adicional para aprender novas tarefas e desenvolver habilidades.</p><h4>5. Deficiência Múltipla</h4><p>É a combinação de dois ou mais tipos de deficiência, como física e auditiva. Exige apoios mais variados e personalizados.</p>` 
     },
     'module6': { 
         id: "module6", 
         title: "6. Legislação: NR vs NT", 
         iconClass: "fas fa-balance-scale-right", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>6.1 Norma Regulamentadora (NR)</h4><p>As Normas Regulamentadoras (NRs) são regras criadas pelo Ministério do Trabalho e Emprego (MTE) que tratam de segurança e saúde no trabalho em todo o Brasil.</p><p>Elas são <strong>obrigatórias</strong> para todas as empresas e trabalhadores.</p><p>O descumprimento dessas normas pode gerar multas, penalidades e, em casos mais graves, interdição ou embargo das atividades.</p><h4>6.2 Norma Técnica (NT)</h4><p>As Normas Técnicas (NTs), também conhecidas como NBRs (Normas Brasileiras), são documentos criados por organismos especializados, como a ABNT (Associação Brasileira de Normas Técnicas).</p><p>Elas servem para <strong>padronizar</strong> procedimentos, definir regras, diretrizes e características técnicas, garantindo que algo seja feito sempre da mesma forma, com segurança e qualidade.</p>` 
     },
     'module7': { 
         id: "module7", 
         title: "7. Legislação: Hierarquia da Brigada", 
         iconClass: "fas fa-gavel", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>7.1 O que é a Brigada de Incêndio?</h4><p>É um grupo organizado de pessoas treinadas e capacitadas para atuar na prevenção e em emergências de incêndio e pânico, dentro de uma edificação ou área preestabelecida.</p><h4>7.2 Quem Faz Parte da Brigada?</h4><p>A brigada é composta por diferentes funções, cada uma com sua responsabilidade:</p><ul><li><strong>Supervisor de Brigada:</strong> É o responsável técnico. Ele planeja, organiza, elabora o PPCI e coordena os treinamentos da brigada.</li><li><strong>Chefe de Brigada:</strong> Coordena e orienta as ações de emergência, garantindo que o PPCI seja colocado em prática pela equipe.</li><li><strong>Brigadista Particular:</strong> Profissional credenciado pelo CBMDF com dedicação exclusiva às tarefas da brigada no local onde foi contratado.</li><li><strong>Brigadista Voluntário:</strong> É um funcionário do local, treinado para atuar como apoio em emergências durante seu expediente de trabalho.</li></ul>` 
     },
     'module8': { 
         id: "module8", 
         title: "8. Legislação: Equipamentos e PPCI", 
         iconClass: "fas fa-shield-alt", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>8.1 Equipamentos de Proteção</h4><p>A segurança dos brigadistas e ocupantes do local é prioridade. Para isso, existem dois tipos de equipamentos:</p><ul><li><strong>EPI (Equipamento de Proteção Individual):</strong> Destinado a proteger a integridade física do brigadista contra riscos. Exemplos incluem luvas, botas, capacete, máscara de proteção respiratória e óculos de segurança.</li><li><strong>EPC (Equipamento de Proteção Coletiva):</strong> Protege todas as pessoas do ambiente, não apenas a brigada. Exemplos são extintores, alarme de incêndio, sinalização de emergência e portas corta-fogo.</li></ul><h4>8.2 PPCI (Plano de Prevenção Contra Incêndio e Pânico)</h4><p>O PPCI é um documento obrigatório que detalha o conjunto de ações e recursos para controlar uma situação de emergência. Ele deve ser elaborado pelo Supervisor da Brigada e precisa conter:</p><ul><li>Análise dos riscos da edificação.</li><li>Procedimentos de emergência e abandono.</li><li>Planejamento de simulados e treinamentos.</li><li>Detalhes sobre os equipamentos e sistemas de proteção.</li><li>Organograma da brigada.</li></ul>` 
     },
     'module9': { 
         id: "module9", 
         title: "9. Legislação: Ações da Brigada", 
         iconClass: "fas fa-tasks", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<p>As atribuições da Brigada de Incêndio são divididas em duas frentes principais: prevenção e emergência.</p><h4>9.1 Ações de Prevenção</h4><p>Estas são as atribuições fundamentais da brigada no dia a dia, para evitar que emergências aconteçam:</p><ul><li>Fazer rondas periódicas para identificar riscos.</li><li>Inspecionar e solicitar manutenção dos sistemas de proteção (saídas de emergência, extintores, etc.).</li><li>Treinar os ocupantes do prédio para situações de emergência por meio de simulados e palestras.</li><li>Elaborar relatórios sobre irregularidades, riscos e atividades realizadas.</li><li>Implementar e manter o PPCI atualizado.</li></ul><h4>9.2 Ações de Emergência</h4><p>Quando uma emergência ocorre, a brigada deve agir rapidamente:</p><ul><li>Identificar a situação e acionar o CBMDF imediatamente.</li><li>Auxiliar no abandono seguro da edificação e controlar o pânico.</li><li>Prestar os primeiros socorros a feridos.</li><li>Combater o fogo em sua fase inicial com os recursos do local (extintores, mangueiras).</li><li>Cortar o fornecimento de energia e gás, se necessário.</li><li>Fornecer informações ao CBMDF na sua chegada.</li></ul>` 
     },
     'module10': { 
         id: "module10", 
         title: "10. Legislação: Uniformes e Avaliação", 
         iconClass: "fas fa-user-check", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>10.1 Uniforme dos Brigadistas</h4><p>A identificação correta da brigada é crucial durante uma emergência.</p><ul><li><strong>Brigadista Voluntário:</strong> O uso de uniforme é dispensado. A identificação pode ser feita por crachá ou, opcionalmente, por um colete com a inscrição "Brigadista Voluntário".</li><li><strong>Brigadista Particular:</strong> O uso de uniforme é obrigatório e exclusivo para o local de serviço. O uniforme não pode ser parecido com os do CBMDF ou de outras forças militares e deve ser aprovado previamente pelo CBMDF. Deve conter a descrição "Brigadista" nas costas e um crachá com foto e validade de 6 meses.</li></ul><h4>10.2 Avaliação do Brigadista Particular</h4><p>O CBMDF pode avaliar os brigadistas particulares a qualquer momento para garantir sua capacitação.</p><ul><li>A avaliação pode ser teórica e/ou prática.</li><li>Faltar a 2 convocações sem justificativa pode levar à suspensão.</li><li>Faltar a 3 convocações ou ser reprovado em 3 avaliações consecutivas resulta no descredenciamento.</li><li>O brigadista reprovado tem 30 dias para agendar uma nova avaliação.</li></ul>` 
     },
     'module11': { 
         id: "module11", 
         title: "11. Salvamento: Comunicação via Rádio", 
         iconClass: "fas fa-walkie-talkie", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>11.1 Código "Q"</h4><p>O Código Q é uma forma padronizada e internacional de comunicação por rádio, utilizada para transmitir informações de forma rápida e clara. Alguns códigos essenciais são:</p><ul><li><strong>QAP:</strong> Na escuta</li><li><strong>QRA:</strong> Nome (pessoa)</li><li><strong>QRF:</strong> Refeição (intervalo)</li><li><strong>QRL:</strong> Você está ocupado?</li><li><strong>QRU:</strong> Problema</li><li><strong>QRV:</strong> Estou à disposição</li><li><strong>QRX:</strong> Aguarde</li><li><strong>QSF:</strong> Você já realizou o salvamento?</li><li><strong>QSJ:</strong> Dinheiro</li><li><strong>QSL:</strong> Entendido</li><li><strong>QSM:</strong> Repita a mensagem</li><li><strong>QTA:</strong> Última forma</li><li><strong>QTC:</strong> Mensagem</li><li><strong>QTH:</strong> Endereço</li><li><strong>QTI:</strong> A Caminho</li><li><strong>QTO:</strong> Banheiro (tomar água)</li><li><strong>QTR:</strong> Hora certa</li><li><strong>QBU:</strong> Paciente com problemas Psiquiátricos</li><li><strong>VTR:</strong> Viatura (carro)</li><li><strong>TKS:</strong> Obrigado</li></ul><h4>11.2 Alfabeto Fonético</h4><p>Para evitar erros ao soletrar nomes ou placas, utiliza-se o Alfabeto Fonético Internacional, onde cada letra corresponde a uma palavra:</p><table class="custom-table"><thead><tr><th>Letra</th><th>Código</th><th>Letra</th><th>Código</th></tr></thead><tbody><tr><td>A</td><td>ALFA</td><td>N</td><td>NOVEMBER</td></tr><tr><td>B</td><td>BRAVO</td><td>O</td><td>OSCAR</td></tr><tr><td>C</td><td>CHARLIE</td><td>P</td><td>PAPA</td></tr><tr><td>D</td><td>DELTA</td><td>Q</td><td>QUEBEC</td></tr><tr><td>E</td><td>ECO</td><td>R</td><td>ROMEU</td></tr><tr><td>F</td><td>FOXTROT</td><td>S</td><td>SIERRA</td></tr><tr><td>G</td><td>GOLF</td><td>T</td><td>TANGO</td></tr><tr><td>H</td><td>HOTEL</td><td>U</td><td>UNIFORM</td></tr><tr><td>I</td><td>ÍNDIA</td><td>V</td><td>VICTOR</td></tr><tr><td>J</td><td>JULIET</td><td>W</td><td>WHISKEY</td></tr><tr><td>K</td><td>KILO</td><td>X</td><td>XRAY</td></tr><tr><td>L</td><td>LIMA</td><td>Y</td><td>YANKEE</td></tr><tr><td>M</td><td>MIKE</td><td>Z</td><td>ZULU</td></tr></tbody></table>` 
     },
     'module12': { 
         id: "module12", 
         title: "12. Salvamento: Fases e Classificações", 
         iconClass: "fas fa-life-ring", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>12.1 Fases do Salvamento</h4><p>O processo de salvamento é dividido em duas fases principais:</p><ul><li><strong>Busca:</strong> É a fase em que se procura por algo ou alguém que precisa ser salvo.</li><li><strong>Resgate:</strong> Consiste na retirada da vítima (pessoa ou bem) do local do incidente para um local seguro.</li></ul><h4>12.2 Classificações do Salvamento</h4><p>O salvamento pode ser classificado de acordo com o ambiente onde ocorre:</p><ul><li><strong>Aéreo:</strong> Realizado com uso ou auxílio de aeronaves, tais como helicópteros, aviões, drones.</li><li><strong>Vertical:</strong> Realizado em altura, utilizando técnicas de rapel e pontos fixos de ancoragem.</li><li><strong>Terrestre:</strong> Ocorre em contato direto com o solo.</li><li><strong>Aquático:</strong> Realizado em meio líquido, como rios, lagos ou mar, exigindo técnicas de remoção específicas.</li></ul>` 
     },
     'module13': { 
         id: "module13", 
         title: "13. Salvamento: Pontos da Operação", 
         iconClass: "fas fa-map-marked-alt", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>13.1 Etapas da Operação de Salvamento</h4><p>Uma operação de salvamento segue uma sequência de pontos para garantir a eficiência e a segurança:</p><ul><li><strong>Aviso:</strong> O reconhecimento do pedido de socorro, que pode vir por grito, apito, rádio ou telefone.</li><li><strong>Deslocamento:</strong> O percurso até o local da emergência. Este é um período de preparação, onde táticas são elaboradas e equipamentos são organizados.</li><li><strong>Reconhecimento:</strong> A análise da cena. É feita uma varredura total para observar riscos (fogo, fumaça), sinalizar o local e garantir a segurança da equipe antes do atendimento.</li><li><strong>Regresso:</strong> A saída do local do salvamento para um abrigo, se necessário.</li><li><strong>Abrigo:</strong> O ponto de encontro seguro para a equipe de salvamento e para onde as vítimas e bens resgatados são levados. A primeira equipe a chegar organiza os materiais enquanto a próxima assume o atendimento.</li></ul>` 
     },
     'module14': { 
         id: "module14", 
         title: "14. Salvamento: Múltiplas Vítimas", 
         iconClass: "fas fa-users", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<p>Existem situações de grande escala que exigem uma compreensão clara de sua magnitude para a correta alocação de recursos.</p><ul><li><strong>Desastre:</strong> Ocorrências onde o número de vítimas excede a capacidade de resposta do serviço de salvamento local.</li><li><strong>Catástrofe (Tragédia):</strong> Um acontecimento funesto (fatal) de grande desgraça que atinge muitas pessoas.</li><li><strong>Calamidade:</strong> Uma série de desastres que lança um grande número de pessoas em situação de desamparo, onde até o poder público perde a capacidade de resposta.</li></ul><h4>Tipos de Ocorrência</h4><ul><li><strong>Soterramento:</strong> Queda de terra, pedras ou outras substâncias sobre pessoas ou edificações, geralmente devido a chuvas.</li><li><strong>Desabamento:</strong> Queda de estruturas com teto, geralmente devido a falhas estruturais, acidentes naturais ou atos de terrorismo.</li></ul>` 
     },
     'module15': { 
         id: "module15", 
         title: "15. Salvamento: Noções de Evacuação", 
         iconClass: "fas fa-door-open", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>15.1 Procedimentos de Evacuação</h4><p>Em uma evacuação, a calma e a organização são essenciais. Siga estes passos:</p><ul><li>Reúna e acalme as vítimas. Peça ajuda às pessoas mais tranquilas.</li><li>Improvise EPIs com cobertores, toalhas ou panos molhados.</li><li>Desça sempre pelas escadas de emergência, nunca suba, a menos que orientado pelo CBM.</li><li>Oriente as pessoas a respirarem de forma curta e rápida.</li><li>Se não houver visibilidade, mande todos se abaixarem.</li><li>Desloque-se em colunas (simples ou dupla), com um brigadista ("xerife") na frente e outro ("cerra fila") no final.</li><li>Feche todas as portas pelas quais passar, sem trancá-las.</li></ul><h4>15.2 Tipos de Locomoção e Transporte</h4><p>Existem diferentes formas de se mover e transportar vítimas:</p><ul><li><strong>Locomoção:</strong> Em pé, 3 Pontas e Rastejo.</li><li><strong>Transporte de Vítimas:</strong> Cadeirinha, Mochila, Arrasto, Elevação Dupla, Transporte de Noiva e Transporte de Bombeiro.</li></ul>` 
     },
     'module16': { 
         id: "module16", 
         title: "16. PCI: Fundamentos e Legislação", 
         iconClass: "fas fa-book-reader", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>16.1 Introdução à PCI</h4><p>O estudo da Prevenção e Combate a Incêndio (PCI) baseia-se na compreensão aprofundada do fogo, seus componentes e fenômenos. É mandatório que o profissional domine as terminologias para diferenciar fogo, incêndio, queima e combustão.</p>
             
             <div class="key-concept">
@@ -123,6 +138,7 @@ const moduleContent = {
         id: "module17", 
         title: "17. PCI: A Ciência do Fogo", 
         iconClass: "fas fa-atom", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <div class="key-concept">
                 <h5>17.1 Tetraedro do Fogo</h5>
@@ -149,6 +165,7 @@ const moduleContent = {
         id: "module18", 
         title: "18. PCI: Propagação e Pontos de Inflamabilidade", 
         iconClass: "fas fa-wind", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <div class="key-concept">
                 <h5>18.1 Pontos de Inflamabilidade</h5>
@@ -172,6 +189,7 @@ const moduleContent = {
         id: "module19", 
         title: "19. PCI: Fenômenos e Tipos de Incêndio", 
         iconClass: "fas fa-bomb", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <div class="key-concept">
                 <h5>19.1 Fenômenos da Combustão</h5>
@@ -199,6 +217,7 @@ const moduleContent = {
         id: "module20", 
         title: "20. PCI: Métodos de Extinção e Classes de Incêndio", 
         iconClass: "fas fa-fire-extinguisher", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <div class="key-concept">
                 <h5>20.1 Métodos de Extinção</h5>
@@ -225,6 +244,7 @@ const moduleContent = {
         id: "module21", 
         title: "21. PCI: Causas do Incêndio", 
         iconClass: "fas fa-fire-alt", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <h4>21.1 Causas do Incêndio</h4>
             <p>Os incêndios podem começar de três formas principais, de acordo com sua origem:</p>
@@ -254,6 +274,7 @@ const moduleContent = {
         id: "module22", 
         title: "22. PCI: SCIP (Sistema Contra Incêndio)", 
         iconClass: "fas fa-broadcast-tower", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <h4>22.1 Introdução ao SCIP</h4>
             <p>O SCIP (Sistema Contra Incêndio e Pânico) é o conjunto de equipamentos, dispositivos e medidas de segurança instalados em uma edificação com o objetivo de detectar, combater e controlar princípios de incêndio, além de garantir a evacuação segura das pessoas.</p>
@@ -307,6 +328,7 @@ const moduleContent = {
         id: "module23", 
         title: "23. PCI: Sinalização de Emergência", 
         iconClass: "fas fa-sign-out-alt", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <h4>23.1 Introdução à Sinalização de Emergência</h4>
             <p>A Sinalização de Emergência é um sistema passivo de proteção, vital para a orientação e segurança das pessoas durante uma evacuação. Seu objetivo é indicar, de forma clara e inequívoca, as rotas de fuga, as saídas de emergência, a localização dos equipamentos de combate (como extintores e hidrantes) e alertar sobre riscos específicos, mesmo na ausência de energia elétrica.</p>
@@ -345,6 +367,7 @@ const moduleContent = {
         id: "module24", 
         title: "24. PCI: Casa de Bombas", 
         iconClass: "fas fa-water", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <h4>24.1 Introdução à Casa de Bombas</h4>
             <p>A Casa de Bombas é o coração do sistema de combate a incêndio por água (hidrantes e sprinklers). Ela é responsável por garantir a pressurização e o abastecimento de água com vazão e pressão adequadas nas tubulações durante um incêndio, mesmo que haja falha no fornecimento de energia elétrica.</p>
@@ -387,6 +410,7 @@ const moduleContent = {
         id: "module25", 
         title: "25. PCI: Equipamentos, Manutenção e Atribuições", 
         iconClass: "fas fa-check-circle", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <div class="key-concept">
                 <h5>25.1 Equipamentos de Combate</h5>
@@ -408,12 +432,11 @@ const moduleContent = {
                 <p>O brigadista deve conhecer os riscos, combater princípios de incêndio, acionar o CBM, promover a evacuação segura e agir de forma rápida e assertiva.</p>
             </div>` 
     },
-      /* === ATUALIZAÇÃO data.js (MÓDULOS 26-37 e 45) - CONTEÚDO LIMPO === */
-
-'module26': { 
+    'module26': { 
         id: "module26", 
         title: "26. APH: Introdução e Aspectos Legais", 
         iconClass: "fas fa-file-medical", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>26.1 Conceitos Fundamentais em APH</h4>
             <p>O Atendimento Pré-Hospitalar (APH) é a assistência prestada a uma vítima de agravo à saúde (trauma ou emergência clínica) fora do ambiente hospitalar. O objetivo é estabilizar a vítima e transportá-la com segurança a uma unidade de saúde. Para isso, dominamos alguns conceitos:</p>
             <ul>
@@ -458,6 +481,7 @@ const moduleContent = {
         id: "module27", 
         title: "27. APH: Biossegurança no Atendimento", 
         iconClass: "fas fa-shield-virus", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>27.1 Riscos Biológicos para o Socorrista</h4>
             <p>O bombeiro civil está constantemente exposto a riscos de contato com sangue ou secreções contaminadas, além da inalação de partículas de risco biológico e doenças transmitidas por contato. A segurança pessoal é a prioridade máxima em qualquer atendimento.</p>
             <h4>27.2 Vias de Exposição</h4>
@@ -529,6 +553,7 @@ const moduleContent = {
         id: "module28", 
         title: "28. APH: Anatomia e Fisiologia", 
         iconClass: "fas fa-user-md", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>28.1 Definições</h4>
             <div class="key-concept">
                 <h5>Anatomia</h5>
@@ -565,6 +590,7 @@ const moduleContent = {
         id: "module29", 
         title: "29. APH: Sistemas do Corpo Humano", 
         iconClass: "fas fa-heart", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>29.1 Sistema Tegumentar</h4>
             <p>Composto pela pele, que se divide em três camadas principais: Epiderme, Derme e Hipoderme. A pele é o maior órgão do corpo e serve como a principal barreira de proteção contra infecções, regula a temperatura e permite a sensibilidade (tato, dor, calor).</p>
             
@@ -615,6 +641,7 @@ const moduleContent = {
         id: "module30", 
         title: "30. APH: Hemorragias e Estados de Choque", 
         iconClass: "fas fa-tint", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>30.1 Conceito de Hemorragia</h4>
             <p>A hemorragia é a perda de sangue causada pela ruptura de vasos sanguíneos. Pode variar desde pequenas lesões até situações graves que colocam a vida em risco. O bombeiro civil deve identificar rapidamente o tipo, a causa e aplicar a técnica adequada para conter o sangramento.</p>
             
@@ -691,6 +718,7 @@ const moduleContent = {
         id: "module31", 
         title: "31. APH: Queimaduras", 
         iconClass: "fas fa-fire", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>31.1 Conceito</h4>
             <p>Queimaduras são lesões na pele ou em outros tecidos causadas por calor, eletricidade, produtos químicos ou radiação. A gravidade depende de duas coisas:</p>
             <ul>
@@ -789,6 +817,7 @@ const moduleContent = {
         id: "module32", 
         title: "32. APH: Lesões Musculoesqueléticas", 
         iconClass: "fas fa-bone", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>32.1 Conceito</h4>
             <p>Lesões musculoesqueléticas são danos que afetam ossos, músculos, tendões, ligamentos e articulações. A maioria acontece por quedas, impactos, torções, golpes ou esforços excessivos. O socorrista deve identificar, imobilizar e preservar a vítima até atendimento médico.</p>
             
@@ -838,6 +867,7 @@ const moduleContent = {
         id: "module33", 
         title: "33. APH: Emergências Clínicas", 
         iconClass: "fas fa-stethoscope", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>33.1 Conceito</h4>
             <p>Emergências clínicas são situações graves causadas por doenças internas, e não por trauma. Podem surgir de forma súbita e ameaçar a vida se não forem reconhecidas e tratadas rapidamente.</p>
             
@@ -907,6 +937,7 @@ const moduleContent = {
         id: "module34", 
         title: "34. APH: Avaliação de Sinais Vitais", 
         iconClass: "fas fa-heartbeat", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>34.1 O que são Sinais Vitais?</h4>
             <p>Sinais vitais são medições que mostram como estão funcionando as funções básicas do corpo. Eles permitem avaliar rapidamente o estado geral da vítima, identificar alterações importantes e monitorar seu quadro durante o atendimento. Também existe o método rápido PPRT, muito usado no APH. Os quatro sinais vitais clássicos são: Temperatura, Pulso (Frequência Cardíaca), Respiração (Frequência Respiratória) e Pressão Arterial.</p>
             
@@ -957,6 +988,7 @@ const moduleContent = {
         id: "module35", 
         title: "35. APH: Avaliação Primária (XABCDE)", 
         iconClass: "fas fa-tasks", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>35.1 Avaliação da Cena (sempre vem antes de tudo)</h4>
             <p>Antes de qualquer atendimento, o socorrista precisa garantir que a cena está segura. Essa etapa vem antes de tocar na vítima, porque o atendimento só acontece se o socorrista permanecer seguro. Uma cena mal avaliada pode gerar mais vítimas inclusive o próprio bombeiro.</p>
             <p>O objetivo da Segurança da Cena é:</p>
@@ -1094,6 +1126,7 @@ const moduleContent = {
         id: "module36", 
         title: "36. APH: PAB e PAF", 
         iconClass: "fas fa-crosshairs", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>36.1 Conceito Geral</h4>
             <p>Tanto a PAB (Perfuração por Arma Branca) quanto a PAF (Perfuração por Arma de Fogo) são mecanismos de trauma penetrante, capazes de causar danos internos graves mesmo quando o ferimento externo parece pequeno. Em ambos os casos, o risco interno é sempre maior do que o que aparece na pele.</p>
             
@@ -1160,6 +1193,7 @@ const moduleContent = {
         id: "module37", 
         title: "37. APH: PCR e RCP", 
         iconClass: "fas fa-heartbeat", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>37.1 Parada Cardiorrespiratória (PCR)</h4>
             <p>A PCR acontece quando o coração para de bombear sangue e a respiração cessa. Sem intervenção imediata, o cérebro sofre danos irreversíveis.</p>
             <h5>Sinais de PCR:</h5>
@@ -1230,6 +1264,7 @@ const moduleContent = {
         id: "module38", 
         title: "38. APH: DEA e Arritmias da PCR", 
         iconClass: "fas fa-heart-circle-bolt", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>38.1 Arritmias Cardíacas e Modalidades da PCR</h4>
             <p>Arritmias cardíacas são alterações graves no ritmo elétrico do coração que podem levar à Parada Cardiorrespiratória (PCR). Na PCR, o coração não consegue bombear sangue adequadamente, exigindo RCP imediata e, quando indicado, desfibrilação com DEA.</p>
             <p>Existem dois grandes grupos de ritmos na PCR:</p>
@@ -1300,6 +1335,7 @@ const moduleContent = {
         id: "module39", 
         title: "39. APH: OVACE (Obstrução de Vias Aéreas)", 
         iconClass: "fas fa-lungs-virus", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>39.1 Conceito</h4>
             <p>A OVACE é a obstrução súbita das vias aéreas por alimento ou objeto. É uma emergência que pode levar à parada respiratória rapidamente, especialmente em bebês e crianças.</p>
             
@@ -1376,6 +1412,7 @@ const moduleContent = {
         id: "module40", 
         title: "40. APH: IMV e Triagem START", 
         iconClass: "fas fa-car-crash", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>40.1 Incidentes com Múltiplas Vítimas (IMV) - Conceito Avançado</h4>
             <p>Um IMV é qualquer evento que gera um número de vítimas que sobrecarrega os recursos de emergência inicialmente disponíveis. Nestes cenários, o objetivo muda de "fazer o melhor para cada vítima" para "<strong>fazer o melhor para o maior número de vítimas</strong>".</p>
             
@@ -1405,6 +1442,7 @@ const moduleContent = {
         id: "module41", 
         title: "41. NR-33: Fundamentos de Espaço Confinado", 
         iconClass: "fas fa-person-booth", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>1. O que é um Espaço Confinado</h4>
             <p>É qualquer área não projetada para ocupação humana contínua, com acessos limitados e ventilação inadequada, permitindo o acúmulo de gases tóxicos, inflamáveis ou deficiência de oxigênio.</p>
             <p><strong>Exemplos:</strong> silos, tanques, galerias, poços, tubulações, cisternas etc.</p>
@@ -1438,6 +1476,7 @@ const moduleContent = {
         id: "module42", 
         title: "42. NR-33: Resgate em Espaço Confinado", 
         iconClass: "fas fa-helmet-safety", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>1. Identificação e Avaliação de Riscos no Resgate</h4>
             <p>Antes de iniciar qualquer resgate, é preciso:</p>
             <ul>
@@ -1509,48 +1548,56 @@ const moduleContent = {
         id: "module43", 
         title: "43. NR35: Introdução ao Salvamento em Alturas", 
         iconClass: "fas fa-chalkboard-teacher", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Introdução ao Salvamento em Alturas</h4><p>O salvamento em alturas é uma atividade crítica desempenhada por bombeiros profissionais civis, exigindo técnicas avançadas, equipamentos modernos e planejamento meticuloso.</p><p>A busca por eficiência e segurança é uma prioridade, visando alcançar a excelência na prestação de serviços à sociedade.</p><p>Este módulo apresenta os fundamentos do salvamento em alturas, destacando a importância de um processo organizado e estruturado, baseado em planejamento, capacitação contínua e melhoria das condições de trabalho.</p><p>O salvamento em alturas abrange operações realizadas em locais elevados, que podem ocorrer em planos verticais (como paredes de edifícios ou penhascos), inclinados (como telhados) ou horizontais (como pontes ou plataformas).</p><p>As técnicas envolvem o uso de ancoragens seguras, sistemas de descensão e içamento adaptados ao grau de lesão das vítimas, além do manejo correto de equipamentos específicos.</p><p>A capacitação dos bombeiros é essencial para lidar com a pressão psicológica e os riscos inerentes a essas operações, onde qualquer erro pode ser fatal.</p><p>Este módulo estabelece a base para os princípios técnicos e táticos abordados nos módulos seguintes.</p>` 
     },
     'module44': { 
         id: "module44", 
         title: "44. NR35: Princípios de Segurança", 
         iconClass: "fas fa-shield-alt", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Princípios de Segurança no Salvamento em Alturas</h4><p>A segurança é a pedra angular do salvamento em alturas, considerando o alto risco envolvido. Este módulo detalha os princípios fundamentais que guiam as operações, garantindo a proteção da equipe, das vítimas e dos bens materiais.</p><p>Esses princípios incluem:</p><ul><li><strong>Garantir a própria segurança:</strong> A prioridade é proteger a vida dos bombeiros, pois um resgate bem-sucedido não deve custar a vida de um socorrista. Isso envolve o uso de equipamentos de proteção individual (EPIs) e a verificação rigorosa dos sistemas de segurança.</li><li><strong>Não agravar lesões:</strong> A manipulação cuidadosa da vítima é essencial para evitar novos danos. Técnicas como imobilização, controle de hemorragias e prevenção de choque devem ser priorizadas, muitas vezes acima da rapidez.</li><li><strong>Avaliar o binômio risco/benefício:</strong> Cada operação deve ser analisada friamente, buscando soluções simples e seguras, evitando improvisações que possam comprometer a segurança.</li><li><strong>Redundância na segurança:</strong> Sistemas de segurança devem ser duplicados ou triplicados em situações críticas, garantindo que, em caso de falha de um sistema, outro assuma imediatamente.</li><li><strong>Revisar os sistemas:</strong> Antes de iniciar qualquer operação, todos os equipamentos e sistemas devem ser inspecionados para garantir sua integridade, evitando falhas que possam ser fatais.</li><li><strong>Economia de esforço e tempo:</strong> Soluções simples, como descer vítimas em vez de içá-las, devem ser priorizadas para reduzir o esforço físico e o tempo de exposição ao risco.</li><li><strong>Instalar um Sistema de Comando em Operações (SCO):</strong> O SCO organiza a operação, definindo papéis, responsabilidades e um plano de ação claro, aumentando a eficiência e a segurança.</li><li><strong>Simplificar:</strong> O uso de técnicas simples evita manobras complexas, reduzindo o risco de erros.</li></ul><p>Esses princípios formam a base para operações seguras e eficazes, exigindo conhecimento técnico, experiência e bom senso.</p>` 
     },
     'module45': { 
         id: "module45", 
         title: "45. NR35: Condições e Classificação da Segurança", 
         iconClass: "fas fa-check-double", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Condições e Classificação da Segurança</h4><p>Este módulo aborda as condições básicas para realizar um salvamento em alturas com segurança e a classificação dos tipos de segurança envolvidos.</p><h5>As condições incluem:</h5><ul><li><strong>Controle emocional:</strong> O bombeiro deve manter a calma sob pressão para tomar decisões acertadas.</li><li><strong>Controle da situação:</strong> Avaliar e gerenciar os riscos do ambiente e da ocorrência.</li><li><strong>Controle dos materiais:</strong> Garantir que os equipamentos estejam em boas condições e sejam usados corretamente.</li><li><strong>Controle das vítimas:</strong> Avaliar o estado das vítimas e adaptar as técnicas ao seu grau de lesão.</li><li><strong>Execução com convicção:</strong> Realizar as manobras com confiança e precisão.</li><li><strong>Organização dos materiais:</strong> Disponibilizar os equipamentos em locais seguros e de fácil acesso.</li></ul><h5>A segurança é classificada em:</h5><ul><li><strong>Segurança individual:</strong> Ações para minimizar riscos de acidentes pessoais ao bombeiro, como o uso correto de EPIs.</li><li><strong>Segurança coletiva:</strong> Procedimentos para proteger a equipe, as vítimas e os bens coletivos, considerando o número de vítimas, condições do local e proporções do evento. A perda de controle da situação, falta de conhecimento técnico, inexperiência e descontrole emocional são os principais riscos.</li><li><strong>Segurança dos materiais:</strong> Uso de equipamentos adequados e bem mantidos, reduzindo riscos e aumentando a eficiência.</li><li><strong>Segurança dos bens materiais:</strong> Proteger bens, desde que isso não coloque vidas em risco, considerando as condições do local e os recursos disponíveis.</li></ul>` 
     },
     'module46': { 
         id: "module46", 
         title: "46. NR35: Fases Táticas do Salvamento", 
         iconClass: "fas fa-clipboard-list", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Fases Táticas do Salvamento em Alturas</h4><p>O salvamento em alturas é estruturado em fases táticas que garantem a organização e a eficiência da operação:</p><ul><li><strong>Fase Prévia:</strong> Envolve a coleta de informações antes de chegar ao local, como altura, natureza da ocorrência, número e condição das vítimas, idade, hora do acidente e localização exata. Essas informações ajudam a planejar a operação e reduzir imprevistos.</li><li><strong>Fase de Reconhecimento:</strong> No local, confirma-se as informações coletadas, avalia-se riscos (eletricidade, fogo, arestas vivas) e verifica-se a necessidade de reforços. Um plano de ação é elaborado com base nessas informações.</li><li><strong>Fase de Preparação:</strong> Inclui a montagem de sistemas de acesso à vítima, a disponibilização de recursos humanos (com diferentes níveis de especialização) e materiais (como equipamentos de proteção e iluminação). O plano de ação deve ser flexível para lidar com imprevistos, como desabamentos.</li><li><strong>Fase de Salvamento:</strong> Envolve a execução do resgate, com a escolha de pontos de ancoragem, montagem de sistemas de descensão ou içamento, e avaliação da vítima para determinar a necessidade de atendimento pré-hospitalar (APH). A comunicação entre a equipe é crucial.</li><li><strong>Fase de Desmobilização:</strong> Após o resgate, realiza-se a revisão e acondicionamento dos equipamentos, além de uma reunião para avaliar acertos e falhas, visando melhorar futuras operações.</li></ul>` 
     },
     'module47': { 
         id: "module47", 
         title: "47. NR35: Materiais Coletivos - Cordas", 
         iconClass: "fas fa-grip-lines", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Materiais Coletivos - Cordas</h4><p>As cordas são o elemento mais crítico no salvamento em alturas, exigindo cuidados especiais em sua escolha, uso e manutenção. Este módulo detalha os tipos de cordas, suas características e cuidados necessários:</p><h5>Materiais</h5><p>Fibras sintéticas (polipropileno, poliéster, poliamida e aramida) substituíram as naturais devido à maior resistência, durabilidade e capacidade de amortecimento. A poliamida, por exemplo, amortece oito vezes mais que o cânhamo. Polipropileno é resistente à umidade, mas tem baixa carga de ruptura; poliéster é durável, mas menos elástico; aramida (Kevlar) é extremamente resistente, comparável ao aço.</p><h5>Tipos de cordas:</h5><ul><li><strong>Torcidas:</strong> Fibras enroladas em fios e cordões, suscetíveis à abrasão e enrijecimento.</li><li><strong>Trançadas (8 ou 16 pernas):</strong> Resistentes à abrasão, mas podem formar "cocas" e encolher.</li><li><strong>Com alma e capa:</strong> Incluem cordas estáticas (elasticidade <5%, para salvamento) e dinâmicas (>5%, para escalada), com a alma suportando 80-85% da carga e a capa protegendo contra abrasão.</li></ul><h5>Classificação por diâmetro:</h5><ul><li><strong>Cordas simples (>10 mm):</strong> Para cabos de sustentação.</li><li><strong>Cordas de apoio (7-8 mm):</strong> Para segurança individual.</li><li><strong>Cordeletes (4-6 mm):</strong> Para ascensão e auto-resgate.</li></ul><h5>Manutenção e acondicionamento:</h5><p>Evitar pisar, contato com areia, exposição prolongada ao sol, tensão desnecessária, aquecimento da capa e contato com produtos químicos. Lavar com detergente neutro e secar à sombra. Métodos de acondicionamento incluem oito (cordas estáticas >50 m), anel/coroa (cordas dinâmicas ou estáticas <50 m), andino/charuto (operações em montanha) e sacola (aeronaves ou tentativas de suicídio).</p><h5>Força de choque:</h5><p>Calculada pelo fator de queda $(FQ=2H/L)$, mede o esforço da corda em quedas, sendo essencial para avaliar a segurança.</p>` 
     },
     'module48': { 
         id: "module48", 
         title: "48. NR35: Materiais Coletivos - Outros Equipamentos", 
         iconClass: "fas fa-toolbox", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Outros Equipamentos Coletivos</h4><p>Além das cordas, outros equipamentos coletivos são essenciais para o salvamento em alturas, cada um com funções específicas:</p><h5>Fitas:</h5><p>Dividem-se em planas (mais rígidas) e tubulares (mais flexíveis e resistentes). São usadas em ancoragens para equalizar tensão e proteger cordas contra abrasão em arestas vivas. A resistência depende da largura e do material, com nós de fita exigindo sobra de 10 cm em cada lado.</p><h5>Escadas de gancho ou prolongáveis:</h5><p>Fabricadas em alumínio ou fibra de vidro, são usadas em resgates em sacadas, varandas ou janelas, especialmente em cenários com fogo ou fumaça. O primeiro bombeiro deve usar um cabo solteiro, com três bombeiros garantindo a estabilidade da escada.</p><h5>Equipamentos de evacuação:</h5><ul><li><strong>Macas:</strong> Rígidas (metálicas, mais pesadas e resistentes) ou flexíveis (plástico resistente, leves, mas exigem maior conhecimento técnico). Usadas para vítimas com lesões graves.</li><li><strong>Triângulos de evacuação:</strong> Versáteis, ocupam pouco espaço e são ideais para vítimas conscientes com lesões leves, com pontos de ancoragem ajustados ao tamanho da vítima.</li></ul><p>O uso correto desses equipamentos exige conhecimento técnico e manutenção rigorosa para garantir a segurança.</p>` 
     },
     'module49': { 
         id: "module49", 
         title: "49. NR35: Materiais Individuais", 
         iconClass: "fas fa-user-shield", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Materiais Individuais</h4><p>Os equipamentos individuais são essenciais para a segurança e mobilidade do bombeiro durante o salvamento em alturas. Este módulo detalha os principais itens:</p><ul><li><strong>Cintos de segurança:</strong> Conhecidos como cadeirinha, arnês ou boldrier, são fundamentais, com modelos tipo paraquedista (acolchoados, com pontos de fixação na cintura e pernas) sendo os mais usados. Mantêm o centro de gravidade acima da cintura pélvica, evitando giros acidentais. Cintos profissionais oferecem maior conforto e pontos de fixação laterais.</li><li><strong>Capacetes:</strong> Protegem contra quedas de objetos e obstáculos, com jugular para fixação e furos para ventilação.</li><li><strong>Luvas:</strong> Protegem contra queimaduras por abrasão, com reforço na palma e polegar. São indispensáveis, apesar da redução no tato.</li></ul><h5>Descensores:</h5><ul><li><strong>Freio oito:</strong> Simples e econômico, mas torce a corda e não suporta cargas muito pesadas sem ajustes.</li><li><strong>Auto-blocantes (Stop, I'D, Gri Gri):</strong> Não torcem a corda, suportam maior carga e permitem pausas sem usar as mãos.</li><li><strong>De barras (Rack):</strong> Usados em grandes descidas, controlam a frenagem ajustando cilindros metálicos.</li><li><strong>O ATC e plaquetas:</strong> Ideais para cordas duplas, não torcem a corda, usados em escaladas.</li></ul><h5>Bloqueadores:</h5><ul><li><strong>Blocantes:</strong> Usam micro-garras para travar a corda, ideais para ascensão e multiplicação de força (máximo 500 kg).</li><li><strong>Trava-quedas:</strong> Travam sob carga em um sentido, mas não devem ser usados como descensores.</li></ul><h5>Conectores:</h5><ul><li><strong>Mosquetões:</strong> De aço ou duralumínio, com ou sem trava, usados em ancoragens, circuitos e progressão vertical.</li><li><strong>Malhas rápidas:</strong> De aço, com abertura por rosca, para manobras auxiliares.</li><li><strong>Roldanas:</strong> Para desvio ou multiplicação de força, usadas em deslocamentos sobre cabos aéreos.</li></ul>` 
     },
     'module50': { 
         id: "module50", 
         title: "50. NR35: Nós e Amarrações", 
         iconClass: "fas fa-link", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `
             <h4>Nós e Amarrações</h4>
             <p>Os nós são fundamentais no salvamento em alturas, devendo ser fáceis de fazer, desatar e oferecer baixa perda de resistência. Este módulo apresenta os principais tipos:</p>
@@ -1589,14 +1636,35 @@ const moduleContent = {
         id: "module51", 
         title: "51. NR35: Sistemas de Ancoragens (SAS)", 
         iconClass: "fas fa-anchor", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Sistemas de Ancoragens de Segurança (SAS)</h4><p>Os Sistemas de Ancoragens de Segurança (SAS) são fundamentais para garantir a segurança no salvamento em alturas, sendo a base de qualquer operação. Este módulo detalha os requisitos e classificações:</p><h5>Requisitos:</h5><ul><li>Usar mosquetões superdimensionados (>22 kN) em cada ponto de ancoragem (principal e secundário).</li><li>Evitar braços de alavanca, ancorando próximo à base da estrutura para reduzir forças.</li><li>Utilizar pelo menos dois pontos de ancoragem (principal e secundário).</li><li>Ancorar diretamente sobre o local de descida para evitar pêndulos.</li><li>Proteger cordas contra abrasão em arestas vivas com materiais resistentes.</li></ul><h5>Classificação:</h5><ul><li><strong>Ancoragem em linha:</strong><ul><li><strong>Tradicional:</strong> Ponto principal mais próximo do objetivo que o secundário.</li><li><strong>Contraposta:</strong> Ponto secundário mais próximo do objetivo.</li></ul></li><li><strong>Ancoragem distribuída:</strong><ul><li><strong>Equalizada:</strong> Ponto de descida fixo, definido no momento da ancoragem.</li><li><strong>Equalizável:</strong> Permite ajustar o ponto de descida, oferecendo mobilidade e segurança.</li></ul></li></ul><h5>Recomendações gerais:</h5><p>Posicionar mosquetões com a abertura oposta à parede, usar fitas tubulares para unir mosquetões, proteger pontos de abrasão e considerar a angulação entre pontos, pois ângulos maiores aumentam a força sobre cada ponto.</p>` 
     },
     'module52': { 
         id: "module52", 
         title: "52. NR35: Técnicas de Resgate", 
         iconClass: "fas fa-people-carry", 
+        driveLink: "SEU_LINK_DO_DRIVE_AQUI",
         content: `<h4>Técnicas de Resgate Simples, Complexo e Auto-Resgate</h4><p>Este módulo aborda as técnicas de resgate em alturas, divididas em três categorias, cada uma com equipamentos e procedimentos específicos:</p><h5>Resgate Simples:</h5><p>Para vítimas com lesões leves, realizado por um bombeiro. Equipamentos mínimos incluem:</p><ul><li><strong>Individuais:</strong> Cinto paraquedista, capacete, 4 mosquetões de aço, 2 de alumínio (com e sem trava), blocantes, freio oito, cordeletes, luvas, óculos e cantil.</li><li><strong>Coletivos:</strong> Cabos solteiros, lanternas, coletes refletivos, fitas zebradas, cones, binóculos, croque, maca flexível, kit de primeiros socorros, cordas estáticas, triângulo de evacuação, descensores (Rack, Stop) e roldanas.</li></ul><h5>Resgate Complexo:</h5><p>Para vítimas com lesões graves (fraturas, hemorragias, traumatismos), exigindo equipe de pelo menos quatro bombeiros. Inclui:</p><ul><li><strong>Técnicas de içamento:</strong> Usam sistemas 3:1 com roldanas e blocantes para reduzir o peso da vítima a um terço, facilitando o içamento.</li><li><strong>Técnicas de descensão:</strong> Com macas (duas cordas: principal e de segurança) ou triângulos de evacuação. Socorristas podem acompanhar a maca em terrenos acidentados, ou usar cabo-guia para evitar obstáculos.</li></ul><h5>Auto-Resgate:</h5><p>Técnicas realizadas por um socorrista sem apoio, como:</p><ul><li><strong>Corte no cabo da vítima:</strong> Socorrista na ancoragem ou descendo até a vítima, usando novo cabo de resgate e nós blocantes (prússico, machard).</li><li><strong>Preservando o cabo da vítima:</strong> Usando valdotan ou blocantes, acessando por cima ou por baixo, com procedimentos como clipagem de longes e uso de estribos.</li><li><strong>Transposição de nó:</strong> Para subir ou descer em cabos emendados, usando blocantes e longes para passar pelo nó.</li></ul>` 
     },
+'module53': { 
+    id: "module900", 
+    title: "Simulado Geral 1", 
+    iconClass: "fas fa-edit", 
+    content: "<h3>Simulado Geral 1</h3><p>Em breve disponível.</p>" 
+},
+    'module54': { 
+        id: "module901", 
+        title: "Simulado Geral 2", 
+        iconClass: "fas fa-edit", 
+        content: "<h3>Simulado Geral 2</h3><p>Em breve disponível.</p>" 
+    },
+    'module55': { 
+        id: "module990", 
+        title: "Material Bônus", 
+        iconClass: "fas fa-star", 
+        content: "<h3>Conteúdo Exclusivo</h3><p>Materiais extras para assinantes.</p>" 
+    },
+    
 };
 
 /* === MAPA DAS CATEGORIAS (Foco na Navegação Aprimorada) === */
@@ -1607,7 +1675,10 @@ const moduleCategories = {
     pci: { id: "pci", title: "Prevenção e Combate a Incêndio", achievementTitle: "Mestre das Chamas", range: [16, 25], icon: "fas fa-fire-extinguisher" }, 
     aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: "fas fa-briefcase-medical" }, 
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
-    nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" } 
+    nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
+    // MUDANÇA 2: ADICIONADO isPremium: true
+    simulados: { id: "simulados", title: "Simulados Gerais", achievementTitle: "Doutorado em Testes", range: [53, 54], icon: "fas fa-clipboard-check", isPremium: true },
+    bonus: { id: "bonus", title: "Bônus Exclusivos", achievementTitle: "Caçador de Recompensas", range: [54, 55], icon: "fas fa-star", isPremium: true }
 };
 /* === NOVO: FONTE DE DADOS PARA LAZY LOADING === */
 

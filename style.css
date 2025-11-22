@@ -1,3 +1,4 @@
+/* === ESTILOS GERAIS DO PROJETO === */
 :root {
     --primary: #c1121f; --primary-dark: #a4161a; --secondary: #003049; --accent: #f77f00;
     --dark-text: #1a202c; --light-text: #2d3748; --light-bg: #f8f9fa; --success: #2a9d8f;
@@ -17,37 +18,39 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 .pulse { animation: pulse 2s infinite; }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
 
+/* Animação para o Toast Deslizar */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in {
+    animation: slideInRight 0.5s ease-out forwards;
+}
 
-/* === BARRA DE PROGRESSO MINIMALISTA (Request) === */
+/* === BARRA DE PROGRESSO === */
 @keyframes progress-gradient-flow {
   0% { background-position: 200% center; }
   100% { background-position: 0% center; }
 }
 
-/* O container que "gruda" no topo, logo abaixo do header */
 .sticky-progress-wrapper {
     position: sticky;
-    top: 5.5rem; /* 88px (altura APROXIMADA do header principal) */
-    
-    /* *** CORREÇÃO DE Z-INDEX (Mobile) *** */
-    /* Rebaixado para '39' (abaixo do header 'z-40' e da sidebar 'z-51') */
+    top: 5.5rem; /* Padrão para desktop */
     z-index: 39; 
-    
     padding: 0.75rem 0; 
-    
-    /* Efeito translúcido */
     background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    
-    /* Sombra suave para separar do conteúdo */
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    
-    /* Cor do texto */
     color: var(--light-text);
-    
-    /* Garante que a barra minimalista fique contida */
     position: relative;
+}
+
+/* Ajuste Específico para Mobile - Garante que a barra desça */
+@media (max-width: 1024px) {
+    .sticky-progress-wrapper {
+        top: 7.5rem; /* Aumentado para não ficar escondido */
+    }
 }
 
 .dark .sticky-progress-wrapper {
@@ -57,15 +60,15 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 
 /* A barra visual minimalista */
 #progress-bar-minimal {
-    position: absolute; /* Posição absoluta EM RELAÇÃO AO WRAPPER */
-    bottom: 0;          /* Grudada no fim do wrapper */
+    position: absolute; 
+    bottom: 0;          
     left: 0;
-    width: 0%;          /* Começa com 0% */
-    height: 4px;        /* Super fina */
+    width: 0%;          
+    height: 4px;        
     background: linear-gradient(90deg, var(--accent), var(--primary), var(--accent));
     background-size: 200% auto;
     transition: width 0.5s ease;
-    z-index: 40; /* Acima do seu wrapper (39) */
+    z-index: 40; 
     animation: progress-gradient-flow 3s linear infinite;
     box-shadow: 0 0 10px var(--accent);
 }
@@ -74,23 +77,21 @@ h1, h2, h3 { font-family: 'Lora', serif; }
      box-shadow: 0 0 12px var(--accent);
 }
 
-/* O card de texto do progresso (que agora não é mais 'sticky') */
+/* O card de texto do progresso */
 .progress-text-container {
-    /* Esta classe não é mais usada para o progresso sticky, mas pode ser usada em outro lugar */
     background-color: var(--panel-bg);
     padding: 0.75rem 1.25rem; 
     border-radius: 1rem;
     box-shadow: 0 5px 15px rgba(0,0,0,0.07);
     border: 1px solid var(--border-color);
 }
-/* === FIM DA CORREÇÃO === */
-
 
 #off-canvas-sidebar { background-color: var(--panel-bg); }
 #off-canvas-sidebar.open { transform: translateX(0); }
 .sidebar-overlay { transition: opacity 0.3s; }
 .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
 .sidebar { background: var(--panel-bg); padding: 1.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.07); border: 1px solid var(--border-color); }
+
 /* ==== BOTÕES PREMIUM ==== */
 .action-button {
   position: relative;
@@ -137,14 +138,12 @@ h1, h2, h3 { font-family: 'Lora', serif; }
   pointer-events: none;
 }
 
-/* Cor no modo claro */
 :root .action-button .ripple {
   background: rgba(255, 255, 255, 0.7);
 }
 
-/* Cor no modo escuro */
 .dark .action-button .ripple {
-  background: rgba(247, 127, 0, 0.45); /* tom de laranja suave */
+  background: rgba(247, 127, 0, 0.45); 
 }
 
 @keyframes ripple-effect {
@@ -153,6 +152,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     opacity: 0;
   }
 }
+
 /* === EFEITO RIPPLE NAS PERGUNTAS === */
 .quiz-option {
   position: relative;
@@ -167,7 +167,6 @@ h1, h2, h3 { font-family: 'Lora', serif; }
   pointer-events: none;
 }
 
-/* Cores dinâmicas */
 :root .quiz-option .ripple {
   background: rgba(255, 255, 255, 0.6);
 }
@@ -201,7 +200,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     background-color: #4b5563; 
 }
 
-/* NOVO: Estilo para a chave da opção (A), B), C), etc.) */
+/* Estilo para a chave da opção (A), B), C), etc.) */
 .quiz-option .option-key {
     font-weight: 700;
     margin-right: 0.75rem;
@@ -221,7 +220,6 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     color: white !important; 
     border-color: var(--primary) !important; 
 }
-/* Força as chaves de cor na resposta correta e incorreta */
 .quiz-option.correct .option-key,
 .quiz-option.incorrect .option-key {
     color: white !important;
@@ -229,7 +227,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 
 /* Feedback Aprimorado (Area) */
 .feedback-area {
-    margin-top: -0.5rem; /* Puxa para cima para ficar mais próximo da questão */
+    margin-top: -0.5rem; 
     margin-bottom: 1rem;
 }
 
@@ -250,17 +248,169 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .module-nav { background-color: var(--panel-bg); border-top: 1px solid var(--border-color); transition: background-color 0.3s, border-color 0.3s; padding: 1rem; box-shadow: 0 -2px 15px rgba(0,0,0,0.1); z-index: 35; border-radius: 0 0 1rem 1rem; }
-.achievement { background: var(--panel-bg); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 5px 15px rgba(0,0,0,0.08); text-align: center; transition: all 0.3s ease; border: 2px solid transparent; }
-.achievement.unlocked { border-color: var(--accent); transform: scale(1.05); background: linear-gradient(135deg, #fffbeb, #fff); }
-.dark .achievement.unlocked { background: linear-gradient(135deg, #4b5563, #374151); }
-.achievement-icon { font-size: 3rem; color: #ced4da; margin-bottom: 1rem; transition: color 0.5s ease; }
-.dark .achievement-icon { color: #4b5563; }
-.achievement.unlocked .achievement-icon { color: var(--accent); animation: pulse 1.5s infinite; }
 
-.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); z-index: 100; background-color: var(--panel-bg); padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; max-width: 32rem; width: 90%; opacity: 0; pointer-events: none; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-.modal.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 48, 73, 0.7); backdrop-filter: blur(5px); z-index: 99; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
-.modal-overlay.show { opacity: 1; pointer-events: auto; }
+/* --- NOVAS CONQUISTAS MODERNAS --- */
+.achievement-card {
+    background: var(--panel-bg);
+    border-radius: 1rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Estado Bloqueado */
+.achievement-card {
+    border-color: var(--border-color);
+    opacity: 0.8;
+    transform: scale(0.98);
+    filter: grayscale(1);
+}
+
+/* Estado Desbloqueado */
+.achievement-card.unlocked {
+    opacity: 1;
+    transform: scale(1);
+    filter: grayscale(0);
+    border-color: var(--accent);
+    background: linear-gradient(145deg, #ffffff, #fff7ed);
+    box-shadow: 0 10px 25px rgba(247, 127, 0, 0.15);
+}
+
+.dark .achievement-card.unlocked {
+    background: linear-gradient(145deg, #1f2937, #111827);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Ícone Grande e Moderno */
+.achievement-icon {
+    font-size: 3.5rem; 
+    margin-bottom: 1rem;
+    transition: all 0.5s ease;
+    color: #d1d5db; 
+    display: inline-block;
+}
+
+.dark .achievement-icon { color: #4b5563; }
+
+.achievement-card.unlocked .achievement-icon {
+    color: var(--accent);
+    filter: drop-shadow(0 0 10px rgba(247, 127, 0, 0.4));
+    animation: floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* Título da Conquista */
+.achievement-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--light-text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.achievement-card.unlocked .achievement-title {
+    color: var(--accent);
+}
+
+/* Efeito de Brilho no Card Desbloqueado */
+.achievement-card.unlocked::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(247,127,0,0.1) 0%, rgba(0,0,0,0) 70%);
+    pointer-events: none;
+}
+
+/* === SEPARADOR DE QUIZ (CORRIGIDO PARA MOBILE) === */
+.quiz-section-separator {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 2px dashed var(--border-color);
+    position: relative;
+}
+
+.quiz-section-separator::before {
+    content: 'PRATIQUE AGORA';
+    position: absolute;
+    top: -14px; /* Ajuste para centralizar na linha */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--panel-bg);
+    padding: 0 1.5rem;
+    color: var(--secondary);
+    font-weight: bold;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    z-index: 1;
+    
+    /* CORREÇÃO DEFINITIVA PARA NÃO QUEBRAR LINHA */
+    white-space: nowrap !important; 
+}
+
+/* AJUSTE ESPECÍFICO PARA TELAS PEQUENAS (MOBILE) */
+@media (max-width: 640px) {
+    .quiz-section-separator::before {
+        padding: 0 1rem;       /* Menos padding lateral */
+        font-size: 0.7rem;     /* Fonte menor para caber */
+        letter-spacing: 0.5px; /* Letras mais juntas */
+        top: -10px;            /* Ajuste vertical */
+    }
+}
+
+.dark .quiz-section-separator::before {
+    color: var(--accent);
+    background-color: #1f2937; 
+}
+
+/* --- MODAIS --- */
+.modal { 
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); 
+    z-index: 20000 !important; 
+    background-color: var(--panel-bg); padding: 2.5rem; border-radius: 1.5rem; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center; 
+    max-width: 32rem; width: 90%; 
+    opacity: 0; pointer-events: none; 
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+    max-height: 90vh; 
+    display: flex;
+    flex-direction: column;
+}
+
+#name-prompt-modal, #expired-modal {
+    z-index: 20000 !important;
+    padding: 0; 
+    overflow: hidden; 
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #f97316; }
+
+.modal.show { opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; pointer-events: auto !important; }
+
+.modal-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(5px); 
+    z-index: 19999 !important; 
+    opacity: 0; pointer-events: none; 
+    transition: opacity 0.5s ease; 
+}
+.modal-overlay.show { opacity: 1 !important; pointer-events: auto !important; }
 
 .accordion-button { width: 100%; text-align: left; background-color: #f8f9fa; color: var(--dark-text); cursor: pointer; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; transition: background-color 0.3s ease; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
 .dark .accordion-button { background-color: #374151; border-color: #374151; }
@@ -269,11 +419,12 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 .accordion-button .fas { transition: transform 0.3s ease; }
 .accordion-button.active .fas { transform: rotate(180deg); }
 .accordion-panel { padding: 0 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
-/* ==== MÓDULOS E CARDS (Refinando para mobile) ==== */
+
+/* ==== MÓDULOS E CARDS ==== */
 .module-list-item {
-  position: relative; /* Adicionado para o ícone de check funcionar */
+  position: relative; 
   padding: 1rem 1.25rem;
-  margin: 0.5rem 0; /* Espaçamento reduzido no mobile */
+  margin: 0.5rem 0; 
   border-radius: 0.75rem;
   background: linear-gradient(145deg, #ffffff, #f7f7f7);
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -294,7 +445,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 }
 
 .module-list-item:hover {
-  transform: translateY(-2px); /* Efeito menor no hover */
+  transform: translateY(-2px); 
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   border-color: var(--accent);
   background: linear-gradient(145deg, #fff9f3, #ffffff);
@@ -306,7 +457,6 @@ h1, h2, h3 { font-family: 'Lora', serif; }
   font-weight: 600;
   box-shadow: 0 4px 10px rgba(247, 127, 0, 0.2);
 }
-
 
 .dark .module-list-item:hover {
   background: linear-gradient(145deg, #374151, #1f2937);
@@ -323,7 +473,6 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     font-size: 1rem;
     color: var(--success);
 }
-
 
 #content-area { background-color: var(--panel-bg); color: var(--light-text); }
 #content-area h3 { color: var(--secondary); border-bottom: 2px solid var(--border-color); }
@@ -352,8 +501,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 
 nav { background-color: var(--panel-bg); border-color: var(--border-color); }
 .dark nav { background-color: #1f2937; }
-/* Removido: nav button { color: #4b5563; } */
-/* Removido: .dark nav button { color: #9ca3af; } */
+
 #toast-container { position: fixed; top: 1.25rem; right: 1.25rem; z-index: 1000; }
 .toast { background-color: #1f2937; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; margin-bottom: 1rem; opacity: 0; transform: translateX(100%); animation: toast-in 0.5s forwards, toast-out 0.5s 4s forwards; }
 .toast i { color: var(--accent); font-size: 1.5rem; margin-right: 0.75rem; }
@@ -394,21 +542,19 @@ nav { background-color: var(--panel-bg); border-color: var(--border-color); }
     animation: gradient-flow 6s linear infinite;
 }
 
-/* --- INÍCIO: NOVOS AJUSTES DE ESTILO (Mobile Médio / Desktop Grande) --- */
+/* --- ESTILOS DE CONTEÚDO (TIPOGRAFIA) --- */
 
-/* 1. Ajuste de Espaçamento (Padrão/Mobile) */
 #content-area > div > p,
 #content-area > div > ul,
 #content-area > div > ol,
 #content-area > div > .key-concept,
 #content-area > div > .warning-box {
-    margin-bottom: 1.25rem; /* 20px (Um bom "respiro" no mobile) */
+    margin-bottom: 1.25rem; 
 }
 
-/* Espaço entre conteúdo e exercícios (Padrão/Mobile) */
 #content-area > div > hr {
-    margin-top: 2.5rem;    /* 40px (Bom espaço no mobile) */
-    margin-bottom: 2rem; /* 32px */
+    margin-top: 2.5rem;    
+    margin-bottom: 2rem; 
     border-color: var(--border-color);
 }
 
@@ -421,70 +567,60 @@ nav { background-color: var(--panel-bg); border-color: var(--border-color); }
     list-style-type: decimal;
  }
  
-/* Tamanho do texto principal (Padrão/Mobile) */
 #content-area > div > p:not(.text-lg),
 #content-area > div > ul li,
 #content-area > div > ol li {
-    font-size: 0.925rem; /* 15px (Reduzido para mobile) */
-    line-height: 1.6;  /* Ajusta a altura da linha para o novo tamanho */
+    font-size: 0.925rem; 
+    line-height: 1.6;  
 }
 
-/* 6. Tamanho dos Subtítulos (Padrão/Mobile) */
 #content-area > div > h4 {
-    font-size: 1.375rem; /* 22px (Reduzido para mobile) */
+    font-size: 1.375rem; 
     font-weight: 700;
     margin-top: 2rem; 
     margin-bottom: 0.75rem; 
 }
 #content-area > div > h5 {
-    font-size: 1.2rem; /* 19.2px (Reduzido para mobile) */
+    font-size: 1.2rem; 
     font-weight: 700;
     margin-top: 1.75rem; 
     margin-bottom: 0.5rem; 
 }
 
-/* Tamanhos Maiores (APENAS DESKTOP - a partir de 1024px) */
 @media (min-width: 1024px) {
-    /* Retorna o texto principal ao tamanho padrão no desktop */
     #content-area > div > p:not(.text-lg),
     #content-area > div > ul li,
     #content-area > div > ol li {
-        font-size: 1rem; /* 16px (Padrão) */
+        font-size: 1rem; 
         line-height: 1.75;
     }
 
     #content-area > div > h4 {
-        font-size: 1.75rem; /* 28px (Grande no desktop) */
+        font-size: 1.75rem; 
         margin-top: 2.25rem; 
         margin-bottom: 1rem; 
     }
     #content-area > div > h5 {
-        font-size: 1.5rem; /* 24px (Grande no desktop) */
+        font-size: 1.5rem; 
         margin-top: 2rem; 
         margin-bottom: 0.75rem; 
     }
     
-    /* Aumenta o espaço do <hr> APENAS no desktop */
     #content-area > div > hr {
-        margin-top: 4rem;    /* 64px */
-        margin-bottom: 3rem; /* 48px */
+        margin-top: 4rem;    
+        margin-bottom: 3rem; 
     }
 }
 
-/* Garante que o primeiro elemento não tenha espaço no topo */
 #content-area > div > h4:first-child {
     margin-top: 0;
 }
 
-/* Mantém o H5 dentro de key-concept com seu estilo original */
 .key-concept h5 {
-    font-size: 1.125rem !important; /* 18px */
+    font-size: 1.125rem !important; 
     margin-top: 0 !important;
     margin-bottom: 0.5rem !important;
 }
-
-/* --- FIM: NOVOS AJUSTES DE ESTILO --- */
-
 
 @media print {
     body > *:not(#print-watermark) {
@@ -542,7 +678,6 @@ nav { background-color: var(--panel-bg); border-color: var(--border-color); }
      box-shadow: 0 0 0 3px rgba(255, 158, 0, 0.3);
 }
 
-/* --- CORREÇÃO (Request Minimalista - Modo Foco) --- */
 #focus-menu-desktop { 
     display: none;
     position: fixed;
@@ -552,18 +687,16 @@ nav { background-color: var(--panel-bg); border-color: var(--border-color); }
 }
 #focus-nav-bar { display: none; }
 
-/* Oculta tudo MENOS o conteúdo e os menus de foco */
 body.focus-mode header,
 body.focus-mode footer,
 body.focus-mode nav:not(#focus-nav-bar), 
 body.focus-mode #back-to-top,
 body.focus-mode #welcome-greeting-container,
 body.focus-mode aside, 
-body.focus-mode #sticky-progress-wrapper /* <-- Oculta o NOVO wrapper de progresso */
+body.focus-mode #sticky-progress-wrapper 
 {
     display: none;
 }
-/* --- FIM DA CORREÇÃO --- */
 
 body.focus-mode #focus-nav-bar {
     display: block;
@@ -581,16 +714,14 @@ body.focus-mode #focus-nav-bar {
     }
 }
 
-/* Ajustes de layout para o Modo Foco */
 body.focus-mode .container.mx-auto { 
-    padding-top: 2rem !important; /* Reduz drásticamente o padding do topo */
+    padding-top: 2rem !important; 
 }
 body.focus-mode .lg\:w-2\/3 {
-    width: 100% !important; /* Força a área de conteúdo a ocupar o espaço */
-    max-width: 80rem; /* Mantém uma largura máxima de leitura */
+    width: 100% !important; 
+    max-width: 80rem; 
     margin: 0 auto;
 }
-/* --- FIM --- */
 
 body.focus-mode #main-wrapper { padding-bottom: 2rem; }
 body.focus-mode { padding-bottom: 70px; } 
@@ -598,7 +729,6 @@ body.focus-mode { padding-bottom: 70px; }
      body.focus-mode { padding-bottom: 0; } 
 }
 
-/* --- Animação do Modal de Conquista --- */
 #achievement-modal-overlay { z-index: 101; } 
 #achievement-modal { z-index: 102; }
 #ach-modal-icon-container i {
@@ -616,11 +746,10 @@ body.focus-mode { padding-bottom: 70px; }
     60% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 25px var(--accent)); }
     100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(247, 127, 0, 0.5)); }
 }
-/* ==== HEADER PREMIUM ==== */
+
 #main-header {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  /* A borda sumiu pois a barra de progresso está no wrapper separado */
 }
 
 #main-header.scrolled {
@@ -631,13 +760,12 @@ body.focus-mode { padding-bottom: 70px; }
 .dark #main-header.scrolled {
   background-color: rgba(17, 24, 39, 0.85);
 }
-/* ==== MICROANIMAÇÃO DE SUCESSO ==== */
+
 .quiz-option.correct {
   position: relative;
   overflow: hidden;
 }
 
-/* Brilho suave */
 .quiz-option.correct::after {
   content: "";
   position: absolute;
@@ -657,7 +785,6 @@ body.focus-mode { padding-bottom: 70px; }
 }
 
 
-/* Partículas douradas */
 @keyframes sparkle {
   0% { transform: translateY(0) scale(1); opacity: 1; }
   100% { transform: translateY(-30px) scale(0); opacity: 0; }
@@ -673,7 +800,7 @@ body.focus-mode { padding-bottom: 70px; }
   pointer-events: none;
   z-index: 10;
 }
-/* ==== MICROANIMAÇÃO DE SUCESSO (PARTÍCULAS + CONFETTI) ==== */
+
 .gold-particles-container {
   position: fixed;
   left: 0;
@@ -695,7 +822,6 @@ body.focus-mode { padding-bottom: 70px; }
   will-change: transform, opacity;
 }
 
-/* NOVO: Loader (Spinner) */
 .loader {
     border: 4px solid rgba(0, 0, 0, 0.1);
     border-left-color: var(--primary);
@@ -714,23 +840,16 @@ body.focus-mode { padding-bottom: 70px; }
         transform: rotate(360deg);
     }
 }
-/* FIM NOVO: Loader */
 
-/* === BOTÃO DE TEMA (PREMIUM) - V4 (FINAL) === */
-
-/* 1. Estilo do Slider no DESKTOP (Botão é o trilho) */
-/* Remove classes de cor e tamanho do HTML */
 #dark-mode-toggle-desktop {
     background-color: var(--secondary);
     border: none;
     width: 50px; height: 28px; border-radius: 14px;
     padding: 0; position: relative; cursor: pointer;
     transition: background-color 0.3s ease;
-    /* PREMIUM: Sombra interna (profundidade) */
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* O <i> é o knob (botão deslizante) */
 #dark-mode-toggle-desktop i {
     background-color: white;
     color: var(--secondary); 
@@ -738,16 +857,11 @@ body.focus-mode { padding-bottom: 70px; }
     font-size: 14px; 
     display: flex; align-items: center; justify-content: center;
     position: absolute; top: 3px; left: 3px;
-    
-    /* PREMIUM: Sombra externa (flutuação) */
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    
-    /* PREMIUM: Animação de rotação + translação */
     transform: rotate(0deg); 
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Efeito de pressionar */
 #dark-mode-toggle-desktop:active i {
     transform: scale(0.9);
 }
@@ -755,21 +869,15 @@ body.focus-mode { padding-bottom: 70px; }
     transform: translateX(22px) scale(0.9);
 }
 
-/* Estado DARK (Desktop) */
 .dark #dark-mode-toggle-desktop {
     background-color: var(--accent);
 }
 
 .dark #dark-mode-toggle-desktop i {
-    /* PREMIUM: Desliza E GIRA */
     transform: translateX(22px) rotate(360deg);
     color: var(--accent);
 }
     
-/* 2. Estilo do Slider no MOBILE (CORRIGIDO E PREMIUM) */
-
-/* O botão container mantem o layout flex-col */
-/* Remove classes de cor do HTML */
 #bottom-nav-theme {
    position: relative;
    overflow: visible;
@@ -779,31 +887,26 @@ body.focus-mode { padding-bottom: 70px; }
     color: #9ca3af;
 }
 
-
-/* 3. O "Trilho" (Rail) é o <i> */
-/* O <i> original é transformado no trilho */
 #bottom-nav-theme i {
     background-color: var(--secondary);
-    width: 50px; /* Largura do trilho */
-    height: 28px; /* Altura do trilho */
+    width: 50px; 
+    height: 28px; 
     border-radius: 14px;
     position: relative;
     transition: background-color 0.3s ease;
-    font-size: 0; /* Esconde o ícone original */
-    color: transparent; /* Esconde o ícone original */
-    margin-bottom: 4px; /* Adiciona espaço para o texto "Tema" abaixo */
-    /* PREMIUM: Sombra interna (profundidade) */
+    font-size: 0; 
+    color: transparent; 
+    margin-bottom: 4px; 
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
-/* 4. O "Botão Deslizante" (Knob) é o ::after do <i> */
 #bottom-nav-theme i::after {
-    content: '\f186'; /* Ícone de Lua (padrão) */
+    content: '\f186'; 
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     
     background-color: white;
-    color: var(--secondary); /* Cor do ícone (lua) */
+    color: var(--secondary); 
     width: 22px; 
     height: 22px; 
     border-radius: 50%;
@@ -817,15 +920,12 @@ body.focus-mode { padding-bottom: 70px; }
     top: 3px;
     left: 3px;
 
-    /* PREMIUM: Sombra externa (flutuação) */
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 
-    /* PREMIUM: Animação de rotação + translação */
     transform: rotate(0deg); 
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Efeito de pressionar (Mobile) */
 #bottom-nav-theme:active i::after {
     transform: scale(0.9);
 }
@@ -833,67 +933,116 @@ body.focus-mode { padding-bottom: 70px; }
     transform: translateX(22px) scale(0.9);
 }
 
-/* 5. O texto "Tema" (Span) */
-/* O span.text-xs já está correto no HTML e não precisa de override */
-
-/* 6. Estilo do Modo DARK (Mobile) */
 .dark #bottom-nav-theme i {
-    background-color: var(--accent); /* Trilho muda para cor de destaque */
+    background-color: var(--accent); 
 }
 
 .dark #bottom-nav-theme i::after {
-    content: '\f185'; /* Ícone de Sol */
-    /* PREMIUM: Desliza E GIRA */
+    content: '\f185'; 
     transform: translateX(22px) rotate(360deg); 
-    color: var(--accent); /* Cor do ícone (sol) */
+    color: var(--accent); 
 }
 
-
-/* === MÓDULOS EM GRADE (DESKTOP E MOBILE) === */
-
-/* 1. Aplica a grade aos DOIS containers (mobile e desktop) */
+/* GRID E BOTÕES ARREDONDADOS PARA MÓDULOS */
 #mobile-module-container .accordion-panel,
 #desktop-module-container .accordion-panel {
     display: grid;
     grid-template-columns: repeat(2, 1fr); 
     padding: 0; 
-    gap: 0.75rem; /* 12px */
+    gap: 0.75rem;
     padding-top: 0.75rem;
 }
 
-/* 2. Remove a margem vertical antiga dos itens */
 #mobile-module-container .module-list-item,
 #desktop-module-container .module-list-item {
     margin: 0; 
-}
-
-/* 3. Ajusta o layout dos cards para Ícone em Cima e Centralizado */
-#mobile-module-container .module-list-item,
-#desktop-module-container .module-list-item {
     flex-direction: column; 
     align-items: center; 
-    padding: 0.625rem; /* 10px */
-    font-size: 0.875rem; /* 14px */
-    min-height: 75px; 
+    padding: 1rem 0.5rem; 
+    font-size: 0.85rem; 
+    min-height: 100px; 
     word-break: break-word;
     text-align: center; 
-    justify-content: center; 
+    justify-content: center;
+    border-radius: 1rem !important; 
 }
 
-/* Ajuste no ícone (agora em cima) */
 #mobile-module-container .module-list-item .module-icon,
 #desktop-module-container .module-list-item .module-icon {
     margin-right: 0;
     margin-bottom: 0.5rem; 
-    font-size: 1.25rem; 
+    font-size: 1.5rem; 
     align-self: center; 
 }
 
-/* Ajuste no ícone de 'concluído' (check) */
 #mobile-module-container .module-list-item .completion-icon,
 #desktop-module-container .module-list-item .completion-icon {
     position: absolute;
     top: 0.5rem;
-    right: 0.75rem;
-    font-size: 0.875rem;
+    right: 0.5rem;
+    font-size: 0.8rem;
+    margin-left: 0;
+}
+
+#back-to-top.action-button {
+    border-radius: 50% !important; 
+    width: 3rem !important;        
+    height: 3rem !important;       
+    padding: 0 !important;         
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); transform: scale(1); }
+    50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); transform: scale(1.05); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); transform: scale(1); }
+}
+
+.pulse-button { animation: pulse-glow 2s infinite; }
+.pulse-button-slow { animation: pulse-glow 3s infinite; }
+
+@keyframes gradient-x {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.animate-gradient { animation: gradient-x 3s ease infinite; }
+
+.drive-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem;
+    margin: 2rem 0;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-weight: bold;
+    border-radius: 0.75rem;
+    text-decoration: none;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.drive-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(37, 99, 235, 0.4);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.drive-button i {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.premium-login-modal {
+    border-radius: 1.5rem !important;
+    overflow: hidden !important;
+}
+
+#main-header .fa-shield-alt {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }

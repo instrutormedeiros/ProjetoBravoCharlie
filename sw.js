@@ -1,49 +1,39 @@
-/* sw.js — Service Worker minimal e tolerante
-   - Cache-then-network strategy with time-limited cache entries
-   - Não bloqueia atualizações e falha silenciosamente se arquivos faltarem
+/* sw.js — Service Worker V3 (Forçando atualização)
+   - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v1';
+const CACHE_NAME = 'pbc-static-v3'; // <--- MUDAMOS PARA V3 PARA FORÇAR ATUALIZAÇÃO
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
   '/style.css',
-  '/app_final.js', /* <<< CORRIGIDO (estava app.js) */
+  '/app_final.js',
   '/data.js',
   '/quizzes.js',
-  '/course.js' /* <<< CORRIGIDO (mantido para bater com o index.html) */
+  '/course.js',
+  '/firebase-init.js' // Adicionado para garantir
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting();
+  self.skipWaiting(); // Força o novo SW a assumir imediatamente
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(PRECACHE_URLS.map(u => new Request(u, {cache: 'no-cache'}))).catch(()=>{ return; });
+      return cache.addAll(PRECACHE_URLS.map(u => new Request(u, {cache: 'reload'}))).catch(()=>{ return; });
     })
   );
 });
 
 self.addEventListener('activate', event => {
-  clients.claim();
+  clients.claim(); // Controla as páginas abertas imediatamente
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)) // Deleta o cache antigo (v1 e v2)
     ))
   );
 });
 
 self.addEventListener('fetch', event => {
-  // Ignore non-GET
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const network = fetch(event.request).then(resp => {
-        // update cache in background (best-effort)
-        if (resp && resp.ok) {
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, resp.clone()));
-        }
-        return resp;
-      }).catch(()=>null);
-      return cached || network || new Response('', {status: 503, statusText: 'Service Unavailable'});
-    })
+    fetch(event.request).catch(() => caches.match(event.request)) // Tenta rede primeiro, depois cache
   );
 });
