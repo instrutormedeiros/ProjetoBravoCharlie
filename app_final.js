@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL - CORREÇÃO MENSAGEM DE EXERCÍCIOS) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL - CORREÇÃO ADMIN MOBILE & BÔNUS) === */
 
 // ESPERA O HTML ESTAR 100% CARREGADO ANTES DE EXECUTAR QUALQUER COISA
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelResetButton = document.getElementById('cancel-reset-button');
 
     const adminBtn = document.getElementById('admin-panel-btn');
+    const mobileAdminBtn = document.getElementById('mobile-admin-btn'); // Seletor do botão mobile
     const adminModal = document.getElementById('admin-modal');
     const adminOverlay = document.getElementById('admin-modal-overlay');
     const closeAdminBtn = document.getElementById('close-admin-modal');
@@ -151,9 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
-        // --- Lógica do Botão Admin ---
+        // --- CORREÇÃO: Lógica do Botão Admin para MOBILE e Desktop ---
         if (userData.isAdmin === true) {
-            if(adminBtn) adminBtn.classList.remove('hidden');
+            if(adminBtn) adminBtn.classList.remove('hidden'); // Desktop
+            if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden'); // Mobile
         }
 
         checkTrialStatus(userData.acesso_ate);
@@ -883,6 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addEventListeners() {
+        // 1. Botões de Navegação
         const nextButton = document.getElementById('next-module');
         const prevButton = document.getElementById('prev-module');
 
@@ -899,6 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nextButton?.classList.remove('blinking-button');
         });
 
+        // 2. Busca
         document.body.addEventListener('input', e => {
             if(e.target.matches('.module-search')) {
                 const s = e.target.value.toLowerCase();
@@ -930,6 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 3. Admin Panel (Correção Mobile)
         adminBtn?.addEventListener('click', window.openAdminPanel);
         const mobileAdminBtn = document.getElementById('mobile-admin-btn');
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
@@ -943,6 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminOverlay.classList.remove('show');
         });
 
+        // 4. Reset
         document.getElementById('reset-progress')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.add('show'); document.getElementById('reset-modal-overlay')?.classList.add('show'); });
         document.getElementById('cancel-reset-button')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.remove('show'); document.getElementById('reset-modal-overlay')?.classList.remove('show'); });
         document.getElementById('confirm-reset-button')?.addEventListener('click', () => {
@@ -953,6 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         });
         
+        // 5. Back to Top
         document.getElementById('back-to-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('back-to-top');
@@ -962,6 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 6. Cliques
         document.body.addEventListener('click', e => {
             const moduleItem = e.target.closest('.module-list-item');
             if (moduleItem) {
