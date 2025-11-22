@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL - ADMIN POWER 2.0) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL - CORREÇÃO MENSAGEM DE EXERCÍCIOS) === */
 
 // ESPERA O HTML ESTAR 100% CARREGADO ANTES DE EXECUTAR QUALQUER COISA
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelResetButton = document.getElementById('cancel-reset-button');
 
     const adminBtn = document.getElementById('admin-panel-btn');
-    const mobileAdminBtn = document.getElementById('mobile-admin-btn');
     const adminModal = document.getElementById('admin-modal');
     const adminOverlay = document.getElementById('admin-modal-overlay');
     const closeAdminBtn = document.getElementById('close-admin-modal');
@@ -155,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Lógica do Botão Admin ---
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
-            if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
 
         checkTrialStatus(userData.acesso_ate);
@@ -169,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleInitialLoad();
     }
 
-    // --- PAINEL ADMINISTRATIVO AVANÇADO (ATUALIZADO 2.0) ---
+    // --- PAINEL ADMINISTRATIVO AVANÇADO ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
         
@@ -191,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cpf = u.cpf || 'Sem CPF';
                 const planoTipo = u.planType || (isPremium ? 'Indefinido' : 'Trial');
                 
-                // Ícone de nota muda de cor se tiver observação
                 const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
                 
                 const row = `
@@ -208,22 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         </td>
                         <td class="p-3 text-sm font-medium">${validade}</td>
                         <td class="p-3 flex flex-wrap gap-2">
-                            <!-- Botões de Ação -->
-                            <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Observações">
-                                <i class="fas fa-sticky-note ${noteIconColor}"></i>
-                            </button>
-                            <button onclick="manageUserAccess('${uid}', '${u.acesso_ate}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Acesso e Plano">
-                                <i class="fas fa-calendar-alt"></i>
-                            </button>
-                            <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Enviar E-mail de Reset de Senha">
-                                <i class="fas fa-key"></i>
-                            </button>
-                            <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir Usuário">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
+                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Observações"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
+                            <button onclick="manageUserAccess('${uid}', '${u.acesso_ate}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Acesso"><i class="fas fa-calendar-alt"></i></button>
+                            <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
+                            <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -234,51 +220,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 1. Editar Dados Básicos
     window.editUserData = async function(uid, oldName, oldCpf) {
         const newName = prompt("Novo nome do aluno:", oldName);
         if (newName === null) return;
         const newCpfRaw = prompt("Novo CPF (apenas números):", oldCpf === 'Sem CPF' ? '' : oldCpf);
         if (newCpfRaw === null) return;
         const newCpf = newCpfRaw.replace(/\D/g, ''); 
-        
         if (!newName || !newCpf) { alert("Nome e CPF são obrigatórios."); return; }
-
         try {
             const batch = window.__fbDB.batch();
             const userRef = window.__fbDB.collection('users').doc(uid);
             batch.update(userRef, { name: newName, cpf: newCpf });
-
             if (oldCpf !== 'Sem CPF' && oldCpf !== newCpf) {
                 batch.delete(window.__fbDB.collection('cpfs').doc(oldCpf));
                 batch.set(window.__fbDB.collection('cpfs').doc(newCpf), { uid: uid });
             } else if (oldCpf === 'Sem CPF') {
                 batch.set(window.__fbDB.collection('cpfs').doc(newCpf), { uid: uid });
             }
-
             await batch.commit();
             alert("Dados atualizados!");
             openAdminPanel();
         } catch (err) { alert("Erro: " + err.message); }
     };
 
-    // 2. Gerenciar Acesso (Renomeado de extendUserAccess)
     window.manageUserAccess = async function(uid, currentExpiryStr) {
-        const opcao = prompt(
-            "Gerenciar Plano e Validade:\n\n" +
-            "1 - MENSAL (+30 dias)\n" +
-            "2 - SEMESTRAL (+180 dias)\n" +
-            "3 - ANUAL (+365 dias)\n" +
-            "4 - PERMANENTE (10 anos)\n" +
-            "5 - PERSONALIZADO (Adicionar/Remover dias)\n\n" +
-            "Digite o número da opção:"
-        );
-
+        const opcao = prompt("Gerenciar Plano e Validade:\n\n1 - MENSAL (+30 dias)\n2 - SEMESTRAL (+180 dias)\n3 - ANUAL (+365 dias)\n4 - PERMANENTE (10 anos)\n5 - PERSONALIZADO (Adicionar/Remover dias)\n\nDigite o número da opção:");
         if (!opcao) return;
-
         let diasToAdd = 0;
         let novoPlano = '';
-
         if (opcao === '1') { diasToAdd = 30; novoPlano = 'Mensal'; }
         else if (opcao === '2') { diasToAdd = 180; novoPlano = 'Semestral'; }
         else if (opcao === '3') { diasToAdd = 365; novoPlano = 'Anual'; }
@@ -293,73 +262,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const hoje = new Date();
         let baseDate = new Date(currentExpiryStr);
-        // Se já venceu, soma a partir de hoje. Se não, soma do vencimento atual.
-        if (isNaN(baseDate.getTime()) || baseDate < hoje) {
-            baseDate = hoje;
-        }
-
+        if (isNaN(baseDate.getTime()) || baseDate < hoje) baseDate = hoje;
         baseDate.setDate(baseDate.getDate() + diasToAdd);
         const newExpiryISO = baseDate.toISOString();
 
         try {
-            await window.__fbDB.collection('users').doc(uid).update({
-                status: 'premium',
-                acesso_ate: newExpiryISO,
-                planType: novoPlano // Salva o tipo do plano para mostrar na tabela
-            });
+            await window.__fbDB.collection('users').doc(uid).update({ status: 'premium', acesso_ate: newExpiryISO, planType: novoPlano });
             alert("Acesso atualizado com sucesso!");
             openAdminPanel();
-        } catch (err) {
-            alert("Erro ao atualizar: " + err.message);
-        }
+        } catch (err) { alert("Erro ao atualizar: " + err.message); }
     };
 
-    // 3. Editar Observação (NOVO)
     window.editUserNote = async function(uid, currentNote) {
-        const newNote = prompt("Observações sobre este aluno (ex: Pagou via PIX, Pendência, etc):", currentNote);
-        if (newNote === null) return; // Cancelou
-
+        const newNote = prompt("Observações sobre este aluno:", currentNote);
+        if (newNote === null) return; 
         try {
-            await window.__fbDB.collection('users').doc(uid).update({
-                adminNote: newNote
-            });
+            await window.__fbDB.collection('users').doc(uid).update({ adminNote: newNote });
             alert("Observação salva.");
             openAdminPanel();
-        } catch (err) {
-            alert("Erro ao salvar nota: " + err.message);
-        }
+        } catch (err) { alert("Erro: " + err.message); }
     };
 
-    // 4. Excluir Usuário
     window.deleteUser = async function(uid, name, cpf) {
-        if(confirm(`TEM CERTEZA que deseja excluir o aluno ${name}?\n\nEssa ação não pode ser desfeita.`)) {
+        if(confirm(`TEM CERTEZA que deseja excluir o aluno ${name}?`)) {
             const userConfirm = prompt("Para confirmar, digite DELETAR:");
             if (userConfirm !== "DELETAR") return;
-
             try {
                 const batch = window.__fbDB.batch();
                 batch.delete(window.__fbDB.collection('users').doc(uid));
-                if (cpf && cpf !== 'Sem CPF' && cpf !== 'undefined') {
-                    batch.delete(window.__fbDB.collection('cpfs').doc(cpf));
-                }
+                if (cpf && cpf !== 'Sem CPF' && cpf !== 'undefined') batch.delete(window.__fbDB.collection('cpfs').doc(cpf));
                 await batch.commit();
                 alert("Usuário excluído.");
                 openAdminPanel();
-            } catch (err) {
-                alert("Erro ao excluir: " + err.message);
-            }
+            } catch (err) { alert("Erro ao excluir: " + err.message); }
         }
     };
 
-    // 5. Resetar Senha
     window.sendResetEmail = async function(email) {
-        if(confirm(`Enviar e-mail de redefinição de senha para ${email}?\n\n(Por segurança, não é possível visualizar a senha atual, apenas resetá-la).`)) {
+        if(confirm(`Enviar e-mail de redefinição de senha para ${email}?`)) {
             try {
                 await window.__fbAuth.sendPasswordResetEmail(email);
-                alert('E-mail de redefinição enviado!');
-            } catch(err) {
-                alert('Erro: ' + err.message);
-            }
+                alert('E-mail enviado!');
+            } catch(err) { alert('Erro: ' + err.message); }
         }
     };
 
@@ -368,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date();
         const diffTime = expiryDate - today; 
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        
         const trialToast = document.getElementById('trial-floating-notify');
         const daysLeftSpan = document.getElementById('trial-days-left');
         const trialBtn = document.getElementById('trial-subscribe-btn');
@@ -379,15 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
             trialToast.classList.remove('hidden');
             if(daysLeftSpan) daysLeftSpan.textContent = diffDays;
             if(trialTitle) trialTitle.textContent = "Período de Experiência";
-            
             trialBtn?.addEventListener('click', () => {
                 document.getElementById('expired-modal').classList.add('show');
                 document.getElementById('name-modal-overlay').classList.add('show');
             });
-            
-            closeTrialBtn?.addEventListener('click', () => {
-                trialToast.classList.add('hidden');
-            });
+            closeTrialBtn?.addEventListener('click', () => { trialToast.classList.add('hidden'); });
         }
     }
 
@@ -399,21 +338,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const emailInput = document.getElementById('email-input');
         const passwordInput = document.getElementById('password-input');
         const feedback = document.getElementById('auth-feedback');
-        
         const loginGroup = document.getElementById('login-button-group');
         const signupGroup = document.getElementById('signup-button-group');
         const authTitle = document.getElementById('auth-title');
         const authMsg = document.getElementById('auth-message');
-
         const btnShowLogin = document.getElementById('show-login-button');
         const btnShowSignup = document.getElementById('show-signup-button');
         const btnLogin = document.getElementById('login-button');
         const btnSignup = document.getElementById('signup-button');
-        
         const btnOpenPayHeader = document.getElementById('header-subscribe-btn');
         const btnOpenPayMobile = document.getElementById('mobile-subscribe-btn');
         const btnOpenPayLogin = document.getElementById('open-payment-login-btn');
-        
         const expiredModal = document.getElementById('expired-modal');
         const closePayModal = document.getElementById('close-payment-modal-btn');
         const loginModalOverlay = document.getElementById('name-modal-overlay');
@@ -427,11 +362,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginModal.dataset.wasOpen = 'true'; 
             }
         }
-
         btnOpenPayHeader?.addEventListener('click', openPaymentModal);
         btnOpenPayMobile?.addEventListener('click', openPaymentModal);
         btnOpenPayLogin?.addEventListener('click', openPaymentModal);
-
         closePayModal?.addEventListener('click', () => {
             expiredModal.classList.remove('show');
             if (loginModal && loginModal.dataset.wasOpen === 'true') {
@@ -445,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-
         btnShowSignup?.addEventListener('click', () => {
             loginGroup.classList.add('hidden');
             signupGroup.classList.remove('hidden');
@@ -455,7 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
             authMsg.textContent = "Cadastre-se para o Período de Experiência.";
             feedback.textContent = "";
         });
-        
         btnShowLogin?.addEventListener('click', () => {
             loginGroup.classList.remove('hidden');
             signupGroup.classList.add('hidden');
@@ -465,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
             authMsg.textContent = "Acesso Restrito";
             feedback.textContent = "";
         });
-        
         btnLogin?.addEventListener('click', async () => {
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -476,7 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             feedback.textContent = "Entrando...";
             feedback.className = "text-center text-sm mt-4 text-blue-400 font-semibold";
-            
             try {
                 localStorage.removeItem('my_session_id'); 
                 await FirebaseCourse.signInWithEmail(email, password);
@@ -486,22 +415,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedback.textContent = "Erro ao entrar. Verifique seus dados.";
             }
         });
-        
         btnSignup?.addEventListener('click', async () => {
             const name = nameInput.value;
             const email = emailInput.value;
             const password = passwordInput.value;
             const cpf = cpfInput.value;
-            
             if (!name || !email || !password || !cpf) {
                 feedback.textContent = "Todos os campos são obrigatórios.";
                 feedback.className = "text-center text-sm mt-4 font-semibold text-red-500";
                 return;
             }
-            
             feedback.textContent = "Criando conta...";
             feedback.className = "text-center text-sm mt-4 text-blue-400 font-semibold";
-
             try {
                 await FirebaseCourse.signUpWithEmail(name, email, password, cpf);
                 feedback.textContent = "Sucesso! Iniciando...";
@@ -514,11 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleInitialLoad() {
         const lastModule = localStorage.getItem('gateBombeiroLastModule');
-        if (lastModule) {
-            loadModuleContent(lastModule);
-        } else {
-            goToHomePage();
-        }
+        if (lastModule) loadModuleContent(lastModule); else goToHomePage();
     }
 
     async function loadQuestionBank(moduleId) {
@@ -532,28 +453,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadModuleContent(id) {
         if (!id || !moduleContent[id]) return;
-        
         const num = parseInt(id.replace('module', ''));
         let moduleCategory = null;
         for (const key in moduleCategories) {
             const cat = moduleCategories[key];
-            if (num >= cat.range[0] && num <= cat.range[1]) {
-                moduleCategory = cat;
-                break;
-            }
+            if (num >= cat.range[0] && num <= cat.range[1]) { moduleCategory = cat; break; }
         }
-
         const isPremiumContent = moduleCategory && moduleCategory.isPremium;
         const userIsNotPremium = !currentUserData || currentUserData.status !== 'premium';
 
-        if (isPremiumContent && userIsNotPremium) {
-            renderPremiumLockScreen(moduleContent[id].title);
-            return;
-        }
+        if (isPremiumContent && userIsNotPremium) { renderPremiumLockScreen(moduleContent[id].title); return; }
 
         currentModuleId = id;
         localStorage.setItem('gateBombeiroLastModule', id);
-        
         const d = moduleContent[id];
         const savedNote = localStorage.getItem('note-' + id) || ''; 
         const categoryColor = getCategoryColor(id);
@@ -563,9 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contentArea.classList.add('hidden'); 
 
         let allQuestions = null;
-        try {
-            allQuestions = await loadQuestionBank(id);
-        } catch(error) { console.error(error); }
+        try { allQuestions = await loadQuestionBank(id); } catch(error) { console.error(error); }
         
         setTimeout(() => {
             loadingSpinner.classList.add('hidden');
@@ -576,31 +486,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>${d.content}</div>
             `;
 
-            // --- BLOQUEIO 2: BOTÃO DRIVE (FOTOS E VÍDEOS) ---
+            // --- CORREÇÃO: REMOVER MENSAGEM DE ERRO DOS MÓDULOS 53, 54, 55 ---
+            const isSpecialModule = ['module53', 'module54', 'module55'].includes(id);
+
             if (d.driveLink) {
                 if (userIsNotPremium) {
-                    html += `
-                    <div class="mt-10 mb-8">
-                        <button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden">
-                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10">
-                                <i class="fas fa-lock text-2xl mr-2"></i>
-                            </div>
-                            <span class="blur-[2px] flex items-center">
-                                <i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)
-                            </span>
-                        </button>
-                        <p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p>
-                    </div>
-                    `;
+                    html += `<div class="mt-10 mb-8"><button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden"><div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10"><i class="fas fa-lock text-2xl mr-2"></i></div><span class="blur-[2px] flex items-center"><i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)</span></button><p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p></div>`;
                 } else {
-                    html += `
-                    <div class="mt-10 mb-8">
-                        <a href="${d.driveLink}" target="_blank" class="drive-button">
-                            <i class="fab fa-google-drive"></i>
-                            VER FOTOS E VÍDEOS DESTA MATÉRIA
-                        </a>
-                    </div>
-                    `;
+                    html += `<div class="mt-10 mb-8"><a href="${d.driveLink}" target="_blank" class="drive-button"><i class="fab fa-google-drive"></i>VER FOTOS E VÍDEOS DESTA MATÉRIA</a></div>`;
                 }
             }
 
@@ -609,83 +502,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 const count = Math.min(allQuestions.length, questionsToDisplay); 
                 const shuffledQuestions = shuffleArray(allQuestions);
                 const selectedQuestions = shuffledQuestions.slice(0, count);
-
-                let quizHtml = `<div class="quiz-section-separator"></div>
-                                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Exercícios de Fixação</h3>`;
-                
+                let quizHtml = `<div class="quiz-section-separator"></div><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Exercícios de Fixação</h3>`;
                 selectedQuestions.forEach((q, index) => {
                     const questionNumber = index + 1;
-                    quizHtml += `<div class="quiz-block" data-question-id="${q.id}">
-                                    <p class="font-semibold mt-4 mb-2 text-gray-700 dark:text-gray-200">${questionNumber}. ${q.question}</p>
-                                    <div class="quiz-options-group space-y-2 mb-4">`;
+                    quizHtml += `<div class="quiz-block" data-question-id="${q.id}"><p class="font-semibold mt-4 mb-2 text-gray-700 dark:text-gray-200">${questionNumber}. ${q.question}</p><div class="quiz-options-group space-y-2 mb-4">`;
                     for (const key in q.options) {
-                        quizHtml += `<div class="quiz-option" data-module="${id}" data-question-id="${q.id}" data-answer="${key}">
-                                        <span class="option-key">${key.toUpperCase()})</span> ${q.options[key]}
-                                        <span class="ripple"></span>
-                                    </div>`;
+                        quizHtml += `<div class="quiz-option" data-module="${id}" data-question-id="${q.id}" data-answer="${key}"><span class="option-key">${key.toUpperCase()})</span> ${q.options[key]}<span class="ripple"></span></div>`;
                     }
                     quizHtml += `</div><div id="feedback-${q.id}" class="feedback-area hidden"></div></div>`;
                 });
                 html += quizHtml;
             } else {
-                if (!d.id.startsWith('module9')) {
+                // SÓ MOSTRA O AVISO SE NÃO FOR ESPECIAL (53, 54, 55) E NÃO FOR TIPO 9
+                if (!d.id.startsWith('module9') && !isSpecialModule) {
                     html += `<div class="warning-box mt-8"><p><strong><i class="fas fa-exclamation-triangle mr-2"></i> Exercícios não encontrados.</strong></p></div>`;
                 }
             }
 
-            html += `
-                <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-right">
-                    <button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button>
-                </div>
-                <div class="mt-10 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-                    <h4 class="text-xl font-bold mb-3 text-secondary dark:text-gray-200"><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Suas notas para este módulo. Elas são salvas automaticamente no seu navegador.</p>
-                    <textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${savedNote}</textarea>
-                </div>
-            `;
+            html += `<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-right"><button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button></div><div class="mt-10 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700"><h4 class="text-xl font-bold mb-3 text-secondary dark:text-gray-200"><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4><p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Suas notas para este módulo. Elas são salvas automaticamente no seu navegador.</p><textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${savedNote}</textarea></div>`;
 
             contentArea.innerHTML = html;
-            
             setupQuizListeners();
             setupConcludeButtonListener();
             setupNotesListener(id);
-            
             contentArea.style.opacity = '1';
             contentArea.style.transition = 'opacity 0.3s ease';
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            
             updateActiveModuleInList();
             updateNavigationButtons();
             updateBreadcrumbs(d.title);
-            
             document.getElementById('module-nav').classList.remove('hidden');
             closeSidebar();
             document.getElementById('next-module')?.classList.remove('blinking-button');
-
         }, 300);
     }
 
     function renderPremiumLockScreen(title) {
-        contentArea.innerHTML = `
-            <div class="text-center py-12 px-6">
-                <div class="inline-block p-6 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-6">
-                    <i class="fas fa-lock text-5xl text-yellow-600 dark:text-yellow-500"></i>
-                </div>
-                <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">Conteúdo Exclusivo</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-300 max-w-md mx-auto mb-8">
-                    O módulo <strong>${title}</strong> faz parte do nosso pacote avançado. Assine agora para desbloquear Simulados, Bônus e muito mais.
-                </p>
-                <button id="premium-lock-btn" class="action-button pulse-button text-lg px-8 py-4">
-                    <i class="fas fa-crown mr-2"></i> DESBLOQUEAR TUDO AGORA
-                </button>
-            </div>
-        `;
-        
-        document.getElementById('premium-lock-btn').addEventListener('click', () => {
-            document.getElementById('expired-modal').classList.add('show');
-            document.getElementById('name-modal-overlay').classList.add('show');
-        });
-        
+        contentArea.innerHTML = `<div class="text-center py-12 px-6"><div class="inline-block p-6 bg-yellow-100 dark:bg-yellow-900/30 rounded-full mb-6"><i class="fas fa-lock text-5xl text-yellow-600 dark:text-yellow-500"></i></div><h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">Conteúdo Exclusivo</h2><p class="text-lg text-gray-600 dark:text-gray-300 max-w-md mx-auto mb-8">O módulo <strong>${title}</strong> faz parte do nosso pacote avançado. Assine agora para desbloquear Simulados, Bônus e muito mais.</p><button id="premium-lock-btn" class="action-button pulse-button text-lg px-8 py-4"><i class="fas fa-crown mr-2"></i> DESBLOQUEAR TUDO AGORA</button></div>`;
+        document.getElementById('premium-lock-btn').addEventListener('click', () => { document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show'); });
         updateActiveModuleInList();
         updateNavigationButtons();
     }
@@ -741,10 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 breadcrumbContainer.innerHTML = `${homeLink} <span class="mx-2 text-gray-400">/</span> ${moduleTitle}`;
             }
         }
-        document.getElementById('home-breadcrumb')?.addEventListener('click', (e) => {
-            e.preventDefault(); 
-            goToHomePage();
-        });
+        document.getElementById('home-breadcrumb')?.addEventListener('click', (e) => { e.preventDefault(); goToHomePage(); });
     }
     
     function setupNotesListener(id) {
@@ -763,40 +614,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.module-list-item.active').forEach(i => i.classList.remove('active'));
         currentModuleId = null;
         closeSidebar();
-        
         const btn = document.getElementById('start-course');
         if (btn) {
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', () => {
-                loadModuleContent('module1');
-            });
+            newBtn.addEventListener('click', () => { loadModuleContent('module1'); });
         }
         updateBreadcrumbs();
     }
 
     function getWelcomeContent() {
-        return `<div class="text-center py-8">
-                        <div class="floating inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6"><i class="fas fa-fire-extinguisher text-6xl text-red-600"></i></div>
-                        <h2 class="text-4xl font-bold mb-4 text-blue-900 dark:text-white">Torne-se um Profissional de Elite</h2>
-                        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">Bem-vindo ao <strong class="font-bold text-orange-500 dark:text-orange-400">Curso de Formação para Bombeiro Civil e Brigadista</strong>.</p>
-                        <button id="start-course" class="action-button pulse text-lg"><i class="fas fa-play-circle mr-2"></i> Iniciar Curso Agora</button>
-                    </div>`;
+        return `<div class="text-center py-8"><div class="floating inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6"><i class="fas fa-fire-extinguisher text-6xl text-red-600"></i></div><h2 class="text-4xl font-bold mb-4 text-blue-900 dark:text-white">Torne-se um Profissional de Elite</h2><p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">Bem-vindo ao <strong class="font-bold text-orange-500 dark:text-orange-400">Curso de Formação para Bombeiro Civil e Brigadista</strong>.</p><button id="start-course" class="action-button pulse text-lg"><i class="fas fa-play-circle mr-2"></i> Iniciar Curso Agora</button></div>`;
     }
 
     function setupProtection() {
         document.body.style.userSelect = 'none';
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-          if (e.ctrlKey || e.metaKey) {
-            if (['c','a','x','v','s','p','u'].includes(e.key.toLowerCase())) e.preventDefault();
-          }
-          if (e.key === 'F12') e.preventDefault();
-        });
-        document.querySelectorAll('img').forEach(img => {
-          img.draggable = false;
-          img.addEventListener('dragstart', e => e.preventDefault());
-        });
+        document.addEventListener('keydown', e => { if (e.ctrlKey || e.metaKey) { if (['c','a','x','v','s','p','u'].includes(e.key.toLowerCase())) e.preventDefault(); } if (e.key === 'F12') e.preventDefault(); });
+        document.querySelectorAll('img').forEach(img => { img.draggable = false; img.addEventListener('dragstart', e => e.preventDefault()); });
     }
 
     function setupTheme() {
@@ -864,39 +699,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getModuleListHTML() {
-        let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2>
-                        <div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo..."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div>
-                        <div class="module-accordion-container space-y-2">`;
-
+        let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2><div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo..."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div><div class="module-accordion-container space-y-2">`;
         for (const k in moduleCategories) {
-            // FILTRO REMOVIDO - TUDO APARECE AGORA
-            
             const cat = moduleCategories[k];
-            // MOSTRA CADEADO SE FOR PREMIUM E O USUÁRIO NÃO FOR PREMIUM
             const isLocked = cat.isPremium && (!currentUserData || currentUserData.status !== 'premium');
             const lockIcon = isLocked ? '<i class="fas fa-lock text-xs ml-2 text-yellow-500"></i>' : '';
-            
             html += `<div><button class="accordion-button"><span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title} ${lockIcon}</span><i class="fas fa-chevron-down"></i></button><div class="accordion-panel">`;
             for (let i = cat.range[0]; i <= cat.range[1]; i++) {
                 const m = moduleContent[`module${i}`];
                 if (m) {
                     const isDone = Array.isArray(completedModules) && completedModules.includes(m.id);
-                    // Adiciona cadeado pequeno também no item se estiver bloqueado
                     const itemLock = isLocked ? '<i class="fas fa-lock text-xs text-gray-400 ml-2"></i>' : '';
-                    html += `<div class="module-list-item${isDone ? ' completed' : ''}" data-module="${m.id}">
-                                <i class="${m.iconClass} module-icon"></i>
-                                <span style="flex:1">${m.title} ${itemLock}</span>
-                                ${isDone ? '<i class="fas fa-check-circle completion-icon" aria-hidden="true"></i>' : ''}
-                             </div>`;
+                    html += `<div class="module-list-item${isDone ? ' completed' : ''}" data-module="${m.id}"><i class="${m.iconClass} module-icon"></i><span style="flex:1">${m.title} ${itemLock}</span>${isDone ? '<i class="fas fa-check-circle completion-icon" aria-hidden="true"></i>' : ''}</div>`;
                 }
             }
             html += `</div></div>`;
         }
-
         html += `</div>`;
-        html += `<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center"><i class="fas fa-medal mr-2 text-yellow-500"></i> Conquistas por Área</h3>
-                    <div id="achievements-grid" class="grid grid-cols-2 gap-4">`;
+        html += `<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"><h3 class="text-xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center"><i class="fas fa-medal mr-2 text-yellow-500"></i> Conquistas por Área</h3><div id="achievements-grid" class="grid grid-cols-2 gap-4">`;
         for (const key in moduleCategories) {
             const cat = moduleCategories[key];
             html += `<div id="ach-cat-${key}" class="achievement-card" title="Conclua a área para ganhar: ${cat.achievementTitle}"><div class="achievement-icon"><i class="${cat.icon}"></i></div><p class="achievement-title">${cat.achievementTitle}</p></div>`;
@@ -1063,7 +883,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addEventListeners() {
-        // 1. Botões de Navegação
         const nextButton = document.getElementById('next-module');
         const prevButton = document.getElementById('prev-module');
 
@@ -1080,7 +899,6 @@ document.addEventListener('DOMContentLoaded', () => {
             nextButton?.classList.remove('blinking-button');
         });
 
-        // 2. Busca
         document.body.addEventListener('input', e => {
             if(e.target.matches('.module-search')) {
                 const s = e.target.value.toLowerCase();
@@ -1112,7 +930,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 3. Admin Panel
         adminBtn?.addEventListener('click', window.openAdminPanel);
         const mobileAdminBtn = document.getElementById('mobile-admin-btn');
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
@@ -1126,7 +943,6 @@ document.addEventListener('DOMContentLoaded', () => {
             adminOverlay.classList.remove('show');
         });
 
-        // 4. Reset
         document.getElementById('reset-progress')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.add('show'); document.getElementById('reset-modal-overlay')?.classList.add('show'); });
         document.getElementById('cancel-reset-button')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.remove('show'); document.getElementById('reset-modal-overlay')?.classList.remove('show'); });
         document.getElementById('confirm-reset-button')?.addEventListener('click', () => {
@@ -1137,7 +953,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         });
         
-        // 5. Back to Top
         document.getElementById('back-to-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('back-to-top');
@@ -1147,7 +962,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 6. Cliques
         document.body.addEventListener('click', e => {
             const moduleItem = e.target.closest('.module-list-item');
             if (moduleItem) {
