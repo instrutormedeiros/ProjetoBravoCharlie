@@ -1674,7 +1674,7 @@ const moduleContent = {
     // --- AQUI ESTÁ O MÓDULO 55 CONFIGURADO COM SEU LINK ---
     'module55': { 
         id: "module55", 
-        title: "55. Bônus: Material Exclusivo (Drive)", 
+        title: "55. Bônus: Material Exclusivo", 
         iconClass: "fas fa-star", 
         // O LINK QUE VOCÊ MANDOU VAI AQUI:
         driveLink: "https://drive.google.com/drive/folders/1_3zurujjEjatAA6wbiHw6BMzMd7Nakch?usp=drive_link",
@@ -1717,3 +1717,4 @@ if (typeof window !== 'undefined') {
   window.moduleContent = moduleContent;
   window.moduleCategories = moduleCategories;
 }
+
