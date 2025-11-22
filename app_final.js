@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelResetButton = document.getElementById('cancel-reset-button');
 
     const adminBtn = document.getElementById('admin-panel-btn');
+    const mobileAdminBtn = document.getElementById('mobile-admin-btn');
     const adminModal = document.getElementById('admin-modal');
     const adminOverlay = document.getElementById('admin-modal-overlay');
     const closeAdminBtn = document.getElementById('close-admin-modal');
@@ -154,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Lógica do Botão Admin ---
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
+            if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
 
         checkTrialStatus(userData.acesso_ate);
@@ -167,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleInitialLoad();
     }
 
-    // --- PAINEL ADMINISTRATIVO AVANÇADO (ATUALIZADO) ---
+    // --- PAINEL ADMINISTRATIVO AVANÇADO (ATUALIZADO 2.0) ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
         
@@ -1112,6 +1114,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Admin Panel
         adminBtn?.addEventListener('click', window.openAdminPanel);
+        const mobileAdminBtn = document.getElementById('mobile-admin-btn');
+        mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
+
         closeAdminBtn?.addEventListener('click', () => {
             adminModal.classList.remove('show');
             adminOverlay.classList.remove('show');
