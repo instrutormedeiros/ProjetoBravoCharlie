@@ -33,7 +33,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Lato:wght@400;700&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
@@ -44,6 +44,17 @@
     <div id="print-watermark" style="display: none;"></div>
     <div id="toast-container"></div>
     
+    <!-- FAB ACESSIBILIDADE -->
+    <div id="accessibility-fab" title="Menu de Acessibilidade">
+        <i class="fas fa-universal-access"></i>
+    </div>
+    <div id="accessibility-menu">
+        <button class="acc-btn" id="acc-font-plus"><i class="fas fa-search-plus"></i> Aumentar Fonte</button>
+        <button class="acc-btn" id="acc-font-minus"><i class="fas fa-search-minus"></i> Diminuir Fonte</button>
+        <button class="acc-btn" id="acc-dyslexic"><i class="fas fa-font"></i> Fonte Dislexia</button>
+        <button class="acc-btn" id="acc-spacing"><i class="fas fa-text-width"></i> Espaçamento</button>
+    </div>
+
     <div id="trial-floating-notify" class="hidden fixed bottom-20 right-4 bg-white dark:bg-gray-800 border-l-4 border-yellow-500 text-gray-800 dark:text-white p-4 rounded-r shadow-2xl z-50 flex items-center gap-4 animate-slide-in max-w-sm">
         <div>
             <p class="font-bold text-sm" id="trial-title-text">Período de Experiência</p>
@@ -57,8 +68,10 @@
         </button>
     </div>
 
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 opacity-0 pointer-events-none sidebar-overlay lg:hidden"></div>
+    <!-- (MANTENHA TODO O RESTO DO HTML DO ARQUIVO ORIGINAL AQUI: SIDEBAR, HEADER, PROGRESS BAR, MAIN WRAPPER...) -->
+    <!-- ... -->
     
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 opacity-0 pointer-events-none sidebar-overlay lg:hidden"></div>
     <div id="off-canvas-sidebar" class="fixed top-0 left-0 h-full w-4/5 max-w-sm z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
         <div class="p-0 h-full flex flex-col">
             <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
@@ -366,6 +379,7 @@
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email / CPF</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispositivo</th> <!-- NOVA COLUNA -->
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimento</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
@@ -445,42 +459,29 @@
           render: { mode: 'overlay' }, 
           voice: { url: "https://runtime-api.voiceflow.com" }
         }).then(() => {
-            // --- HACK PARA CORRIGIR POSIÇÃO NO MOBILE ---
             const checkChat = setInterval(() => {
                 const chatHost = document.getElementById('voiceflow-chat');
-                
                 if (chatHost && chatHost.shadowRoot) {
                     clearInterval(checkChat);
-                    
-                    // Cria uma tag <style> DENTRO do componente para vencer as regras dele
                     const style = document.createElement('style');
                     style.textContent = `
-                        /* REGRAS PARA CELULAR (Telas menores que 768px) */
                         @media (max-width: 768px) {
-                            
-                            /* 1. Levanta o botão para não cobrir o menu Início */
                             .vfrc-launcher {
-                                bottom: 110px !important; /* Aumentei para 110px para garantir */
+                                bottom: 110px !important; 
                                 left: 20px !important;
                                 right: auto !important;
                                 position: fixed !important;
-                                
-                                /* 2. Transparência e Visual */
                                 opacity: 0.6 !important;
                                 box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
                             }
-
-                            /* 3. Janela do Chat (quando aberta) */
                             .vfrc-widget--chat {
-                                bottom: 110px !important; /* Abre na mesma altura do botão */
-                                height: 65vh !important; /* 65% da tela */
+                                bottom: 110px !important; 
+                                height: 65vh !important; 
                                 width: 85vw !important;
                                 left: 20px !important;
                                 right: auto !important;
                                 border-radius: 16px !important;
                             }
-                            
-                            /* Remove tela cheia padrão */
                             .vfrc-widget.is-mobile {
                                 background: transparent !important;
                                 width: auto !important;
@@ -488,16 +489,9 @@
                                 position: static !important;
                             }
                         }
-                        
-                        /* Efeito ao tocar/clicar (ficar sólido) */
-                        .vfrc-launcher:active, 
-                        .vfrc-launcher:hover {
-                            opacity: 1 !important;
-                        }
+                        .vfrc-launcher:active, .vfrc-launcher:hover { opacity: 1 !important; }
                     `;
-                    // Injeta as regras
                     chatHost.shadowRoot.appendChild(style);
-                    console.log("MedeirosAI: Estilos mobile aplicados com sucesso.");
                 }
             }, 500);
         });
