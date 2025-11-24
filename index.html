@@ -434,7 +434,7 @@
     <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
     
-   <script type="text/javascript">
+<script type="text/javascript">
   (function(d, t) {
       var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
       v.onload = function() {
@@ -442,13 +442,67 @@
           verify: { projectID: '69247d068e3b774e5660d59d' },
           url: 'https://general-runtime.voiceflow.com',
           versionID: 'production',
-          // Adicionamos configurações de renderização para ajudar
-          render: {
-            mode: 'overlay',
-          },
-          voice: {
-            url: "https://runtime-api.voiceflow.com"
-          }
+          render: { mode: 'overlay' }, // Garante sobreposição
+          voice: { url: "https://runtime-api.voiceflow.com" }
+        }).then(() => {
+            // --- INICIO DO HACK PARA FORÇAR ESTILO ---
+            
+            // Verifica a cada meio segundo se o chat apareceu para aplicar as mudanças
+            const checkChat = setInterval(() => {
+                const chatHost = document.getElementById('voiceflow-chat');
+                
+                if (chatHost && chatHost.shadowRoot) {
+                    clearInterval(checkChat); // Chat encontrado, para de procurar
+                    
+                    // 1. FORÇAR POSIÇÃO E TRANSPARÊNCIA (No Container Principal)
+                    // Isso empurra ele para cima (livrando o botão Início) e para a esquerda
+                    chatHost.style.setProperty('bottom', '120px', 'important'); 
+                    chatHost.style.setProperty('left', '20px', 'important');
+                    chatHost.style.setProperty('right', 'auto', 'important');
+                    chatHost.style.setProperty('z-index', '99999', 'important');
+                    
+                    // Transparência (Efeito Fantasma)
+                    chatHost.style.setProperty('opacity', '0.6', 'important');
+                    chatHost.style.transition = "opacity 0.3s ease";
+
+                    // Volta a ficar sólido se tocar/clicar
+                    chatHost.addEventListener('touchstart', () => { chatHost.style.opacity = '1'; });
+                    chatHost.addEventListener('mouseenter', () => { chatHost.style.opacity = '1'; });
+                    chatHost.addEventListener('mouseleave', () => { chatHost.style.opacity = '0.6'; });
+
+                    // 2. FORÇAR TAMANHO DA JANELA (Dentro do Shadow DOM)
+                    // Isso impede que ele cubra a tela toda no celular
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        /* Força a janela a ser menor no mobile */
+                        .vfrc-widget--chat {
+                            max-height: 60vh !important; /* Ocupa só 60% da altura */
+                            width: 85vw !important;      /* Largura confortável */
+                            border-radius: 16px !important;
+                            bottom: 0 !important;
+                            position: absolute !important;
+                        }
+                        
+                        /* Remove a tela cheia padrão do mobile */
+                        .vfrc-widget.is-mobile {
+                            background: transparent !important;
+                            height: auto !important;
+                            width: auto !important;
+                            position: static !important;
+                        }
+                        
+                        /* Garante que o botão fique visível */
+                        .vfrc-launcher {
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+                        }
+                    `;
+                    // Injeta esse estilo dentro da proteção do Voiceflow
+                    chatHost.shadowRoot.appendChild(style);
+                    
+                    console.log("MedeirosAI: Estilos forçados com sucesso.");
+                }
+            }, 500); // Tenta a cada 500ms
+            // --- FIM DO HACK ---
         });
       }
       v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
