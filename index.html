@@ -32,56 +32,32 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-      /* --- CONFIGURAÇÃO DO BOTÃO (BOLINHA) --- */
-      #chatbase-bubble-button {
-          bottom: 95px !important;    
-          right: 20px !important;
-          opacity: 0.6 !important;    /* Translúcido */
+      /* Tenta posicionar o botão do Coze na ESQUERDA e deixá-lo translúcido */
+      /* Nota: O Coze pode usar IDs dinâmicos, este é um estilo genérico */
+      div[class*="coze-web-chat-entry-button"], 
+      div[id^="coze-web-chat"] button {
+          left: 20px !important;
+          right: auto !important; /* Remove alinhamento a direita */
+          bottom: 95px !important;
+          opacity: 0.6 !important; /* Translúcido */
           transition: all 0.3s ease;
-          /* O SEGREDO: Z-Index altíssimo para ficar SOBRE a janela aberta */
-          z-index: 2147483647 !important; 
+          z-index: 2147483647 !important;
       }
 
-      /* Efeito ao passar o mouse */
-      #chatbase-bubble-button:hover {
-          opacity: 1 !important; 
+      /* Quando passa o mouse, fica 100% visível */
+      div[class*="coze-web-chat-entry-button"]:hover,
+      div[id^="coze-web-chat"] button:hover {
+          opacity: 1 !important;
           transform: scale(1.1);
       }
 
-      /* --- CONFIGURAÇÃO DA JANELA ABERTA (PC) --- */
-      #chatbase-bubble-window {
-          bottom: 20px !important;
-          right: 20px !important;
-          /* Z-Index menor que o botão, para o botão ficar clicável */
-          z-index: 9999 !important; 
-          /* Limita altura para garantir que o topo apareça */
-          max-height: 85vh !important;
-      }
-
-      /* --- MOBILE (CELULAR) --- */
+      /* Ajustes para celular */
       @media (max-width: 768px) {
-          /* Botão menorzinho no celular */
-          #chatbase-bubble-button {
+          div[class*="coze-web-chat-entry-button"],
+          div[id^="coze-web-chat"] button {
+              bottom: 85px !important;
               width: 45px !important;
               height: 45px !important;
-              bottom: 85px !important; /* Acima do menu */
-              right: 15px !important;
-          }
-          
-          /* Ajuste do ícone dentro do botão */
-          #chatbase-bubble-button img {
-              width: 24px !important;
-              height: 24px !important;
-          }
-
-          /* Janela do chat no celular */
-          #chatbase-bubble-window {
-              width: 90% !important;
-              height: 70vh !important;
-              max-height: 70vh !important;
-              bottom: 80px !important; 
-              right: 5% !important;
-              left: 5% !important;
           }
       }
     </style>
@@ -490,26 +466,25 @@
     <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
     
-    <script>
-    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="yLMzjlt0de5eR8DAC28Rx";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
-    </script>
-    
-    <script>
-        // Função para limpar o chat quando o aluno deslogar
-        const cleanChatSession = () => {
-            // Remove a memória do chatbase deste navegador
-            localStorage.removeItem('chatbase-bubble-state'); 
-            sessionStorage.clear();
-        };
-
-        // Adiciona essa limpeza aos botões de Sair do seu site
-        const logoutBtns = document.querySelectorAll('#logout-button, #logout-button-header, #mobile-logout-btn, #logout-expired-button');
-        
-        logoutBtns.forEach(btn => {
-            if(btn) {
-                btn.addEventListener('click', cleanChatSession);
-            }
-        });
-    </script>
+    <script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/oversea/index.js"></script>
+<script>
+  new CozeWebSDK.WebChatClient({
+    config: {
+      bot_id: '7576273727811108869',
+    },
+    componentProps: {
+      title: 'Coze',
+    },
+    auth: {
+      type: 'token',
+      // SEU TOKEN REAL (válido por 30 dias)
+      token: 'pat_ZhWxFgimp2JcHDtFAOC9UIOy8cY2G9QOfppKJqbId1GhDLtWHtrfARvEQ7ZPVRd9',
+      onRefreshToken: function () {
+        // O MESMO TOKEN REAL AQUI
+        return 'pat_ZhWxFgimp2JcHDtFAOC9UIOy8cY2G9QOfppKJqbId1GhDLtWHtrfARvEQ7ZPVRd9'
+      }
+    }
+  });
+</script>
 </body>
 </html>
