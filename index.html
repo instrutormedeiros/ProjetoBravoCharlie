@@ -32,14 +32,48 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-      /* Mover o botão do Chatbase para cima (para não cobrir o botão de tema) */
+      /* --- CONFIGURAÇÃO GERAL DO BOTÃO --- */
       #chatbase-bubble-button {
-          bottom: 90px !important; /* Altura ajustada */
+          bottom: 95px !important;    /* Altura suficiente para não cobrir o botão de tema */
           right: 20px !important;
+          opacity: 0.6 !important;    /* BEM TRANSLÚCIDO (Transparente) */
+          transition: all 0.3s ease;  /* Efeito suave */
+          z-index: 9990 !important;
       }
-      /* Ajuste da janela do chat quando aberta */
-      #chatbase-bubble-window {
-          bottom: 100px !important;
+
+      /* Quando passa o mouse ou toca, fica visível */
+      #chatbase-bubble-button:hover, #chatbase-bubble-button:active {
+          opacity: 1 !important; 
+          transform: scale(1.1); /* Leve aumento para dar feedback */
+      }
+
+      /* --- AJUSTES ESPECÍFICOS PARA CELULAR --- */
+      @media (max-width: 768px) {
+          /* 1. Botão Menor */
+          #chatbase-bubble-button {
+              width: 45px !important;   /* Tamanho reduzido */
+              height: 45px !important;
+              bottom: 85px !important;  /* Acima da barra de navegação */
+              right: 15px !important;
+          }
+          /* Ícone dentro do botão menor */
+          #chatbase-bubble-button img {
+              width: 25px !important;
+              height: 25px !important;
+          }
+
+          /* 2. Janela do Chat (Para não travar a tela) */
+          #chatbase-bubble-window {
+              position: fixed !important;
+              width: 90% !important;       /* Largura confortável */
+              height: 70vh !important;     /* 70% da altura da tela (SOBRA ESPAÇO PARA FECHAR) */
+              bottom: 80px !important;     /* Flutua acima da barra de menu */
+              right: 5% !important;        /* Centralizado horizontalmente */
+              left: 5% !important;
+              border-radius: 20px !important;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+              z-index: 9999 !important;
+          }
       }
     </style>
     
