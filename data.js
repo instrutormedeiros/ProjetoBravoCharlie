@@ -1683,8 +1683,8 @@ const moduleContent = {
             timeLimit: 60,
             questionCount: 60,
             distribution: {
-                'pci': 30, // 16 a 25 (Aumentei para 30 para fechar 60 total)
-                'aph_novo': 30 // 26 a 40 (Aumentei para 30 para fechar 60 total)
+                'pci': 30, // 16 a 25
+                'aph_novo': 30 // 26 a 40
             }
         },
         content: `
@@ -1712,7 +1712,6 @@ const moduleContent = {
         <div class="key-concept"><h5>Como Acessar</h5><p>Clique no botão azul para ir ao Drive.</p></div>
         ` 
     },
-    // --- NOVO MÓDULO DE FERRAMENTAS (PREPARAÇÃO) ---
     'module56': {
         id: "module56",
         title: "56. Ferramentas Operacionais",
@@ -1736,13 +1735,14 @@ const moduleContent = {
     }
 };
 
-/* === MAPA DAS CATEGORIAS === */
+/* === MAPA DAS CATEGORIAS (CORRIGIDO) === */
+/* A correção principal foi remover a barra invertida \ em 'aph_novo' */
 const moduleCategories = { 
     rh: { id: "rh", title: "Relações Humanas", achievementTitle: "Excelente Comunicador", range: [1, 5], icon: "fas fa-users" }, 
     legislacao: { id: "legislacao", title: "Legislação Aplicada", achievementTitle: "Mestre em Leis", range: [6, 10], icon: "fas fa-gavel" }, 
     salvamento: { id: "salvamento", title: "Salvamento", achievementTitle: "Especialista em Resgate", range: [11, 15], icon: "fas fa-life-ring" }, 
     pci: { id: "pci", title: "Prevenção e Combate a Incêndio", achievementTitle: "Mestre das Chamas", range: [16, 25], icon: "fas fa-fire-extinguisher" }, 
-    aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: \"fas fa-briefcase-medical\" }, 
+    aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: "fas fa-briefcase-medical" }, 
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
     nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
     // CATEGORIAS PREMIUM & TOOLS
