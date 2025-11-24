@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curso de Formação | Bombeiro Civil e Brigadista</title>
     
-    <!-- Configurações do PWA -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0b1220">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- ÍCONE -->
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png">
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png" type="image/png">
     
@@ -37,7 +35,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
@@ -47,7 +44,6 @@
     <div id="print-watermark" style="display: none;"></div>
     <div id="toast-container"></div>
     
-    <!-- AVISO DE TRIAL DISCRETO -->
     <div id="trial-floating-notify" class="hidden fixed bottom-20 right-4 bg-white dark:bg-gray-800 border-l-4 border-yellow-500 text-gray-800 dark:text-white p-4 rounded-r shadow-2xl z-50 flex items-center gap-4 animate-slide-in max-w-sm">
         <div>
             <p class="font-bold text-sm" id="trial-title-text">Período de Experiência</p>
@@ -69,7 +65,6 @@
                 <h2 class="text-xl font-semibold flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo</h2>
                 <button id="close-sidebar-button" class="text-2xl text-gray-500 dark:text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
             </div>
-            <!-- Botão Instalar Mobile -->
             <div class="p-4 pb-0 lg:hidden">
                  <button id="install-app-btn-mobile" class="hidden w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white py-2 px-4 rounded-lg font-bold border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center">
                     <i class="fas fa-download mr-2"></i> Instalar App
@@ -95,12 +90,10 @@
 
                     <div class="hidden lg:flex items-center space-x-4">
                         
-                        <!-- BOTÃO ADMIN DESKTOP -->
                         <button id="admin-panel-btn" class="hidden bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded-full shadow-md transition-all" title="Painel Administrativo">
                             <i class="fas fa-crown"></i>
                         </button>
 
-                        <!-- Botão Instalar Desktop -->
                         <button id="install-app-btn" class="hidden bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-full text-sm font-bold shadow-md transition-all flex items-center">
                             <i class="fas fa-download mr-2"></i> Instalar App
                         </button>
@@ -128,7 +121,6 @@
                     </div>
 
                     <div class="lg:hidden flex items-center gap-3">
-                        <!-- BOTÃO ADMIN MOBILE (VISIVEL APENAS PARA ADMIN) -->
                         <button id="mobile-admin-btn" class="hidden bg-yellow-500 text-white text-sm px-3 py-1.5 rounded-full shadow-lg border border-yellow-400">
                             <i class="fas fa-crown"></i>
                         </button>
@@ -144,7 +136,6 @@
             </div>
         </header>
 
-        <!-- PROGRESSO STICKY -->
         <div id="sticky-progress-wrapper" class="sticky-progress-wrapper">
             <div class="container mx-auto px-4 md:px-6 max-w-7xl">
                 <div class="flex justify-between items-center text-sm">
@@ -185,7 +176,6 @@
             </div>
         </div>
         
-        <!-- RODAPÉ -->
         <footer class="bg-gray-800 dark:bg-black text-white py-10 mt-12">
             <div class="container mx-auto px-4 md:px-6 max-w-7xl">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -227,7 +217,6 @@
     
     <button id="back-to-top" class="action-button fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full hidden justify-center items-center shadow-lg text-2xl"><i class="fas fa-arrow-up"></i></button>
     
-    <!-- MODAL DE LOGIN (MOBILE AJUSTADO) -->
     <div id="name-prompt-modal" class="modal premium-login-modal w-11/12 max-w-lg mx-auto overflow-hidden flex flex-col max-h-[90vh]" style="background: #0f172a; border: 1px solid #334155;">
         <div class="relative bg-gradient-to-b from-orange-600 to-gray-900 p-5 text-center overflow-hidden flex-shrink-0">
             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
@@ -307,7 +296,6 @@
     </div>
     <div id="name-modal-overlay" class="modal-overlay bg-black/90 backdrop-blur-sm"></div>
 
-    <!-- MODAL DE PAGAMENTO -->
     <div id="expired-modal" class="modal bg-gray-900 text-white p-0 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-5xl mx-auto overflow-hidden max-h-[90vh] flex flex-col">
         <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-4 md:p-6 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
             <div>
@@ -318,7 +306,6 @@
         </div>
         <div class="p-4 md:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- PLANO MENSAL -->
                 <div class="bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-500 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
                     <div class="p-5 text-center bg-gray-800/50 border-b border-gray-700">
                         <h3 class="text-xl font-bold text-blue-400">MENSAL</h3>
@@ -365,7 +352,6 @@
         </div>
     </div>
 
-    <!-- MODAL DE ADMINISTRAÇÃO -->
     <div id="admin-modal" class="modal w-[95%] max-w-6xl mx-auto overflow-hidden flex flex-col max-h-[90vh]" style="background: #f8f9fa; border: 1px solid #e2e8f0; color: #1a202c; z-index: 20002 !important;">
         <div class="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
             <h2 class="text-xl font-bold text-white flex items-center">
@@ -395,7 +381,6 @@
     </div>
     <div id="admin-modal-overlay" class="modal-overlay bg-black/90 backdrop-blur-sm" style="z-index: 20001 !important;"></div>
 
-    <!-- MODAL INSTRUÇÕES IOS -->
     <div id="ios-install-modal" class="modal">
         <div class="p-6 text-center">
             <i class="fab fa-apple text-5xl text-gray-300 mb-4"></i>
@@ -416,7 +401,6 @@
     </div>
     <div id="ios-modal-overlay" class="modal-overlay"></div>
 
-    <!-- Modais Auxiliares -->
     <div id="reset-modal" class="modal"><div class="p-4"><i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i><h2 class="text-2xl font-bold mb-2">Resetar Progresso?</h2><div class="flex justify-center gap-4"><button id="cancel-reset-button" class="action-button bg-gray-500">Cancelar</button><button id="confirm-reset-button" class="action-button bg-red-600">Confirmar</button></div></div></div>
     <div id="reset-modal-overlay" class="modal-overlay"></div>
     <div id="congratulations-modal" class="modal"><div class="p-4"><i class="fas fa-trophy text-4xl text-yellow-500 mb-4"></i><h2 class="text-2xl font-bold mb-2">Parabéns!</h2><button id="close-congrats" class="action-button">Fechar</button></div></div>
@@ -424,7 +408,6 @@
     <div id="achievement-modal" class="modal"><div id="ach-modal-icon-container" class="mb-4"></div><h2 class="text-2xl font-bold mb-2">Conquista!</h2><p id="ach-modal-title" class="mb-6">...</p><button id="close-ach-modal" class="action-button">Continuar</button></div>
     <div id="achievement-modal-overlay" class="modal-overlay"></div>
 
-    <!-- Nav Mobile -->
     <nav class="md:hidden fixed bottom-0 left-0 w-full z-40 bg-white dark:bg-gray-800 shadow-lg border-t dark:border-gray-700">
         <div class="flex justify-around items-center h-16">
             <button id="bottom-nav-home" class="flex flex-col items-center text-gray-600 dark:text-gray-300"><i class="fas fa-home text-xl"></i><span class="text-[10px]">Início</span></button>
@@ -450,6 +433,10 @@
     <script src="data.js" defer></script>
     <script src="course.js" defer></script>
     <script src="firebase-init.js" defer></script>
-    <script src="app_final.js" defer></script> 
+    <script src="app_final.js" defer></script>
+    
+    <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="yLMzjlt0de5eR8DAC28Rx";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
 </body>
 </html>
