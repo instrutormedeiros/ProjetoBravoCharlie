@@ -32,47 +32,56 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-      /* --- CONFIGURAÇÃO GERAL DO BOTÃO --- */
+      /* --- CONFIGURAÇÃO DO BOTÃO (BOLINHA) --- */
       #chatbase-bubble-button {
-          bottom: 95px !important;    /* Altura suficiente para não cobrir o botão de tema */
+          bottom: 95px !important;    
           right: 20px !important;
-          opacity: 0.6 !important;    /* BEM TRANSLÚCIDO (Transparente) */
-          transition: all 0.3s ease;  /* Efeito suave */
-          z-index: 9990 !important;
+          opacity: 0.6 !important;    /* Translúcido */
+          transition: all 0.3s ease;
+          /* O SEGREDO: Z-Index altíssimo para ficar SOBRE a janela aberta */
+          z-index: 2147483647 !important; 
       }
 
-      /* Quando passa o mouse ou toca, fica visível */
-      #chatbase-bubble-button:hover, #chatbase-bubble-button:active {
+      /* Efeito ao passar o mouse */
+      #chatbase-bubble-button:hover {
           opacity: 1 !important; 
-          transform: scale(1.1); /* Leve aumento para dar feedback */
+          transform: scale(1.1);
       }
 
-      /* --- AJUSTES ESPECÍFICOS PARA CELULAR --- */
+      /* --- CONFIGURAÇÃO DA JANELA ABERTA (PC) --- */
+      #chatbase-bubble-window {
+          bottom: 20px !important;
+          right: 20px !important;
+          /* Z-Index menor que o botão, para o botão ficar clicável */
+          z-index: 9999 !important; 
+          /* Limita altura para garantir que o topo apareça */
+          max-height: 85vh !important;
+      }
+
+      /* --- MOBILE (CELULAR) --- */
       @media (max-width: 768px) {
-          /* 1. Botão Menor */
+          /* Botão menorzinho no celular */
           #chatbase-bubble-button {
-              width: 45px !important;   /* Tamanho reduzido */
+              width: 45px !important;
               height: 45px !important;
-              bottom: 85px !important;  /* Acima da barra de navegação */
+              bottom: 85px !important; /* Acima do menu */
               right: 15px !important;
           }
-          /* Ícone dentro do botão menor */
+          
+          /* Ajuste do ícone dentro do botão */
           #chatbase-bubble-button img {
-              width: 25px !important;
-              height: 25px !important;
+              width: 24px !important;
+              height: 24px !important;
           }
 
-          /* 2. Janela do Chat (Para não travar a tela) */
+          /* Janela do chat no celular */
           #chatbase-bubble-window {
-              position: fixed !important;
-              width: 90% !important;       /* Largura confortável */
-              height: 70vh !important;     /* 70% da altura da tela (SOBRA ESPAÇO PARA FECHAR) */
-              bottom: 80px !important;     /* Flutua acima da barra de menu */
-              right: 5% !important;        /* Centralizado horizontalmente */
+              width: 90% !important;
+              height: 70vh !important;
+              max-height: 70vh !important;
+              bottom: 80px !important; 
+              right: 5% !important;
               left: 5% !important;
-              border-radius: 20px !important;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-              z-index: 9999 !important;
           }
       }
     </style>
