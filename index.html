@@ -466,7 +466,8 @@
     <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
     
-    <script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/oversea/index.js"></script>
+ 
+<script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/oversea/index.js"></script>
 <script>
   new CozeWebSDK.WebChatClient({
     config: {
@@ -477,10 +478,8 @@
     },
     auth: {
       type: 'token',
-      // SEU TOKEN REAL (válido por 30 dias)
       token: 'pat_ZhWxFgimp2JcHDtFAOC9UIOy8cY2G9QOfppKJqbId1GhDLtWHtrfARvEQ7ZPVRd9',
       onRefreshToken: function () {
-        // O MESMO TOKEN REAL AQUI
         return 'pat_ZhWxFgimp2JcHDtFAOC9UIOy8cY2G9QOfppKJqbId1GhDLtWHtrfARvEQ7ZPVRd9'
       }
     }
