@@ -1648,54 +1648,92 @@ const moduleContent = {
     },
 'module53': { 
         id: "module53", 
-        title: "53. Simulado Geral 1", 
-        iconClass: "fas fa-edit", 
+        title: "53. Simulado Geral 1 (RH, LEG, SALV)", 
+        iconClass: "fas fa-stopwatch", 
+        isSimulado: true, // Flag para o app.js identificar
+        simuladoConfig: {
+            timeLimit: 60, // minutos
+            questionCount: 50,
+            distribution: {
+                'rh': 15,       // 1 a 5
+                'legislacao': 15, // 6 a 10
+                'salvamento': 20  // 11 a 15
+            }
+        },
         content: `
-        <h3>Simulado Geral de Conhecimentos</h3>
-        <p>Este simulado abrange todas as áreas do curso para testar seu nível de preparação.</p>
+        <h3><i class="fas fa-file-signature mr-2"></i> Simulado Geral I</h3>
+        <p>Este simulado testará seus conhecimentos em <strong>Relações Humanas, Legislação e Salvamento</strong>.</p>
         <div class="warning-box">
-            <p><strong>Instruções:</strong> Responda as questões abaixo sem consultar o material. O objetivo é avaliar sua retenção de conhecimento.</p>
+            <h5>Regras do Simulado:</h5>
+            <ul>
+                <li><strong>Tempo:</strong> 60 minutos.</li>
+                <li><strong>Questões:</strong> 50 questões aleatórias.</li>
+                <li><strong>Feedback:</strong> O gabarito e a nota só aparecerão ao FINAL.</li>
+            </ul>
         </div>
+        <p>Prepare-se e clique no botão abaixo para iniciar o cronômetro.</p>
         ` 
     },
     'module54': { 
         id: "module54", 
-        title: "54. Simulado Geral 2", 
-        iconClass: "fas fa-edit", 
+        title: "54. Simulado Geral 2 (PCI, APH)", 
+        iconClass: "fas fa-stopwatch", 
+        isSimulado: true,
+        simuladoConfig: {
+            timeLimit: 60,
+            questionCount: 60,
+            distribution: {
+                'pci': 30, // 16 a 25 (Aumentei para 30 para fechar 60 total)
+                'aph_novo': 30 // 26 a 40 (Aumentei para 30 para fechar 60 total)
+            }
+        },
         content: `
-        <h3>Simulado Geral Avançado</h3>
-        <p>Teste final para consolidar seu aprendizado.</p>
-        <div class="key-concept">
-            <h5>Dica de Ouro</h5>
-            <p>Revise os módulos onde você teve mais dificuldade antes de iniciar este simulado.</p>
+        <h3><i class="fas fa-fire-extinguisher mr-2"></i> Simulado Geral II</h3>
+        <p>Este simulado testará seus conhecimentos em <strong>Prevenção Contra Incêndio e Primeiros Socorros (APH)</strong>.</p>
+        <div class="warning-box">
+            <h5>Regras do Simulado:</h5>
+            <ul>
+                <li><strong>Tempo:</strong> 60 minutos.</li>
+                <li><strong>Questões:</strong> 60 questões aleatórias.</li>
+                <li><strong>Feedback:</strong> O gabarito e a nota só aparecerão ao FINAL.</li>
+            </ul>
         </div>
+        <p>Prepare-se e clique no botão abaixo para iniciar o cronômetro.</p>
         ` 
     },
-    // --- AQUI ESTÁ O MÓDULO 55 CONFIGURADO COM SEU LINK ---
     'module55': { 
         id: "module55", 
         title: "55. Bônus: Material Exclusivo", 
         iconClass: "fas fa-star", 
-        // O LINK QUE VOCÊ MANDOU VAI AQUI:
         driveLink: "https://drive.google.com/drive/folders/1_3zurujjEjatAA6wbiHw6BMzMd7Nakch?usp=drive_link",
         content: `
         <h3><i class="fas fa-crown text-yellow-500 mr-2"></i> Acesso VIP à Biblioteca Digital</h3>
-        <p>Parabéns por investir na sua formação profissional! Como assinante Premium, você tem acesso vitalício à nossa biblioteca de materiais complementares.</p>
-        
-        <h4>O que você vai encontrar no Drive:</h4>
-        <ul>
-            <li><strong>Apostilas Completas em PDF:</strong> Material teórico aprofundado para leitura offline.</li>
-            <li><strong>Vídeos Práticos:</strong> Demonstrações de nós, amarrações e primeiros socorros.</li>
-            <li><strong>Banco de Imagens:</strong> Fotos reais de treinamentos e ocorrências para estudo de caso.</li>
-            <li><strong>Planilhas e Checklists:</strong> Documentos prontos para uso no seu dia a dia profissional (Checklist de Extintores, Modelos de Relatório).</li>
-        </ul>
-
-        <div class="key-concept">
-            <h5>Como Acessar</h5>
-            <p>Clique no botão azul  ("VER FOTOS E VÍDEOS DESTA MATÉRIA") para ser redirecionado automaticamente para a pasta segura no Google Drive.</p>
-        </div>
+        <p>Parabéns por investir na sua formação profissional! Como assinante Premium, você tem acesso vitalício à nossa biblioteca.</p>
+        <div class="key-concept"><h5>Como Acessar</h5><p>Clique no botão azul para ir ao Drive.</p></div>
         ` 
     },
+    // --- NOVO MÓDULO DE FERRAMENTAS (PREPARAÇÃO) ---
+    'module56': {
+        id: "module56",
+        title: "56. Ferramentas Operacionais",
+        iconClass: "fas fa-tools",
+        content: `
+        <h3><i class="fas fa-briefcase mr-2"></i> Painel do Profissional</h3>
+        <p>Ferramentas úteis para o dia a dia do Bombeiro Civil.</p>
+        <div id="tools-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center opacity-50">
+                <i class="fas fa-calendar-alt text-3xl mb-2"></i>
+                <h4 class="font-bold">Escala de Serviço</h4>
+                <p class="text-sm">(Em Breve)</p>
+            </div>
+            <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg text-center opacity-50">
+                <i class="fas fa-clock text-3xl mb-2"></i>
+                <h4 class="font-bold">Banco de Horas</h4>
+                <p class="text-sm">(Em Breve)</p>
+            </div>
+        </div>
+        `
+    }
 };
 
 /* === MAPA DAS CATEGORIAS === */
@@ -1704,19 +1742,15 @@ const moduleCategories = {
     legislacao: { id: "legislacao", title: "Legislação Aplicada", achievementTitle: "Mestre em Leis", range: [6, 10], icon: "fas fa-gavel" }, 
     salvamento: { id: "salvamento", title: "Salvamento", achievementTitle: "Especialista em Resgate", range: [11, 15], icon: "fas fa-life-ring" }, 
     pci: { id: "pci", title: "Prevenção e Combate a Incêndio", achievementTitle: "Mestre das Chamas", range: [16, 25], icon: "fas fa-fire-extinguisher" }, 
-    aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: "fas fa-briefcase-medical" }, 
+    aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: \"fas fa-briefcase-medical\" }, 
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
     nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
-    // CATEGORIAS PREMIUM
+    // CATEGORIAS PREMIUM & TOOLS
     simulados: { id: "simulados", title: "Simulados Gerais", achievementTitle: "Mestre dos Testes", range: [53, 54], icon: "fas fa-clipboard-check", isPremium: true },
-    bonus: { id: "bonus", title: "Bônus Exclusivos", achievementTitle: "Caçador de Recompensas", range: [55, 55], icon: "fas fa-star", isPremium: true }
+    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [55, 56], icon: "fas fa-star", isPremium: true }
 };
 
-/* === EXPORTAÇÃO === */
 if (typeof window !== 'undefined') {
   window.moduleContent = moduleContent;
   window.moduleCategories = moduleCategories;
 }
-
-
-
