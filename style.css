@@ -1047,62 +1047,59 @@ body.focus-mode { padding-bottom: 70px; }
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
-/* === CUSTOMIZAÇÃO MEDEIROS AI (VISUAL E TAMANHO) === */
+/* === CORREÇÃO DEFINITIVA MEDEIROS AI (MOBILE) === */
 
-/* 1. Botão (Bolinha) Translúcido */
+/* 1. POSIÇÃO DO BOTÃO E CONTAINER (Para não cobrir o menu Início) */
+#voiceflow-chat {
+    /* Empurramos bem para cima (110px) para livrar a barra de navegação */
+    bottom: 110px !important; 
+    left: 20px !important;
+    right: auto !important; /* Remove alinhamento à direita */
+    z-index: 9999 !important; /* Garante que fique sobre o conteúdo */
+}
+
+/* 2. DEIXAR O BOTÃO TRANSLÚCIDO (Transparente) */
 .vfrc-launcher {
-    /* Cor vermelha da sua marca com transparência */
-    background-color: rgba(193, 18, 31, 0.6) !important; 
-    /* Efeito de vidro fosco */
+    /* Opacidade 0.5 = 50% transparente (Bem translúcido) */
+    opacity: 0.5 !important; 
+    
+    /* Efeito de vidro (blur) */
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important;
-    /* Sombras suaves */
+    
+    /* Removemos a cor sólida padrão para garantir a transparência */
     box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
-    /* Garante que o ícone fique visível */
-    color: white !important;
-    /* Transparência geral do botão */
-    opacity: 0.7 !important;
-    transition: all 0.3s ease !important;
+    transition: opacity 0.3s ease !important;
 }
 
-/* Ao passar o mouse ou clicar, fica totalmente visível e sólido */
+/* Quando clicar ou passar o dedo, ele fica sólido para facilitar o uso */
 .vfrc-launcher:hover, 
+.vfrc-launcher:active,
 .vfrc-widget--chat-open .vfrc-launcher {
-    background-color: rgba(193, 18, 31, 1) !important;
-    opacity: 1 !important;
-    transform: scale(1.05);
+    opacity: 1 !important; /* Volta a ser visível */
 }
 
-/* 2. Ajustes para Mobile (Celular) */
+/* 3. IMPEDIR TELA CHEIA NO MOBILE (Janela Flutuante) */
 @media (max-width: 768px) {
     
-    /* Ajusta a posição do container para não cobrir a barra de navegação inferior */
-    #voiceflow-chat {
-        bottom: 85px !important; /* Altura da sua nav bar + margem */
-        z-index: 5000 !important;
-    }
-
-    /* Força a janela do chat a NÃO ocupar a tela toda */
+    /* Remove a configuração padrão de tela cheia do Voiceflow */
+    .vfrc-widget.is-mobile,
     .vfrc-widget--chat {
-        /* Ocupa 70% da altura da tela, como pedido */
-        height: 70vh !important;
-        max-height: 70vh !important;
+        position: fixed !important;
         
-        /* Largura confortável (não encosta nas bordas) */
+        /* Tamanho da janela: 65% da altura e 85% da largura */
+        height: 65vh !important;
         width: 85vw !important;
         
-        /* Mantém bordas arredondadas */
-        border-radius: 16px !important;
+        /* Posicionamento da janela ABERTA (Mesma altura do botão) */
+        bottom: 110px !important;
+        left: 20px !important;
+        right: auto !important;
+        top: auto !important; /* Impede que estique até o topo */
         
-        /* Sombra para destacar do fundo */
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
-    }
-
-    /* Remove o comportamento padrão de "tela cheia" do Voiceflow */
-    .vfrc-widget.is-mobile {
-        position: static !important;
-        width: 100% !important;
-        height: 100% !important;
-        background: transparent !important;
+        /* Estética da janela */
+        border-radius: 20px !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+        overflow: hidden !important;
     }
 }
