@@ -30,6 +30,18 @@
     </script>
 
     <link rel="stylesheet" href="style.css">
+
+    <style>
+      /* Mover o botão do Chatbase para cima (para não cobrir o botão de tema) */
+      #chatbase-bubble-button {
+          bottom: 90px !important; /* Altura ajustada */
+          right: 20px !important;
+      }
+      /* Ajuste da janela do chat quando aberta */
+      #chatbase-bubble-window {
+          bottom: 100px !important;
+      }
+    </style>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -437,6 +449,24 @@
     
     <script>
     (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="yLMzjlt0de5eR8DAC28Rx";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
+    
+    <script>
+        // Função para limpar o chat quando o aluno deslogar
+        const cleanChatSession = () => {
+            // Remove a memória do chatbase deste navegador
+            localStorage.removeItem('chatbase-bubble-state'); 
+            sessionStorage.clear();
+        };
+
+        // Adiciona essa limpeza aos botões de Sair do seu site
+        const logoutBtns = document.querySelectorAll('#logout-button, #logout-button-header, #mobile-logout-btn, #logout-expired-button');
+        
+        logoutBtns.forEach(btn => {
+            if(btn) {
+                btn.addEventListener('click', cleanChatSession);
+            }
+        });
     </script>
 </body>
 </html>
