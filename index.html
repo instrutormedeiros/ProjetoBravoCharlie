@@ -434,7 +434,7 @@
     <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
     
-    <script type="text/javascript">
+   <script type="text/javascript">
   (function(d, t) {
       var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
       v.onload = function() {
@@ -442,6 +442,10 @@
           verify: { projectID: '69247d068e3b774e5660d59d' },
           url: 'https://general-runtime.voiceflow.com',
           versionID: 'production',
+          // Adicionamos configurações de renderização para ajudar
+          render: {
+            mode: 'overlay',
+          },
           voice: {
             url: "https://runtime-api.voiceflow.com"
           }
