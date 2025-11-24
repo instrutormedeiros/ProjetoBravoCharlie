@@ -30,37 +30,6 @@
     </script>
 
     <link rel="stylesheet" href="style.css">
-
-    <style>
-      /* Tenta posicionar o botão do Coze na ESQUERDA e deixá-lo translúcido */
-      /* Nota: O Coze pode usar IDs dinâmicos, este é um estilo genérico */
-      div[class*="coze-web-chat-entry-button"], 
-      div[id^="coze-web-chat"] button {
-          left: 20px !important;
-          right: auto !important; /* Remove alinhamento a direita */
-          bottom: 95px !important;
-          opacity: 0.6 !important; /* Translúcido */
-          transition: all 0.3s ease;
-          z-index: 2147483647 !important;
-      }
-
-      /* Quando passa o mouse, fica 100% visível */
-      div[class*="coze-web-chat-entry-button"]:hover,
-      div[id^="coze-web-chat"] button:hover {
-          opacity: 1 !important;
-          transform: scale(1.1);
-      }
-
-      /* Ajustes para celular */
-      @media (max-width: 768px) {
-          div[class*="coze-web-chat-entry-button"],
-          div[id^="coze-web-chat"] button {
-              bottom: 85px !important;
-              width: 45px !important;
-              height: 45px !important;
-          }
-      }
-    </style>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -221,7 +190,7 @@
                                 <i class="fab fa-instagram w-6 text-center"></i> Coordenador Medeiros
                             </a>
                             <a href="https://www.linkedin.com/in/chefemedeiros/" class="flex items-center text-gray-300 hover:text-blue-500 transition-colors social-link" target="_blank">
-                                <i class="fab fa-linkedin w-6 text-center"></i> Chefe Medeiros
+                                <i class="fab fab fa-linkedin w-6 text-center"></i> Chefe Medeiros
                             </a>
                             <a href="https://instrutormedeiros.github.io/fardamento-acampamento/" class="flex items-center text-gray-300 hover:text-green-500 transition-colors social-link" target="_blank">
                                 <i class="fas fa-tshirt w-6 text-center"></i> Artigos Militares
@@ -382,7 +351,6 @@
             </div>
         </div>
     </div>
-
     <div id="admin-modal" class="modal w-[95%] max-w-6xl mx-auto overflow-hidden flex flex-col max-h-[90vh]" style="background: #f8f9fa; border: 1px solid #e2e8f0; color: #1a202c; z-index: 20002 !important;">
         <div class="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
             <h2 class="text-xl font-bold text-white flex items-center">
@@ -466,24 +434,21 @@
     <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
     
- 
-<script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/1.2.0-beta.6/libs/oversea/index.js"></script>
-<script>
-  new CozeWebSDK.WebChatClient({
-    config: {
-      bot_id: '7576273727811108869',
-    },
-    componentProps: {
-      title: 'Coze',
-    },
-    auth: {
-      type: 'token',
-      token: 'pat_X3FcQwoRqM6uiq7FDlvAp6udcsuFBAjgcVSlLvO4toQrflqRUuZdyJYldZN7KF2K',
-      onRefreshToken: function () {
-        return 'pat_X3FcQwoRqM6uiq7FDlvAp6udcsuFBAjgcVSlLvO4toQrflqRUuZdyJYldZN7KF2K'
-      }
-    }
-  });
+    <script type="text/javascript">
+  (function(d, t) {
+      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      v.onload = function() {
+        window.voiceflow.chat.load({
+          verify: { projectID: '69247d068e3b774e5660d59d' },
+          url: 'https://general-runtime.voiceflow.com',
+          versionID: 'production',
+          voice: {
+            url: "https://runtime-api.voiceflow.com"
+          }
+        });
+      }
+      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+  })(document, 'script');
 </script>
 </body>
 </html>
