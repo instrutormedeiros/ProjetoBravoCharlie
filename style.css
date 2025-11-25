@@ -291,42 +291,44 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 }
 @keyframes pulse-audio { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-/* --- 5.4 SIMULADO PAGINADO (UI) --- */
+/* --- SIMULADO PAGINADO (CORRIGIDO PARA NÃO TAMPAR) --- */
 .simulado-header-sticky {
-    position: sticky; top: 80px; z-index: 38;
-    background: var(--panel-bg); padding: 1rem; border-bottom: 2px solid var(--primary);
-    display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1.5rem; border-radius: 0.5rem;
+    position: sticky; 
+    top: 5.5rem; /* Mesma altura da barra de progresso desktop */
+    z-index: 38;
+    background: var(--panel-bg); 
+    padding: 10px 1rem; 
+    border-bottom: 2px solid var(--primary);
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    margin-bottom: 1.5rem; 
+    border-radius: 0 0 8px 8px;
 }
-.simulado-timer { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.2rem; color: var(--primary); }
-.simulado-progress { font-size: 0.9rem; color: var(--light-text); font-weight: bold; }
 
-.simulado-question-container {
-    min-height: 300px;
-    animation: slideInRight 0.3s ease-out;
+/* Ajuste para mobile onde o header é maior */
+@media (max-width: 1024px) {
+    .simulado-header-sticky {
+        top: 7.5rem; 
+    }
 }
-.simulado-q-block label { transition: all 0.2s; }
-.simulado-q-block label:hover { transform: translateX(5px); }
 
-.sim-nav-btn {
-    padding: 0.8rem 1.5rem; border-radius: 0.5rem; font-weight: bold; transition: all 0.2s; cursor: pointer;
+/* Container do simulado para dar espaço ao topo */
+.simulado-container-wrapper {
+    padding-top: 1rem; /* Espaço extra para garantir que o título não fique colado */
 }
-.sim-btn-next { background-color: var(--secondary); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.sim-btn-next:hover { background-color: var(--primary); transform: translateY(-2px); }
-.sim-btn-prev { background-color: #e5e7eb; color: #374151; }
-.sim-btn-prev:hover { background-color: #d1d5db; }
-.dark .sim-btn-prev { background-color: #374151; color: #e5e7eb; }
-.dark .sim-btn-prev:hover { background-color: #4b5563; }
 
-.simulado-result-card {
-    text-align: center; padding: 2rem; background: var(--panel-bg);
-    border-radius: 1rem; border: 1px solid var(--border-color);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+.simulado-timer { 
+    font-family: 'Courier New', monospace; 
+    font-weight: bold; 
+    font-size: 1.2rem; 
+    color: var(--primary); 
 }
-.simulado-score-circle {
-    width: 120px; height: 120px; border-radius: 50%; border: 8px solid var(--primary);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.5rem; font-weight: bold; margin: 0 auto 1.5rem auto; color: var(--dark-text);
+.simulado-progress { 
+    font-size: 0.9rem; 
+    color: var(--light-text); 
+    font-weight: bold; 
 }
 
 /* --- 5.5 FERRAMENTAS (TOOLS UI) --- */
@@ -528,3 +530,4 @@ body.focus-mode #main-wrapper { padding-bottom: 2rem; }
 .dark #bottom-nav-theme i::after { content: '\f185'; transform: translateX(22px) rotate(360deg); color: var(--accent); }
 
 /* === FIM DO ARQUIVO === */
+
