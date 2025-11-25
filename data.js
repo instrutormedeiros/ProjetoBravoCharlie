@@ -1648,43 +1648,85 @@ const moduleContent = {
     },
 'module53': { 
         id: "module53", 
-        title: "53. Simulado Geral 1 (RH, LEG, SALV)", 
-        iconClass: "fas fa-stopwatch", 
+        title: "53. Simulado: Relações Humanas", 
+        iconClass: "fas fa-users", 
         isSimulado: true,
         simuladoConfig: {
-            timeLimit: 60,
-            questionCount: 50,
-            distribution: { 'rh': 15, 'legislacao': 15, 'salvamento': 20 }
+            timeLimit: 30, // 30 min
+            questionCount: 15, // 15 questões
+            distribution: { 'rh': 15 } // Puxa só de RH
         },
-        content: `<h3><i class="fas fa-file-signature mr-2"></i> Simulado Geral I</h3><p>Este simulado testará seus conhecimentos em <strong>Relações Humanas, Legislação e Salvamento</strong>.</p><div class="warning-box"><h5>Regras do Simulado:</h5><ul><li><strong>Tempo:</strong> 60 minutos.</li><li><strong>Questões:</strong> 50 questões aleatórias.</li><li><strong>Feedback:</strong> O gabarito e a nota só aparecerão ao FINAL.</li></ul></div><p>Prepare-se e clique no botão abaixo para iniciar o cronômetro.</p>` 
+        content: `<h3><i class="fas fa-users mr-2 text-orange-500"></i> Simulado de RH</h3><p>Teste seus conhecimentos focados em <strong>Relações Humanas</strong>.</p><div class="warning-box"><h5>Regras:</h5><ul><li><strong>Tempo:</strong> 30 minutos.</li><li><strong>Questões:</strong> 15 aleatórias.</li><li><strong>Foco:</strong> Comunicação, Liderança e Comportamento.</li></ul></div><p>Clique abaixo para iniciar.</p>` 
     },
+    
     'module54': { 
         id: "module54", 
-        title: "54. Simulado Geral 2 (PCI, APH)", 
-        iconClass: "fas fa-stopwatch", 
+        title: "54. Simulado: Legislação", 
+        iconClass: "fas fa-gavel", 
         isSimulado: true,
         simuladoConfig: {
-            timeLimit: 60,
-            questionCount: 60,
-            distribution: { 'pci': 30, 'aph_novo': 30 }
+            timeLimit: 30,
+            questionCount: 15,
+            distribution: { 'legislacao': 15 }
         },
-        content: `<h3><i class="fas fa-fire-extinguisher mr-2"></i> Simulado Geral II</h3><p>Este simulado testará seus conhecimentos em <strong>Prevenção Contra Incêndio e Primeiros Socorros (APH)</strong>.</p><div class="warning-box"><h5>Regras do Simulado:</h5><ul><li><strong>Tempo:</strong> 60 minutos.</li><li><strong>Questões:</strong> 60 questões aleatórias.</li><li><strong>Feedback:</strong> O gabarito e a nota só aparecerão ao FINAL.</li></ul></div><p>Prepare-se e clique no botão abaixo para iniciar o cronômetro.</p>` 
+        content: `<h3><i class="fas fa-gavel mr-2 text-orange-500"></i> Simulado de Legislação</h3><p>Teste seus conhecimentos sobre <strong>Normas e Leis</strong>.</p><div class="warning-box"><h5>Regras:</h5><ul><li><strong>Tempo:</strong> 30 minutos.</li><li><strong>Questões:</strong> 15 aleatórias.</li><li><strong>Foco:</strong> NRs, NTs e atribuições da brigada.</li></ul></div>` 
     },
+
     'module55': { 
         id: "module55", 
-        title: "55. Bônus: Material Exclusivo", 
+        title: "55. Simulado: Salvamento", 
+        iconClass: "fas fa-life-ring", 
+        isSimulado: true,
+        simuladoConfig: {
+            timeLimit: 30,
+            questionCount: 15,
+            distribution: { 'salvamento': 15 }
+        },
+        content: `<h3><i class="fas fa-life-ring mr-2 text-blue-500"></i> Simulado de Salvamento</h3><p>Teste seus conhecimentos em <strong>Técnicas de Resgate</strong>.</p><div class="warning-box"><h5>Regras:</h5><ul><li><strong>Tempo:</strong> 30 minutos.</li><li><strong>Questões:</strong> 15 aleatórias.</li><li><strong>Foco:</strong> Busca, Salvamento e Evacuação.</li></ul></div>` 
+    },
+
+    'module56': { 
+        id: "module56", 
+        title: "56. Simulado: PCI (Incêndio)", 
+        iconClass: "fas fa-fire-extinguisher", 
+        isSimulado: true,
+        simuladoConfig: {
+            timeLimit: 45,
+            questionCount: 20,
+            distribution: { 'pci': 20 }
+        },
+        content: `<h3><i class="fas fa-fire-extinguisher mr-2 text-red-500"></i> Simulado de Combate a Incêndio</h3><p>Avaliação completa sobre <strong>Prevenção e Combate a Incêndio</strong>.</p><div class="warning-box"><h5>Regras:</h5><ul><li><strong>Tempo:</strong> 45 minutos.</li><li><strong>Questões:</strong> 20 aleatórias.</li><li><strong>Foco:</strong> Classes de fogo, extintores e hidraúlica.</li></ul></div>` 
+    },
+
+    'module57': { 
+        id: "module57", 
+        title: "57. Simulado: APH (Socorros)", 
+        iconClass: "fas fa-briefcase-medical", 
+        isSimulado: true,
+        simuladoConfig: {
+            timeLimit: 45,
+            questionCount: 20,
+            distribution: { 'aph_novo': 20 }
+        },
+        content: `<h3><i class="fas fa-briefcase-medical mr-2 text-green-500"></i> Simulado de APH</h3><p>Avaliação completa sobre <strong>Atendimento Pré-Hospitalar</strong>.</p><div class="warning-box"><h5>Regras:</h5><ul><li><strong>Tempo:</strong> 45 minutos.</li><li><strong>Questões:</strong> 20 aleatórias.</li><li><strong>Foco:</strong> Protocolos, traumas e emergências clínicas.</li></ul></div>` 
+    },
+
+    // --- BÔNUS E FERRAMENTAS (RENUMERADOS) ---
+
+    'module58': { 
+        id: "module58", 
+        title: "58. Bônus: Material Exclusivo", 
         iconClass: "fas fa-star", 
         driveLink: "https://drive.google.com/drive/folders/1_3zurujjEjatAA6wbiHw6BMzMd7Nakch?usp=drive_link",
         content: `<h3><i class="fas fa-crown text-yellow-500 mr-2"></i> Acesso VIP à Biblioteca Digital</h3><p>Parabéns por investir na sua formação profissional! Como assinante Premium, você tem acesso vitalício à nossa biblioteca.</p><div class="key-concept"><h5>Como Acessar</h5><p>Clique no botão azul para ir ao Drive.</p></div>` 
     },
     
-    // --- MÓDULO FERRAMENTAS (ATUALIZADO) ---
-    'module56': {
-        id: "module56",
-        title: "56. Ferramentas Operacionais",
+    'module59': {
+        id: "module59",
+        title: "59. Ferramentas Operacionais",
         iconClass: "fas fa-tools",
         content: `
-        <h3><i class="fas fa-briefcase mr-2"></i> Painel do Profissional</h3>
+        <h3><i class="fas fa-briefcase mr-2 text-gray-600 dark:text-gray-400"></i> Painel do Profissional</h3>
         <p>Ferramentas práticas para o dia a dia operacional e administrativo.</p>
         <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <!-- AS FERRAMENTAS SERÃO INJETADAS AQUI PELO TOOLS_LOGIC.JS -->
@@ -1693,7 +1735,7 @@ const moduleContent = {
     }
 };
 
-/* === MAPA DAS CATEGORIAS === */
+/* === MAPA DAS CATEGORIAS (ATUALIZADO) === */
 const moduleCategories = { 
     rh: { id: "rh", title: "Relações Humanas", achievementTitle: "Excelente Comunicador", range: [1, 5], icon: "fas fa-users" }, 
     legislacao: { id: "legislacao", title: "Legislação Aplicada", achievementTitle: "Mestre em Leis", range: [6, 10], icon: "fas fa-gavel" }, 
@@ -1702,11 +1744,20 @@ const moduleCategories = {
     aph_novo: { id: "aph_novo", title: "Atendimento Pré Hospitalar", achievementTitle: "Protetor da Vida", range: [26, 40], icon: "fas fa-briefcase-medical" }, 
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
     nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
-    simulados: { id: "simulados", title: "Simulados Gerais", achievementTitle: "Mestre dos Testes", range: [53, 54], icon: "fas fa-clipboard-check", isPremium: true },
-    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [55, 56], icon: "fas fa-star", isPremium: true }
+    
+    // NOVAS FAIXAS
+    simulados: { id: "simulados", title: "Simulados por Matéria", achievementTitle: "Mestre dos Testes", range: [53, 57], icon: "fas fa-clipboard-check", isPremium: true },
+    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [58, 59], icon: "fas fa-star", isPremium: true }
 };
 
+
 if (typeof window !== 'undefined') {
-  window.moduleContent = moduleContent;
-  window.moduleCategories = moduleCategories;
+
+    if(window.moduleContent) {
+        Object.assign(window.moduleContent, moduleContent); // Mescla os novos
+        window.moduleCategories = moduleCategories; // Substitui categorias
+    } else {
+        window.moduleContent = moduleContent;
+        window.moduleCategories = moduleCategories;
+    }
 }
