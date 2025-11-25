@@ -1711,7 +1711,7 @@ const moduleContent = {
         content: `<h3><i class="fas fa-briefcase-medical mr-2 text-green-500"></i> Simulado de APH</h3><p>Avaliação completa sobre <strong>Atendimento Pré-Hospitalar</strong>.</p><div class="warning-box"><h5>Regras:</h5><ul><li><strong>Tempo:</strong> 45 minutos.</li><li><strong>Questões:</strong> 20 aleatórias.</li><li><strong>Foco:</strong> Protocolos, traumas e emergências clínicas.</li></ul></div>` 
     },
 
-    'module58': { 
+   'module58': { 
         id: "module58", 
         title: "58. Bônus: Material Exclusivo", 
         iconClass: "fas fa-star", 
@@ -1723,17 +1723,132 @@ const moduleContent = {
         id: "module59",
         title: "59. Ferramentas Operacionais",
         iconClass: "fas fa-tools",
+        content: `<h3><i class="fas fa-briefcase mr-2 text-gray-600 dark:text-gray-400"></i> Painel do Profissional</h3><p>Ferramentas práticas para o dia a dia operacional e administrativo.</p><div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"></div>`
+    },
+
+    // --- NOVOS MÓDULOS ---
+
+    'module60': {
+        id: "module60",
+        title: "60. Modo Sobrevivência",
+        iconClass: "fas fa-skull-crossbones",
+        isSurvival: true, // Flag para identificar
         content: `
-        <h3><i class="fas fa-briefcase mr-2 text-gray-600 dark:text-gray-400"></i> Painel do Profissional</h3>
-        <p>Ferramentas práticas para o dia a dia operacional e administrativo.</p>
-        <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <!-- FERRAMENTAS INJETADAS VIA JS -->
-        </div>
+            <div class="text-center">
+                <div class="mb-6 text-6xl animate-bounce">💀</div>
+                <h3 class="text-3xl font-bold text-red-600 mb-2">Desafio Sobrevivência</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6">Prove que você é elite. Responda o máximo de perguntas sem perder suas 3 vidas.</p>
+                
+                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-6 text-left max-w-md mx-auto border border-gray-200 dark:border-gray-700">
+                    <h5 class="font-bold text-gray-800 dark:text-white mb-2"><i class="fas fa-scroll mr-2"></i> Regras:</h5>
+                    <ul class="text-sm space-y-2 text-gray-600 dark:text-gray-400">
+                        <li><i class="fas fa-heart text-red-500 mr-2"></i> Você começa com <strong>3 vidas</strong>.</li>
+                        <li><i class="fas fa-random mr-2"></i> Perguntas aleatórias de <strong>todo o curso</strong>.</li>
+                        <li><i class="fas fa-trophy text-yellow-500 mr-2"></i> Entre para o Ranking Global.</li>
+                        <li class="text-xs mt-2 pt-2 border-t border-gray-300 dark:border-gray-600 italic">
+                            * Usuários Grátis: 1 tentativa a cada 24h.<br>
+                            * Premium: Tentativas ilimitadas.
+                        </li>
+                    </ul>
+                </div>
+
+                <button id="start-survival-btn" class="action-button pulse-button text-xl px-8 py-4 bg-red-600 hover:bg-red-700 border-red-800">
+                    <i class="fas fa-play mr-2"></i> INICIAR DESAFIO
+                </button>
+                
+                <div id="survival-last-score" class="mt-4 text-sm text-gray-500"></div>
+            </div>
+        `
+    },
+
+    'module61': {
+        id: "module61",
+        title: "61. Simulador de Ocorrências (RPG)",
+        iconClass: "fas fa-gamepad",
+        isRPG: true,
+        content: `
+            <div class="text-center">
+                <div class="mb-4 text-5xl text-orange-500"><i class="fas fa-fire-fighter"></i></div>
+                <h3 class="text-2xl font-bold mb-2">Simulador de Decisões</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6">Você no comando. Suas escolhas salvam vidas ou causam desastres.</p>
+                <button id="start-rpg-btn" class="action-button text-lg px-6 py-3 bg-orange-600 hover:bg-orange-700">
+                    <i class="fas fa-book-open mr-2"></i> Iniciar Cenário: "O Galpão"
+                </button>
+            </div>
+        `,
+        // DADOS DO RPG (CENÁRIOS)
+        rpgData: {
+            start: 'cena1',
+            scenes: {
+                'cena1': {
+                    text: "Você chega em um galpão industrial. Há fumaça negra saindo em lufadas (pulsando) pelas frestas da janela. A porta de entrada está quente ao toque e a tinta está borbulhando. O que você faz?",
+                    image: null, // Pode adicionar URL de imagem aqui
+                    options: [
+                        { text: "Abrir a porta imediatamente para ventilar a fumaça.", next: 'gameover_backdraft' },
+                        { text: "Resfriar a porta, posicionar-se lateralmente e fazer uma abertura controlada.", next: 'cena2' }
+                    ]
+                },
+                'gameover_backdraft': {
+                    text: "<strong>GAME OVER!</strong><br>Ao abrir a porta sem precaução, o oxigênio entrou violentamente e causou um <strong>BACKDRAFT</strong>. A explosão feriu gravemente você e sua equipe.",
+                    type: 'death',
+                    options: [
+                        { text: "Tentar Novamente", next: 'cena1' }
+                    ]
+                },
+                'cena2': {
+                    text: "Boa escolha! Você evitou o Backdraft. Ao entrar, a visibilidade é zero. Você escuta um gemido fraco vindo do fundo à direita. Porém, o teto sobre o centro do galpão estala e parece instável.",
+                    options: [
+                        { text: "Avançar rapidamente pelo centro para chegar logo à vítima.", next: 'gameover_colapso' },
+                        { text: "Ir tateando pela parede (técnica de exploração) contornando o perigo.", next: 'cena3' }
+                    ]
+                },
+                'gameover_colapso': {
+                    text: "<strong>GAME OVER!</strong><br>O teto central colapsou sobre você. Em estruturas instáveis, nunca cruze áreas abertas sem avaliação. Siga sempre pelas paredes/vigas mestras.",
+                    type: 'death',
+                    options: [
+                        { text: "Tentar Novamente", next: 'cena1' }
+                    ]
+                },
+                'cena3': {
+                    text: "Você alcança a vítima! É um homem inconsciente, pesado (aprox. 100kg). Seu ar está acabando (o alarme do SCBA apitou).",
+                    options: [
+                        { text: "Tentar arrastar a vítima sozinho (Arrasto Rautek).", next: 'gameover_ar' },
+                        { text: "Pedir apoio via rádio (MAYDAY/Prioridade) e aguardar a dupla.", next: 'vitoria' }
+                    ]
+                },
+                'gameover_ar': {
+                    text: "<strong>GAME OVER!</strong><br>O esforço excessivo consumiu o resto do seu ar. Você desmaiou antes de sair. Nunca subestime o consumo de ar sob esforço.",
+                    type: 'death',
+                    options: [
+                        { text: "Tentar Novamente", next: 'cena1' }
+                    ]
+                },
+                'vitoria': {
+                    text: "<strong>PARABÉNS! MISSÃO CUMPRIDA!</strong><br>Sua dupla chegou, vocês dividiram o peso e saíram com segurança. A vítima foi entregue ao SAMU e sobreviveu.",
+                    type: 'win',
+                    options: [
+                        { text: "Voltar ao Menu", next: 'exit' }
+                    ]
+                }
+            }
+        }
+    },
+
+    'module62': {
+        id: "module62",
+        title: "62. Carteirinha Digital",
+        iconClass: "fas fa-id-card",
+        isIDCard: true,
+        content: `
+            <div id="id-card-container" class="flex flex-col items-center justify-center py-6">
+                <!-- CARTEIRINHA SERÁ RENDERIZADA AQUI VIA JS -->
+                <div class="loader"></div>
+            </div>
         `
     }
 };
 
-/* === MAPA DAS CATEGORIAS === */
+/* === MAPA DAS CATEGORIAS (ATUALIZADO) === */
 const moduleCategories = { 
     rh: { id: "rh", title: "Relações Humanas", achievementTitle: "Excelente Comunicador", range: [1, 5], icon: "fas fa-users" }, 
     legislacao: { id: "legislacao", title: "Legislação Aplicada", achievementTitle: "Mestre em Leis", range: [6, 10], icon: "fas fa-gavel" }, 
@@ -1743,7 +1858,9 @@ const moduleCategories = {
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
     nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
     simulados: { id: "simulados", title: "Simulados por Matéria", achievementTitle: "Mestre dos Testes", range: [53, 57], icon: "fas fa-clipboard-check", isPremium: true },
-    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [58, 59], icon: "fas fa-star", isPremium: true }
+    
+    // BÔNUS E NOVIDADES
+    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [58, 62], icon: "fas fa-star", isPremium: true }
 };
 
 if (typeof window !== 'undefined') {

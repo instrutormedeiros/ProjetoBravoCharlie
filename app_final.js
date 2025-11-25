@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL CORRIGIDA V7) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL V9 - COMPLETA COM FOTO NA CARTEIRINHA) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeSimuladoQuestions = [];
     let userAnswers = {};
     let currentSimuladoQuestionIndex = 0; 
+
+    // --- VARIÁVEIS PARA MODO SOBREVIVÊNCIA ---
+    let survivalLives = 3;
+    let survivalScore = 0;
+    let survivalQuestions = [];
+    let currentSurvivalIndex = 0;
 
     // --- SELETORES DO DOM ---
     const toastContainer = document.getElementById('toast-container');
@@ -223,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleInitialLoad();
     }
 
+    // --- FUNÇÕES ADMIN ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
         adminModal.classList.add('show');
@@ -527,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return shuffleArray(allQuestions);
     }
 
+    // --- CARREGAMENTO DE MÓDULOS (ROTEADOR PRINCIPAL) ---
     async function loadModuleContent(id) {
         if (!id || !moduleContent[id]) return;
         const d = moduleContent[id];
@@ -539,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPremiumContent = moduleCategory && moduleCategory.isPremium;
         const userIsNotPremium = !currentUserData || currentUserData.status !== 'premium';
 
+        // Verifica bloqueio premium
         if (isPremiumContent && userIsNotPremium) { renderPremiumLockScreen(moduleContent[id].title); return; }
 
         currentModuleId = id;
@@ -555,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingSpinner.classList.add('hidden');
             contentArea.classList.remove('hidden'); 
 
-            // --- MODO SIMULADO ---
+            // 1. MODO SIMULADO
             if (d.isSimulado) {
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-orange-600 dark:text-orange-500 flex items-center">
@@ -570,8 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 document.getElementById('start-simulado-btn').addEventListener('click', () => startSimuladoMode(d));
             } 
-            // --- MÓDULO FERRAMENTAS (ATUALIZADO PARA MODULE 59) ---
-            // AQUI ESTÁ A CORREÇÃO: Verifica explicitamente o module59
+            
+            // 2. FERRAMENTAS (Módulo 59)
             else if (id === 'module59') { 
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
@@ -591,7 +600,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     grid.innerHTML = '<p class="text-red-500">Erro: Script de Ferramentas não carregado.</p>';
                 }
             }
-            // --- MODO AULA NORMAL ---
+
+            // 3. MODO SOBREVIVÊNCIA (Módulo 60)
+            else if (d.isSurvival) {
+                contentArea.innerHTML = d.content;
+                const survivalScoreEl = document.getElementById('survival-last-score');
+                const lastScore = localStorage.getItem('lastSurvivalScore');
+                if(survivalScoreEl && lastScore) survivalScoreEl.innerText = `Seu recorde anterior: ${lastScore} pontos`;
+                
+                document.getElementById('start-survival-btn').addEventListener('click', initSurvivalGame);
+            }
+
+            // 4. RPG (Módulo 61)
+            else if (d.isRPG) {
+                contentArea.innerHTML = d.content;
+                document.getElementById('start-rpg-btn').addEventListener('click', () => initRPGGame(d.rpgData));
+            }
+
+            // 5. CARTEIRINHA (Módulo 62)
+            else if (d.isIDCard) {
+                contentArea.innerHTML = d.content;
+                renderDigitalID();
+            }
+
+            // 6. MODO AULA NORMAL (TEXTO + AUDIO)
             else {
                 let html = `
                     <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
@@ -604,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div>${d.content}</div>
                 `;
 
-                const isSpecialModule = ['module53', 'module54', 'module55', 'module56', 'module57', 'module58', 'module59'].includes(id);
+                const isSpecialModule = ['module53', 'module54', 'module55', 'module56', 'module57', 'module58', 'module59', 'module60', 'module61', 'module62'].includes(id);
 
                 if (d.driveLink) {
                     if (userIsNotPremium) {
@@ -660,6 +692,247 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
+    // === LÓGICA: MODO SOBREVIVÊNCIA ===
+    async function initSurvivalGame() {
+        survivalLives = 3;
+        survivalScore = 0;
+        currentSurvivalIndex = 0;
+        survivalQuestions = [];
+
+        // Coleta todas as questões disponíveis no app
+        const allQs = [];
+        for(let i=1; i<=52; i++) { // Módulos de conteúdo
+            const modId = `module${i}`;
+            if(QUIZ_DATA[modId]) allQs.push(...QUIZ_DATA[modId]);
+        }
+        survivalQuestions = shuffleArray(allQs);
+
+        renderSurvivalScreen();
+    }
+
+    function renderSurvivalScreen() {
+        if(survivalLives <= 0) {
+            // Game Over
+            localStorage.setItem('lastSurvivalScore', survivalScore);
+            contentArea.innerHTML = `
+                <div class="text-center animate-slide-in p-8">
+                    <h2 class="text-4xl font-bold text-red-600 mb-4">GAME OVER</h2>
+                    <div class="text-6xl mb-6">💀</div>
+                    <p class="text-2xl text-gray-800 dark:text-white mb-2">Sua Pontuação Final</p>
+                    <div class="text-5xl font-extrabold text-orange-500 mb-8">${survivalScore}</div>
+                    <button id="retry-survival" class="action-button pulse-button">Tentar Novamente</button>
+                </div>
+            `;
+            document.getElementById('retry-survival').addEventListener('click', initSurvivalGame);
+            return;
+        }
+
+        const q = survivalQuestions[currentSurvivalIndex];
+        if(!q) {
+            // Acabaram as questões (Raro)
+            contentArea.innerHTML = `<h2 class="text-center text-2xl">Você zerou o banco de questões! Incrível!</h2>`;
+            return;
+        }
+
+        let hearts = '';
+        for(let i=0; i<survivalLives; i++) hearts += '<i class="fas fa-heart text-red-600 text-2xl mx-1 survival-life-heart"></i>';
+
+        contentArea.innerHTML = `
+            <div class="flex justify-between items-center mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div class="flex items-center">${hearts}</div>
+                <div class="text-xl font-bold text-blue-600 dark:text-blue-400">Pontos: ${survivalScore}</div>
+            </div>
+            <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg animate-fade-in">
+                <p class="font-bold text-lg mb-6 text-gray-800 dark:text-white">Questão ${currentSurvivalIndex + 1}: ${q.question}</p>
+                <div class="space-y-3">
+                    ${Object.keys(q.options).map(key => `
+                        <button class="w-full text-left p-4 rounded border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors survival-option" data-key="${key}">
+                            <span class="font-bold text-orange-500 mr-2">${key.toUpperCase()})</span> ${q.options[key]}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        document.querySelectorAll('.survival-option').forEach(btn => {
+            btn.addEventListener('click', (e) => handleSurvivalAnswer(e, q));
+        });
+    }
+
+    function handleSurvivalAnswer(e, q) {
+        const selected = e.currentTarget.dataset.key;
+        const isCorrect = selected === q.answer;
+        const btns = document.querySelectorAll('.survival-option');
+        
+        btns.forEach(b => {
+            b.disabled = true;
+            if(b.dataset.key === q.answer) b.classList.add('bg-green-200', 'dark:bg-green-900', 'border-green-500');
+            else if(b.dataset.key === selected && !isCorrect) b.classList.add('bg-red-200', 'dark:bg-red-900', 'border-red-500');
+        });
+
+        if(isCorrect) {
+            survivalScore += 10;
+            if(typeof confetti === 'function') confetti({ particleCount: 30, spread: 60, origin: { y: 0.7 } });
+        } else {
+            survivalLives--;
+            navigator.vibrate?.(200);
+        }
+
+        setTimeout(() => {
+            currentSurvivalIndex++;
+            renderSurvivalScreen();
+        }, 1500);
+    }
+
+    // === LÓGICA: RPG (SIMULADOR) ===
+    async function initRPGGame(rpgData) {
+        renderRPGScene(rpgData.start, rpgData);
+    }
+
+    function renderRPGScene(sceneId, rpgData) {
+        const scene = rpgData.scenes[sceneId];
+        if(!scene) return; // Erro ou fim
+
+        let html = `
+            <div class="max-w-2xl mx-auto animate-fade-in">
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    ${scene.image ? `<img src="${scene.image}" class="w-full h-48 object-cover">` : ''}
+                    <div class="p-6">
+                        <p class="text-lg text-gray-800 dark:text-gray-200 mb-6 leading-relaxed">${scene.text}</p>
+                        <div class="space-y-3">
+        `;
+
+        scene.options.forEach(opt => {
+            html += `
+                <button class="rpg-choice-btn w-full text-left p-4 bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all rounded shadow-sm mb-2" data-next="${opt.next}">
+                    <i class="fas fa-chevron-right text-blue-500 mr-2"></i> ${opt.text}
+                </button>
+            `;
+        });
+
+        html += `</div></div></div></div>`;
+        contentArea.innerHTML = html;
+
+        if(scene.type === 'death') {
+            contentArea.querySelector('.bg-white').classList.add('border-red-500', 'border-2');
+        } else if(scene.type === 'win') {
+            contentArea.querySelector('.bg-white').classList.add('border-green-500', 'border-2');
+            if(typeof confetti === 'function') confetti();
+        }
+
+        document.querySelectorAll('.rpg-choice-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const next = btn.dataset.next;
+                if(next === 'exit') loadModuleContent('module61'); // Reset
+                else renderRPGScene(next, rpgData);
+            });
+        });
+    }
+
+    // === LÓGICA ATUALIZADA: CARTEIRINHA DIGITAL COM FOTO ===
+    function renderDigitalID() {
+        if (!currentUserData) return;
+        
+        const container = document.getElementById('id-card-container');
+        if (!container) return;
+
+        // Lógica da Foto: Tenta pegar do LocalStorage, senão usa um avatar padrão
+        const savedPhoto = localStorage.getItem('user_profile_pic');
+        const defaultPhoto = "https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png"; 
+        const currentPhoto = savedPhoto || defaultPhoto;
+
+        // Formatação de datas
+        const validUntil = new Date(currentUserData.acesso_ate).toLocaleDateString('pt-BR');
+        const statusColor = currentUserData.status === 'premium' ? 'text-yellow-400' : 'text-gray-400';
+        
+        container.innerHTML = `
+            <div class="relative w-full max-w-md bg-gradient-card rounded-xl overflow-hidden shadow-2xl text-white font-sans transform transition hover:scale-[1.01] duration-300">
+                <div class="card-shine"></div>
+                
+                <div class="bg-red-700 p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-white p-1 rounded-full">
+                            <img src="https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png" class="w-10 h-10 object-cover">
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm uppercase tracking-wider">Bombeiro Civil</h3>
+                            <p class="text-[10px] text-red-200">Identificação de Aluno</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-wifi text-white/50 rotate-90"></i>
+                </div>
+
+                <div class="p-6 relative z-10">
+                    
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-4">
+                            
+                            <div class="relative group cursor-pointer" onclick="document.getElementById('profile-pic-input').click()" title="Clique para alterar a foto">
+                                <div class="w-20 h-20 rounded-lg border-2 border-white/30 overflow-hidden bg-gray-800">
+                                    <img id="id-card-photo" src="${currentPhoto}" class="w-full h-full object-cover">
+                                </div>
+                                <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i class="fas fa-camera text-white"></i>
+                                </div>
+                                <input type="file" id="profile-pic-input" class="hidden" accept="image/*" onchange="window.updateProfilePic(this)">
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-gray-400 uppercase mb-1">Nome do Aluno</p>
+                                <h2 class="text-lg font-bold text-white tracking-wide leading-tight max-w-[150px] break-words">${currentUserData.name}</h2>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-1 rounded">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUserData.email}" class="w-14 h-14">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">CPF</p>
+                            <p class="font-mono text-sm">${currentUserData.cpf || '000.000.000-00'}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Matrícula</p>
+                            <p class="font-mono text-sm">BC-${Math.floor(Math.random()*10000)}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Válido Até</p>
+                            <p class="font-bold text-green-400 text-sm">${validUntil}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-gray-400 uppercase">Status</p>
+                            <p class="font-bold text-sm uppercase flex items-center gap-1 ${statusColor}">
+                                <i class="fas fa-star text-xs"></i> ${currentUserData.status || 'Trial'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-black/30 p-3 text-center border-t border-white/10">
+                    <p class="text-[9px] text-gray-500">Uso pessoal e intransferível. Toque na foto para alterar.</p>
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button onclick="window.print()" class="text-sm text-blue-500 hover:underline"><i class="fas fa-print"></i> Imprimir Carteirinha</button>
+            </div>
+        `;
+    }
+
+    // === FUNÇÃO GLOBAL PARA UPLOAD DE FOTO ===
+    window.updateProfilePic = function(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('id-card-photo').src = e.target.result;
+                localStorage.setItem('user_profile_pic', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    // === FUNÇÕES PADRÃO DO APP ===
     async function startSimuladoMode(moduleData) {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
@@ -968,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let newArray = [...array]; 
         for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            [newArray[i], newArray[j]] = [newArray[i], newArray[i]];
         }
         return newArray;
     }
@@ -1158,7 +1431,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const n = parseInt(currentModuleId.replace('module',''));
         prevModule.disabled = (n === 1);
-        nextModule.disabled = (n === totalModules); // Agora totalModules inclui até o 59
+        nextModule.disabled = (n === totalModules); // Agora totalModules inclui até o 62
     }
     function setupQuizListeners() {
         document.querySelectorAll('.quiz-option').forEach(o => o.addEventListener('click', handleQuizOptionClick));

@@ -542,4 +542,28 @@ body.focus-mode #main-wrapper { padding-bottom: 2rem; }
 .dark #bottom-nav-theme i { background-color: var(--accent); }
 .dark #bottom-nav-theme i::after { content: '\f185'; transform: translateX(22px) rotate(360deg); color: var(--accent); }
 
-/* === FIM DO ARQUIVO === */
+/* MODO SOBREVIVÊNCIA */
+.survival-life-heart {
+    filter: drop-shadow(0 0 5px red);
+    animation: beat 1s infinite;
+}
+@keyframes beat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* RPG TEXTO */
+.border-l-4 { border-left-width: 4px; }
+.animate-fade-in { animation: fadeIn 0.5s ease-in; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* CARTEIRINHA DIGITAL */
+.bg-gradient-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+}
+.card-shine {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(125deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 60%);
+    pointer-events: none;
+}
