@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL CORRIGIDA - SIMULADO LAYOUT FIX) === */
+/* === ARQUIVO app_final.js (VERSÃO REFINADA - FEEDBACK COMPLETO) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -66,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
-        // Cancela se já estiver falando
         if (window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
             document.getElementById('audio-btn-icon')?.classList.remove('fa-stop');
@@ -76,15 +75,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Prepara o texto limpo (sem tags HTML)
         const div = document.createElement('div');
         div.innerHTML = moduleContent[currentModuleId].content;
         const cleanText = div.textContent || div.innerText || "";
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'pt-BR';
-        
-        // VELOCIDADE AJUSTADA (0.8)
         utterance.rate = 0.8; 
 
         utterance.onstart = () => {
@@ -163,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(installBtn) installBtn.addEventListener('click', triggerInstall);
     if(installBtnMobile) installBtnMobile.addEventListener('click', triggerInstall);
 
-    // --- VERIFICAÇÃO DE SEGURANÇA ---
     if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined') {
         document.getElementById('main-header')?.classList.add('hidden');
         document.querySelector('footer')?.classList.add('hidden');
@@ -222,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
-        // --- Lógica do Botão Admin ---
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
@@ -239,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         handleInitialLoad();
     }
 
-    // --- PAINEL ADMINISTRATIVO AVANÇADO ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
         
@@ -525,7 +518,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return questions;
     }
 
-    // --- FUNÇÃO DE GERAÇÃO DE QUESTÕES PARA SIMULADO ---
     async function generateSimuladoQuestions(config) {
         const allQuestions = [];
         const questionsByCategory = {};
@@ -579,7 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingSpinner.classList.add('hidden');
             contentArea.classList.remove('hidden'); 
 
-            // --- MODO SIMULADO ---
             if (d.isSimulado) {
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-orange-600 dark:text-orange-500 flex items-center">
@@ -594,7 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 document.getElementById('start-simulado-btn').addEventListener('click', () => startSimuladoMode(d));
             } 
-            // --- MÓDULO FERRAMENTAS (NOVO) ---
             else if (id === 'module56') {
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
@@ -603,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 `;
                 const grid = document.getElementById('tools-grid');
-                // Chama a renderização das ferramentas
                 if (typeof ToolsApp !== 'undefined') {
                     ToolsApp.renderPonto(grid);
                     ToolsApp.renderEscala(grid);
@@ -615,7 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     grid.innerHTML = '<p class="text-red-500">Erro: Script de Ferramentas não carregado.</p>';
                 }
             }
-            // --- MODO AULA NORMAL ---
             else {
                 let html = `
                     <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
@@ -638,7 +626,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Correção do "savedNote is not defined"
                 const savedNote = localStorage.getItem('note-' + id) || '';
 
                 let allQuestions = null;
@@ -685,7 +672,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // --- LÓGICA DO SIMULADO (LAYOUT CORRIGIDO V2) ---
     async function startSimuladoMode(moduleData) {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
@@ -695,25 +681,19 @@ document.addEventListener('DOMContentLoaded', () => {
         simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
         currentSimuladoQuestionIndex = 0;
 
-        // REMOVIDO style="top: 6rem" E AUMENTADO O MARGIN-TOP (mt-10)
         contentArea.innerHTML = `
             <div class="relative pt-4 pb-12">
-                
-                <!-- HEADER COM TIMER (FIXO NO TOPO VIA CSS) -->
                 <div id="simulado-timer-bar" class="simulado-header-sticky shadow-lg">
                     <span class="simulado-timer flex items-center"><i class="fas fa-clock mr-2 text-lg"></i><span id="timer-display">60:00</span></span>
                     <span class="simulado-progress text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Questão <span id="q-current">1</span> / ${activeSimuladoQuestions.length}</span>
                 </div>
                 
-                <!-- TÍTULO DO SIMULADO (ESPAÇAMENTO AUMENTADO) -->
                 <div class="mt-10 mb-6 px-2 text-center">
                      <h3 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white border-b pb-2 inline-block">${moduleData.title}</h3>
                 </div>
 
-                <!-- ÁREA DA QUESTÃO -->
                 <div id="question-display-area" class="simulado-question-container"></div>
                 
-                <!-- NAVEGAÇÃO -->
                 <div class="mt-8 flex justify-between items-center">
                     <button id="sim-prev-btn" class="sim-nav-btn sim-btn-prev shadow" style="visibility: hidden;"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
                     <button id="sim-next-btn" class="sim-nav-btn sim-btn-next shadow">Próxima <i class="fas fa-arrow-right ml-2"></i></button>
@@ -802,6 +782,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    // --- FUNÇÃO CORRIGIDA: RESULTADO DO SIMULADO COM FEEDBACK COMPLETO ---
     function finishSimulado(moduleId) {
         clearInterval(simuladoTimerInterval);
         let correctCount = 0;
@@ -815,12 +796,25 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const statusClass = isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20';
             
+            // Recupera o texto da resposta correta
+            const correctAnswerText = q.options[q.answer];
+            const explanation = q.explanation || "Sem explicação disponível.";
+
             feedbackHtml += `
-                <div class="p-4 rounded border-l-4 ${statusClass}">
-                    <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${i+1}. ${q.question}</p>
-                    <div class="flex justify-between mt-2 text-xs">
-                        <span class="text-gray-600 dark:text-gray-400">Sua: <strong>${selected ? selected.toUpperCase() : '-'}</strong></span>
-                        <span class="text-green-600 font-bold">Correta: ${q.answer.toUpperCase()}</span>
+                <div class="p-4 rounded border-l-4 ${statusClass} mb-4">
+                    <p class="font-bold text-gray-800 dark:text-gray-200 text-sm mb-2">${i+1}. ${q.question}</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs mb-3">
+                        <div class="${isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                            <span class="font-bold">Sua Resposta:</span> ${selected ? selected.toUpperCase() + ') ' + q.options[selected] : 'Não respondeu'}
+                        </div>
+                        <div class="text-green-700 dark:text-green-400">
+                            <span class="font-bold">Resposta Correta:</span> ${q.answer.toUpperCase()}) ${correctAnswerText}
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
+                        <strong><i class="fas fa-info-circle mr-1"></i> Explicação:</strong> ${explanation}
                     </div>
                 </div>
             `;
@@ -834,7 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="simulado-score-circle">${score.toFixed(1)}</div>
                 <p class="text-lg text-gray-600 dark:text-gray-300">Acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.</p>
             </div>
-            <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Gabarito</h4>
+            <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Gabarito & Explicações</h4>
             ${feedbackHtml}
             <div class="text-center mt-8"><button onclick="location.reload()" class="action-button">Voltar ao Início</button></div>
         `;
@@ -856,6 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavigationButtons();
     }
 
+    // --- FUNÇÃO CORRIGIDA: QUIZ IMEDIATO COM FEEDBACK COMPLETO ---
     function handleQuizOptionClick(e) {
         const o = e.currentTarget;
         if (o.disabled) return;
@@ -866,7 +861,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!questionData) return; 
         
         const correctAnswer = questionData.answer;
+        const correctAnswerText = questionData.options[correctAnswer];
         const explanationText = questionData.explanation || 'Nenhuma explicação disponível.';
+        
         const optionsGroup = o.closest('.quiz-options-group');
         const feedbackArea = document.getElementById(`feedback-${questionId}`);
         
@@ -878,14 +875,26 @@ document.addEventListener('DOMContentLoaded', () => {
         let feedbackContent = '';
         if (selectedAnswer === correctAnswer) {
             o.classList.add('correct');
-            feedbackContent = `<strong class="font-semibold text-green-700 dark:text-green-400"><i class="fas fa-check-circle mr-2"></i> Correto!</strong> ${explanationText}`;
+            feedbackContent = `
+                <strong class="font-semibold text-green-700 dark:text-green-400"><i class="fas fa-check-circle mr-2"></i> Correto!</strong> 
+                <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">${explanationText}</div>
+            `;
             try { triggerSuccessParticles(e, o); } catch (err) {}
         } else {
             o.classList.add('incorrect');
-            feedbackContent = `<strong class="font-semibold text-red-700 dark:text-red-400"><i class="fas fa-times-circle mr-2"></i> Incorreto.</strong> ${explanationText} <span class="text-sm italic block mt-1"> (Dica: A resposta correta foi destacada em verde.)</span>`;
+            feedbackContent = `
+                <div class="mb-2"><strong class="font-semibold text-red-700 dark:text-red-400"><i class="fas fa-times-circle mr-2"></i> Incorreto.</strong></div>
+                <div class="mb-2 text-sm text-gray-700 dark:text-gray-300">
+                    Resposta Correta: <span class="font-bold text-green-600 dark:text-green-400">${correctAnswer.toUpperCase()}) ${correctAnswerText}</span>
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                    <strong>Explicação:</strong> ${explanationText}
+                </div>
+            `;
         }
+        
         if (feedbackArea) {
-            feedbackArea.innerHTML = `<div class="explanation mt-2">${feedbackContent}</div>`;
+            feedbackArea.innerHTML = `<div class="explanation mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">${feedbackContent}</div>`;
             feedbackArea.classList.remove('hidden');
         }
     }
@@ -1247,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 3. Admin Panel (Correção Mobile)
+        // 3. Admin Panel
         adminBtn?.addEventListener('click', window.openAdminPanel);
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
 
