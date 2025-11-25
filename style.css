@@ -40,11 +40,11 @@ body {
     transition: background-color 0.3s, color 0.3s; 
 }
 
-/* === CORREÇÃO DO TOPO MOBILE === */
-/* Garante espaço para que o conteúdo não fique escondido atrás da barra de progresso */
+/* === CORREÇÃO DO TOPO MOBILE (AJUSTADO) === */
+/* Aumentei o padding-top para empurrar o conteúdo para baixo da barra de progresso */
 @media (max-width: 1024px) {
     .main-content-container {
-        padding-top: 9.5rem !important; 
+        padding-top: 12.5rem !important; /* Aumentado de 9.5rem para 12.5rem */
     }
     body { padding-bottom: 80px; }
 }
@@ -107,7 +107,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     background-color: rgba(17, 24, 39, 0.85); 
 }
 
-/* Barra de Progresso Sticky */
+/* Barra de Progresso Sticky - Ajuste de Posição */
 .sticky-progress-wrapper {
     position: sticky;
     top: 5.5rem; 
@@ -118,10 +118,14 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     color: var(--light-text);
+    transition: top 0.3s ease;
 }
-/* Ajuste da posição sticky no mobile */
+
+/* AJUSTE CRÍTICO MOBILE: 'top' aumentado para descer a barra e não ficar atrás do header */
 @media (max-width: 1024px) { 
-    .sticky-progress-wrapper { top: 85px; } 
+    .sticky-progress-wrapper { 
+        top: 110px; /* Aumentado de 85px para 110px (aprox header height + gap) */
+    } 
 }
 .dark .sticky-progress-wrapper { background-color: rgba(17, 24, 39, 0.85); color: var(--light-text); }
 
@@ -196,10 +200,10 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 .drive-button i { font-size: 1.5rem; margin-right: 0.75rem; }
 
 /* ==========================================================================
-   5. FUNCIONALIDADES (RESTAURADO + NOVIDADES)
+   5. FUNCIONALIDADES
    ========================================================================== */
 
-/* --- 5.1 BOTÃO VOLTAR AO TOPO (RESTAURADO) --- */
+/* --- 5.1 BOTÃO VOLTAR AO TOPO --- */
 #back-to-top.action-button {
     border-radius: 50% !important; 
     width: 35px !important;       
@@ -220,7 +224,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     transform: translateY(-3px);
 }
 
-/* --- 5.2 MENU DE ACESSIBILIDADE (RESTAURADO) --- */
+/* --- 5.2 MENU DE ACESSIBILIDADE --- */
 #accessibility-fab {
     position: fixed;
     bottom: 80px;
@@ -273,7 +277,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 body.dyslexic-font { font-family: 'Comic Sans MS', 'Verdana', sans-serif !important; }
 body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 
-/* --- 5.3 MODO AUDIOBOOK (RESTAURADO) --- */
+/* --- 5.3 MODO AUDIOBOOK --- */
 .audio-controls {
     background: transparent;
     color: var(--secondary);
@@ -299,7 +303,7 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 }
 @keyframes pulse-audio { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-/* --- 5.4 SIMULADO PAGINADO (RESTAURADO) --- */
+/* --- 5.4 SIMULADO PAGINADO --- */
 .simulado-header-sticky {
     position: sticky; 
     top: 5.5rem;
@@ -314,12 +318,12 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
     margin-bottom: 1.5rem; 
     border-radius: 0 0 8px 8px;
 }
-@media (max-width: 1024px) { .simulado-header-sticky { top: 7.5rem; } }
+@media (max-width: 1024px) { .simulado-header-sticky { top: 110px; } }
 
 .simulado-timer { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.2rem; color: var(--primary); }
 .simulado-progress { font-size: 0.9rem; color: var(--light-text); font-weight: bold; }
 
-/* --- 5.5 FERRAMENTAS (ATUALIZADO COM JARRA DE ÁGUA) --- */
+/* --- 5.5 FERRAMENTAS --- */
 .tool-card {
     background: var(--panel-bg); border: 1px solid var(--border-color);
     border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem;
@@ -330,7 +334,7 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 .tool-title { font-size: 1.1rem; font-weight: bold; color: var(--secondary); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
 .dark .tool-title { color: #fff; }
 
-/* --- NOVA JARRA DE ÁGUA (NOVO) --- */
+/* JARRA DE ÁGUA */
 .water-jar {
     width: 100px;
     height: 140px;
@@ -380,7 +384,7 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; }
 
 /* ==========================================================================
-   6. MÓDULOS, CONTEÚDO E ACCORDION (MANTIDO INTEGRALMENTE)
+   6. MÓDULOS, CONTEÚDO E ACCORDION
    ========================================================================== */
 .accordion-button { width: 100%; text-align: left; background-color: #f8f9fa; color: var(--dark-text); cursor: pointer; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; transition: background-color 0.3s ease; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
 .dark .accordion-button { background-color: #374151; border-color: #374151; }
@@ -425,9 +429,11 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 
 @media (min-width: 1024px) { 
     #content-area > div > p, #content-area > div > ul li, #content-area > div > ol li { font-size: 1rem; line-height: 1.75; } 
-    #content-area > div > h4 { font-size: 1.75rem; margin-top: 2.25rem; } 
-    #content-area > div > h5 { font-size: 1.5rem; margin-top: 2rem; }
+    #content-area > div > h4 { font-size: 1.75rem; margin-top: 2.25rem; margin-bottom: 1rem; } 
+    #content-area > div > h5 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 0.75rem; } 
+    #content-area > div > hr { margin-top: 4rem; margin-bottom: 3rem; } 
 }
+#content-area > div > h4:first-child { margin-top: 0; }
 
 .key-concept { background-color: var(--info-bg); border-left: 4px solid var(--info-border); padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; }
 .key-concept h5 { color: #2c5282 !important; font-weight: 700; margin-top: 0 !important; }
