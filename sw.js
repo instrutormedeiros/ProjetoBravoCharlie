@@ -1,7 +1,7 @@
-/* sw.js — Service Worker V3 (Forçando atualização)
+/* sw.js — Service Worker V4 (Forçando atualização para exibir Ferramentas)
    - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v3'; // <--- MUDAMOS PARA V3 PARA FORÇAR ATUALIZAÇÃO
+const CACHE_NAME = 'pbc-static-v4'; // <--- MUDAMOS PARA V4
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
@@ -10,7 +10,7 @@ const PRECACHE_URLS = [
   '/data.js',
   '/quizzes.js',
   '/course.js',
-  '/firebase-init.js' // Adicionado para garantir
+  '/firebase-init.js'
 ];
 
 self.addEventListener('install', event => {
@@ -23,10 +23,10 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  clients.claim(); // Controla as páginas abertas imediatamente
+  clients.claim(); 
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)) // Deleta o cache antigo (v1 e v2)
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)) // Limpa cache antigo
     ))
   );
 });
@@ -34,6 +34,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)) // Tenta rede primeiro, depois cache
+    fetch(event.request).catch(() => caches.match(event.request)) 
   );
 });
