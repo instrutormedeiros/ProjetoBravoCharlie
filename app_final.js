@@ -1,10 +1,10 @@
-/* === ARQUIVO app_final.js (VERSÃO REFINADA - FEEDBACK COMPLETO) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL CORRIGIDA V7) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS DO APP ---
     const contentArea = document.getElementById('content-area');
-    const totalModules = Object.keys(moduleContent).length;
+    const totalModules = Object.keys(window.moduleContent || {}).length; 
     let completedModules = JSON.parse(localStorage.getItem('gateBombeiroCompletedModules_v3')) || [];
     let notifiedAchievements = JSON.parse(localStorage.getItem('gateBombeiroNotifiedAchievements_v3')) || [];
     let currentModuleId = null;
@@ -28,12 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeAchButton = document.getElementById('close-ach-modal');
     const breadcrumbContainer = document.getElementById('breadcrumb-container');
     const loadingSpinner = document.getElementById('loading-spinner');
-    
-    const resetModal = document.getElementById('reset-modal');
-    const resetOverlay = document.getElementById('reset-modal-overlay');
-    const confirmResetButton = document.getElementById('confirm-reset-button');
-    const cancelResetButton = document.getElementById('cancel-reset-button');
-
     const adminBtn = document.getElementById('admin-panel-btn');
     const mobileAdminBtn = document.getElementById('mobile-admin-btn');
     const adminModal = document.getElementById('admin-modal');
@@ -62,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-    // --- AUDIOBOOK (TEXT TO SPEECH - VELOCIDADE 0.8) ---
+    // --- AUDIOBOOK ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
@@ -162,10 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined') {
         document.getElementById('main-header')?.classList.add('hidden');
         document.querySelector('footer')?.classList.add('hidden');
-        const contentAreaError = document.getElementById('content-area');
-        if (contentAreaError) {
-            contentAreaError.innerHTML = `<div class="text-center py-10 px-6"><h2 class="text-3xl font-bold text-red-700">Erro Crítico</h2><p>Dados não carregados. Recarregue a página.</p><button onclick="location.reload()" class="action-button mt-4">Recarregar</button></div>`;
-        }
         return; 
     }
 
@@ -235,17 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
-        
         adminModal.classList.add('show');
         adminOverlay.classList.add('show');
-        
         const tbody = document.getElementById('admin-table-body');
         tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando...</td></tr>';
-
         try {
             const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
             tbody.innerHTML = '';
-            
             snapshot.forEach(doc => {
                 const u = doc.data();
                 const uid = doc.id;
@@ -254,9 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cpf = u.cpf || 'Sem CPF';
                 const planoTipo = u.planType || (isPremium ? 'Indefinido' : 'Trial');
                 const deviceInfo = u.last_device || 'Desconhecido';
-                
                 const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
-                
                 const row = `
                     <tr class="border-b hover:bg-gray-50 transition-colors">
                         <td class="p-3 font-bold text-gray-800">${u.name}</td>
@@ -571,6 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingSpinner.classList.add('hidden');
             contentArea.classList.remove('hidden'); 
 
+            // --- MODO SIMULADO ---
             if (d.isSimulado) {
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-orange-600 dark:text-orange-500 flex items-center">
@@ -585,7 +570,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 document.getElementById('start-simulado-btn').addEventListener('click', () => startSimuladoMode(d));
             } 
-            else if (id === 'module56') {
+            // --- MÓDULO FERRAMENTAS (ATUALIZADO PARA MODULE 59) ---
+            // AQUI ESTÁ A CORREÇÃO: Verifica explicitamente o module59
+            else if (id === 'module59') { 
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
                         <i class="fas fa-tools mr-3"></i> Ferramentas Operacionais
@@ -604,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     grid.innerHTML = '<p class="text-red-500">Erro: Script de Ferramentas não carregado.</p>';
                 }
             }
+            // --- MODO AULA NORMAL ---
             else {
                 let html = `
                     <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
@@ -616,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div>${d.content}</div>
                 `;
 
-                const isSpecialModule = ['module53', 'module54', 'module55', 'module56'].includes(id);
+                const isSpecialModule = ['module53', 'module54', 'module55', 'module56', 'module57', 'module58', 'module59'].includes(id);
 
                 if (d.driveLink) {
                     if (userIsNotPremium) {
@@ -782,7 +770,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // --- FUNÇÃO CORRIGIDA: RESULTADO DO SIMULADO COM FEEDBACK COMPLETO ---
     function finishSimulado(moduleId) {
         clearInterval(simuladoTimerInterval);
         let correctCount = 0;
@@ -795,26 +782,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if(isCorrect) correctCount++;
             
             const statusClass = isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20';
-            
-            // Recupera o texto da resposta correta
             const correctAnswerText = q.options[q.answer];
+            const selectedAnswerText = selected ? q.options[selected] : "Não respondeu";
             const explanation = q.explanation || "Sem explicação disponível.";
 
             feedbackHtml += `
                 <div class="p-4 rounded border-l-4 ${statusClass} mb-4">
-                    <p class="font-bold text-gray-800 dark:text-gray-200 text-sm mb-2">${i+1}. ${q.question}</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs mb-3">
-                        <div class="${isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
-                            <span class="font-bold">Sua Resposta:</span> ${selected ? selected.toUpperCase() + ') ' + q.options[selected] : 'Não respondeu'}
+                    <p class="font-bold text-gray-800 dark:text-gray-200 text-sm mb-3">${i+1}. ${q.question}</p>
+                    <div class="grid grid-cols-1 gap-3 text-xs mb-3">
+                        <div class="p-2 rounded ${isCorrect ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
+                            <span class="font-bold block mb-1">Sua Resposta:</span> 
+                            ${selected ? selected.toUpperCase() + ') ' + selectedAnswerText : 'Em branco'}
                         </div>
-                        <div class="text-green-700 dark:text-green-400">
-                            <span class="font-bold">Resposta Correta:</span> ${q.answer.toUpperCase()}) ${correctAnswerText}
+                        ${!isCorrect ? `
+                        <div class="p-2 rounded bg-green-50 text-green-800 dark:bg-green-900/50 dark:text-green-300 border border-green-200 dark:border-green-800">
+                            <span class="font-bold block mb-1">Resposta Correta:</span> 
+                            ${q.answer.toUpperCase()}) ${correctAnswerText}
                         </div>
+                        ` : ''}
                     </div>
-
                     <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
-                        <strong><i class="fas fa-info-circle mr-1"></i> Explicação:</strong> ${explanation}
+                        <strong><i class="fas fa-info-circle mr-1 text-blue-500"></i> Explicação:</strong><br> ${explanation}
                     </div>
                 </div>
             `;
@@ -828,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="simulado-score-circle">${score.toFixed(1)}</div>
                 <p class="text-lg text-gray-600 dark:text-gray-300">Acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.</p>
             </div>
-            <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Gabarito & Explicações</h4>
+            <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white border-b pb-2">Gabarito & Explicações</h4>
             ${feedbackHtml}
             <div class="text-center mt-8"><button onclick="location.reload()" class="action-button">Voltar ao Início</button></div>
         `;
@@ -850,7 +838,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavigationButtons();
     }
 
-    // --- FUNÇÃO CORRIGIDA: QUIZ IMEDIATO COM FEEDBACK COMPLETO ---
     function handleQuizOptionClick(e) {
         const o = e.currentTarget;
         if (o.disabled) return;
@@ -876,25 +863,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedAnswer === correctAnswer) {
             o.classList.add('correct');
             feedbackContent = `
-                <strong class="font-semibold text-green-700 dark:text-green-400"><i class="fas fa-check-circle mr-2"></i> Correto!</strong> 
-                <div class="mt-1 text-sm text-gray-600 dark:text-gray-300">${explanationText}</div>
+                <div class="p-3 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 rounded">
+                    <strong class="block text-green-700 dark:text-green-400 mb-1"><i class="fas fa-check-circle mr-2"></i> Correto!</strong> 
+                    <div class="text-sm text-gray-600 dark:text-gray-300">${explanationText}</div>
+                </div>
             `;
             try { triggerSuccessParticles(e, o); } catch (err) {}
         } else {
             o.classList.add('incorrect');
             feedbackContent = `
-                <div class="mb-2"><strong class="font-semibold text-red-700 dark:text-red-400"><i class="fas fa-times-circle mr-2"></i> Incorreto.</strong></div>
-                <div class="mb-2 text-sm text-gray-700 dark:text-gray-300">
-                    Resposta Correta: <span class="font-bold text-green-600 dark:text-green-400">${correctAnswer.toUpperCase()}) ${correctAnswerText}</span>
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-                    <strong>Explicação:</strong> ${explanationText}
+                <div class="p-3 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded">
+                    <div class="mb-2"><strong class="text-red-700 dark:text-red-400"><i class="fas fa-times-circle mr-2"></i> Incorreto.</strong></div>
+                    <div class="mb-2 text-sm text-gray-700 dark:text-gray-200">
+                        A resposta correta é: <span class="font-bold text-green-600 dark:text-green-400 block mt-1 p-1 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">${correctAnswer.toUpperCase()}) ${correctAnswerText}</span>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                        <strong>Explicação:</strong> ${explanationText}
+                    </div>
                 </div>
             `;
         }
         
         if (feedbackArea) {
-            feedbackArea.innerHTML = `<div class="explanation mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">${feedbackContent}</div>`;
+            feedbackArea.innerHTML = `<div class="explanation mt-3 animate-slide-in">${feedbackContent}</div>`;
             feedbackArea.classList.remove('hidden');
         }
     }
@@ -1167,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const n = parseInt(currentModuleId.replace('module',''));
         prevModule.disabled = (n === 1);
-        nextModule.disabled = (n === totalModules);
+        nextModule.disabled = (n === totalModules); // Agora totalModules inclui até o 59
     }
     function setupQuizListeners() {
         document.querySelectorAll('.quiz-option').forEach(o => o.addEventListener('click', handleQuizOptionClick));
@@ -1256,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 3. Admin Panel
+        // 3. Admin Panel (Correção Mobile)
         adminBtn?.addEventListener('click', window.openAdminPanel);
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
 
