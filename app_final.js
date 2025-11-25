@@ -1,5 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO COMPLETA E UNIFICADA) === */
-/* Inclui: Lógica Original + Simulados + Acessibilidade + Audiobook + Fingerprint */
+/* === ARQUIVO app_final.js (VERSÃO FINAL ATUALIZADA E COMPLETA) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -12,13 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedQuestionBanks = {}; 
     let currentUserData = null; 
 
-    // --- VARIÁVEIS PARA O SIMULADO ---
+    // --- VARIÁVEIS SIMULADO ---
     let simuladoTimerInterval = null;
     let simuladoTimeLeft = 0;
     let activeSimuladoQuestions = [];
     let userAnswers = {};
+    let currentSimuladoQuestionIndex = 0; // Para paginação
 
-    // --- SELETORES DO DOM ---
+    // --- SELETORES GERAIS ---
     const toastContainer = document.getElementById('toast-container');
     const sidebar = document.getElementById('off-canvas-sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-    // --- AUDIOBOOK (TEXT TO SPEECH) ---
+    // --- AUDIOBOOK ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         utterance.onstart = () => {
             document.getElementById('audio-btn-icon')?.classList.remove('fa-headphones');
             document.getElementById('audio-btn-icon')?.classList.add('fa-stop');
-            document.getElementById('audio-btn-text').textContent = 'Parar Áudio';
+            document.getElementById('audio-btn-text').textContent = 'Parar';
             document.getElementById('audio-btn').classList.add('audio-playing');
         };
         utterance.onend = () => {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.speak(utterance);
     };
 
-    // --- PWA INSTALLATION LOGIC ---
+    // --- INSTALL PWA ---
     let deferredPrompt;
     const installBtn = document.getElementById('install-app-btn');
     const installBtnMobile = document.getElementById('install-app-btn-mobile');
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     iosOverlay.classList.remove('show');
                 });
             } else {
-                alert("Para instalar no iPhone:\n1. Toque em Compartilhar (quadrado com seta).\n2. Toque em 'Adicionar à Tela de Início'.");
+                alert("Para instalar no iPhone:\nToque em Compartilhar (quadrado com seta).\nToque em 'Adicionar à Tela de Início'.");
             }
         } else if (deferredPrompt) {
             deferredPrompt.prompt();
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             deferredPrompt = null;
         } else {
-            alert("Para instalar:\nPC/Android: Procure o ícone de instalação na barra de endereço ou menu.\niOS: Toque em Compartilhar > Adicionar à Tela de Início.");
+            alert("Para instalar:\nProcure o ícone de instalação na barra de endereço ou menu.");
         }
     }
 
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(installBtnMobile) installBtnMobile.addEventListener('click', triggerInstall);
 
     // --- VERIFICAÇÃO DE SEGURANÇA ---
-    if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined' || typeof questionSources === 'undefined') {
+    if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined') {
         document.getElementById('main-header')?.classList.add('hidden');
         document.querySelector('footer')?.classList.add('hidden');
         const contentAreaError = document.getElementById('content-area');
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const validade = u.acesso_ate ? new Date(u.acesso_ate).toLocaleDateString('pt-BR') : '-';
                 const cpf = u.cpf || 'Sem CPF';
                 const planoTipo = u.planType || (isPremium ? 'Indefinido' : 'Trial');
-                const deviceInfo = u.last_device || 'Desconhecido'; // Fingerprint
+                const deviceInfo = u.last_device || 'Desconhecido';
                 
                 const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
                 
@@ -515,10 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadQuestionBank(moduleId) {
         if (cachedQuestionBanks[moduleId]) return cachedQuestionBanks[moduleId];
         if (typeof QUIZ_DATA === 'undefined') return null;
-        const questions = QUIZ_DATA[moduleId];
-        if (!questions || !Array.isArray(questions) || questions.length === 0) return null; 
-        cachedQuestionBanks[moduleId] = questions;
-        return questions;
+        return QUIZ_DATA[moduleId] || null;
     }
 
     // --- FUNÇÃO DE GERAÇÃO DE QUESTÕES PARA SIMULADO ---
@@ -594,6 +591,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 document.getElementById('start-simulado-btn').addEventListener('click', () => startSimuladoMode(d));
+            } 
+            // --- MÓDULO FERRAMENTAS ---
+            else if (id === 'module56') {
+                contentArea.innerHTML = `
+                    <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
+                        <i class="fas fa-tools mr-3"></i> Ferramentas Operacionais
+                    </h3>
+                    <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                `;
+                const grid = document.getElementById('tools-grid');
+                // Chama a renderização das ferramentas se o script estiver carregado
+                if (typeof ToolsApp !== 'undefined') {
+                    ToolsApp.renderPonto(grid);
+                    ToolsApp.renderEscala(grid);
+                    ToolsApp.renderPlanner(grid);
+                    ToolsApp.renderWater(grid);
+                    ToolsApp.renderNotes(grid);
+                    ToolsApp.renderHealth(grid);
+                } else {
+                    grid.innerHTML = '<p class="text-red-500">Erro: Script de Ferramentas não carregado.</p>';
+                }
             }
             // --- MODO AULA NORMAL ---
             else {
@@ -602,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     <!-- AUDIOBOOK BUTTON -->
                     <div id="audio-btn" class="audio-controls mb-6" onclick="window.speakContent()">
-                        <i id="audio-btn-icon" class="fas fa-headphones text-xl mr-2"></i>
+                        <i id="audio-btn-icon" class="fas fa-headphones text-lg mr-2"></i>
                         <span id="audio-btn-text">Ouvir Aula</span>
                     </div>
 
@@ -664,57 +682,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // --- LÓGICA DO SIMULADO ---
+    // --- LÓGICA DO SIMULADO PAGINADO (Questão por Questão) ---
     async function startSimuladoMode(moduleData) {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
 
         activeSimuladoQuestions = await generateSimuladoQuestions(moduleData.simuladoConfig);
         userAnswers = {};
-        simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; // converte para segundos
+        simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
+        currentSimuladoQuestionIndex = 0;
 
-        let html = `
-            <div id="simulado-timer-bar" class="simulado-timer-sticky">
-                <span><i class="fas fa-clock mr-2"></i>Tempo Restante:</span>
-                <span id="timer-display">60:00</span>
+        renderSimuladoUI(moduleData);
+    }
+
+    function renderSimuladoUI(moduleData) {
+        contentArea.innerHTML = `
+            <div id="simulado-timer-bar" class="simulado-header-sticky">
+                <span class="simulado-timer"><i class="fas fa-clock mr-2"></i><span id="timer-display">60:00</span></span>
+                <span class="simulado-progress">Questão <span id="q-current">1</span> de ${activeSimuladoQuestions.length}</span>
             </div>
-            <h3 class="text-2xl font-bold my-6 text-center">${moduleData.title}</h3>
-            <div class="space-y-8">
-        `;
-
-        activeSimuladoQuestions.forEach((q, index) => {
-            html += `
-                <div class="bg-white dark:bg-gray-900 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700 simulado-q-block" id="sim-q-${q.id}">
-                    <p class="font-bold text-lg mb-3 text-gray-800 dark:text-gray-100">${index + 1}. ${q.question}</p>
-                    <div class="space-y-2">
-            `;
-            for (const key in q.options) {
-                html += `
-                    <label class="flex items-center p-3 rounded border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <input type="radio" name="q-${q.id}" value="${key}" class="mr-3 w-5 h-5 text-orange-600 focus:ring-orange-500" onchange="registerSimuladoAnswer('${q.id}', '${key}')">
-                        <span class="text-gray-700 dark:text-gray-300"><strong class="mr-1 text-orange-500">${key.toUpperCase()})</strong> ${q.options[key]}</span>
-                    </label>
-                `;
-            }
-            html += `</div><div id="sim-feedback-${q.id}" class="hidden mt-3 p-3 rounded bg-gray-100 dark:bg-gray-800 text-sm"></div></div>`;
-        });
-
-        html += `
-            </div>
-            <div class="mt-8 text-center pb-10">
-                <button id="finish-simulado-btn" class="action-button bg-green-600 hover:bg-green-500 w-full md:w-auto text-lg px-10 py-4">
-                    <i class="fas fa-check-double mr-2"></i> ENTREGAR SIMULADO
-                </button>
+            <h3 class="text-2xl font-bold my-4 text-center">${moduleData.title}</h3>
+            <div id="question-display-area" class="simulado-question-container"></div>
+            <div class="mt-8 flex justify-between items-center pb-10">
+                <button id="sim-prev-btn" class="sim-nav-btn sim-btn-prev" style="visibility: hidden;"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                <button id="sim-next-btn" class="sim-nav-btn sim-btn-next">Próxima <i class="fas fa-arrow-right ml-2"></i></button>
             </div>
         `;
-
-        contentArea.innerHTML = html;
         contentArea.classList.remove('hidden');
         loadingSpinner.classList.add('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        document.getElementById('finish-simulado-btn').addEventListener('click', () => finishSimulado(moduleData.id));
+        showSimuladoQuestion(currentSimuladoQuestionIndex);
         startTimer(moduleData.id);
+
+        document.getElementById('sim-next-btn').addEventListener('click', () => navigateSimulado(1, moduleData.id));
+        document.getElementById('sim-prev-btn').addEventListener('click', () => navigateSimulado(-1, moduleData.id));
+    }
+
+    function showSimuladoQuestion(index) {
+        const q = activeSimuladoQuestions[index];
+        const container = document.getElementById('question-display-area');
+        
+        // Salva resposta anterior se existir
+        const savedAnswer = userAnswers[q.id] || null;
+
+        let html = `
+            <div class="bg-white dark:bg-gray-900 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                <p class="font-bold text-xl mb-6 text-gray-800 dark:text-gray-100">${index + 1}. ${q.question}</p>
+                <div class="space-y-3">
+        `;
+        for (const key in q.options) {
+            const isChecked = savedAnswer === key ? 'checked' : '';
+            html += `
+                <label class="flex items-center p-4 rounded border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <input type="radio" name="q-current" value="${key}" class="mr-4 w-5 h-5 text-orange-600 focus:ring-orange-500" ${isChecked} onchange="registerSimuladoAnswer('${q.id}', '${key}')">
+                    <span class="text-lg text-gray-700 dark:text-gray-300"><strong class="mr-2 text-orange-500">${key.toUpperCase()})</strong> ${q.options[key]}</span>
+                </label>
+            `;
+        }
+        html += `</div></div>`;
+        container.innerHTML = html;
+
+        document.getElementById('q-current').innerText = index + 1;
+        
+        // Botões
+        const prevBtn = document.getElementById('sim-prev-btn');
+        const nextBtn = document.getElementById('sim-next-btn');
+        
+        prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+        if (index === activeSimuladoQuestions.length - 1) {
+            nextBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> ENTREGAR';
+            nextBtn.classList.replace('bg-secondary', 'bg-green-600');
+            nextBtn.classList.replace('hover:bg-secondary', 'hover:bg-green-500');
+        } else {
+            nextBtn.innerHTML = 'Próxima <i class="fas fa-arrow-right ml-2"></i>';
+        }
+    }
+
+    function navigateSimulado(direction, moduleId) {
+        const newIndex = currentSimuladoQuestionIndex + direction;
+        if (newIndex >= 0 && newIndex < activeSimuladoQuestions.length) {
+            currentSimuladoQuestionIndex = newIndex;
+            showSimuladoQuestion(newIndex);
+        } else if (newIndex >= activeSimuladoQuestions.length) {
+            if(confirm("Deseja realmente entregar o simulado?")) {
+                finishSimulado(moduleId);
+            }
+        }
     }
 
     window.registerSimuladoAnswer = function(qId, answer) {
@@ -741,26 +795,26 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(simuladoTimerInterval);
         let correctCount = 0;
         const total = activeSimuladoQuestions.length;
+        let feedbackHtml = '<div class="space-y-6">';
 
-        activeSimuladoQuestions.forEach(q => {
+        activeSimuladoQuestions.forEach((q, i) => {
             const selected = userAnswers[q.id];
-            const block = document.getElementById(`sim-q-${q.id}`);
-            const feedback = document.getElementById(`sim-feedback-${q.id}`);
-            const inputs = block.querySelectorAll('input');
+            const isCorrect = selected === q.answer;
+            if(isCorrect) correctCount++;
             
-            inputs.forEach(inp => inp.disabled = true);
-
-            if (selected === q.answer) {
-                correctCount++;
-                block.classList.add('border-green-500', 'border-2');
-                feedback.innerHTML = `<strong class="text-green-600"><i class="fas fa-check"></i> Correto!</strong>`;
-            } else {
-                block.classList.add('border-red-500', 'border-2');
-                const correctText = q.options[q.answer];
-                feedback.innerHTML = `<strong class="text-red-600"><i class="fas fa-times"></i> Errado.</strong> Resposta correta: <strong>${q.answer.toUpperCase()}) ${correctText}</strong>`;
-            }
-            feedback.classList.remove('hidden');
+            const statusClass = isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20';
+            const statusIcon = isCorrect ? '<i class="fas fa-check text-green-600"></i>' : '<i class="fas fa-times text-red-600"></i>';
+            
+            feedbackHtml += `
+                <div class="p-4 rounded border-l-4 ${statusClass}">
+                    <p class="font-bold text-gray-800 dark:text-gray-200">${i+1}. ${q.question} ${statusIcon}</p>
+                    <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">Sua resposta: <strong>${selected ? selected.toUpperCase() : 'Nenhuma'}</strong></p>
+                    ${!isCorrect ? `<p class="text-sm text-green-600 font-bold">Correta: ${q.answer.toUpperCase()}) ${q.options[q.answer]}</p>` : ''}
+                    <p class="text-xs mt-1 italic text-gray-500">${q.explanation || ''}</p>
+                </div>
+            `;
         });
+        feedbackHtml += '</div>';
 
         const score = (correctCount / total) * 10;
         const finalHtml = `
@@ -768,16 +822,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2 class="text-2xl font-bold mb-4">Resultado Final</h2>
                 <div class="simulado-score-circle">${score.toFixed(1)}</div>
                 <p class="text-lg">Você acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.</p>
-                <p class="text-gray-500 mt-2 text-sm">Confira abaixo as respostas detalhadas.</p>
             </div>
+            <h4 class="text-xl font-bold mb-4">Gabarito Detalhado</h4>
+            ${feedbackHtml}
+            <div class="text-center mt-8"><button onclick="location.reload()" class="action-button">Voltar ao Início</button></div>
         `;
         
-        document.getElementById('simulado-timer-bar').remove();
-        document.getElementById('finish-simulado-btn').remove();
-        contentArea.insertAdjacentHTML('afterbegin', finalHtml);
+        contentArea.innerHTML = finalHtml;
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // Marca como concluído 
+        // Marca como concluído se nota > 7 (Opcional, vou marcar sempre por enquanto)
         if (!completedModules.includes(moduleId)) {
             completedModules.push(moduleId);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
@@ -1134,6 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addEventListeners() {
+        // 1. Botões de Navegação
         const nextButton = document.getElementById('next-module');
         const prevButton = document.getElementById('prev-module');
 
@@ -1150,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nextButton?.classList.remove('blinking-button');
         });
 
+        // 2. Busca
         document.body.addEventListener('input', e => {
             if(e.target.matches('.module-search')) {
                 const s = e.target.value.toLowerCase();
@@ -1181,6 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 3. Admin Panel (Correção Mobile)
         adminBtn?.addEventListener('click', window.openAdminPanel);
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
 
@@ -1193,6 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminOverlay.classList.remove('show');
         });
 
+        // 4. Reset
         document.getElementById('reset-progress')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.add('show'); document.getElementById('reset-modal-overlay')?.classList.add('show'); });
         document.getElementById('cancel-reset-button')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.remove('show'); document.getElementById('reset-modal-overlay')?.classList.remove('show'); });
         document.getElementById('confirm-reset-button')?.addEventListener('click', () => {
@@ -1203,6 +1261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         });
         
+        // 5. Back to Top
         document.getElementById('back-to-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('back-to-top');
@@ -1212,6 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 6. Cliques
         document.body.addEventListener('click', e => {
             const moduleItem = e.target.closest('.module-list-item');
             if (moduleItem) {
