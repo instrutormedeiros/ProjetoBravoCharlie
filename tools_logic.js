@@ -1,10 +1,10 @@
-/* === LÓGICA DAS FERRAMENTAS (TOOLS) - VERSÃO REFINADA V4 === */
+/* === LÓGICA DAS FERRAMENTAS (TOOLS) - VERSÃO REFINADA V5 (COM LIMPEZA) === */
 
 (function(){
     window.ToolsApp = window.ToolsApp || {};
 
     // =================================================================
-    // 1. PONTO ELETRÔNICO (AGRUPADO POR DIA + SOMA DE HORAS)
+    // 1. PONTO ELETRÔNICO
     // =================================================================
     window.ToolsApp.renderPonto = function(container) {
         let html = `
@@ -27,7 +27,7 @@
                     <div id="ponto-list" class="flex flex-col divide-y divide-gray-100 dark:divide-gray-800"></div>
                 </div>
                 <div class="mt-3 text-right">
-                    <button onclick="ToolsApp.clearPonto()" class="text-xs text-red-500 hover:text-red-700 font-bold"><i class="fas fa-trash-alt mr-1"></i> Zerar Tudo</button>
+                    <button onclick="ToolsApp.clearPonto()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Zerar Tudo</button>
                 </div>
             </div>
         `;
@@ -147,7 +147,7 @@
 
 
     // =================================================================
-    // 2. ESCALA DE SERVIÇO (CALENDÁRIO + FOLGÃO + NAVEGAÇÃO)
+    // 2. ESCALA DE SERVIÇO
     // =================================================================
     window.ToolsApp.renderEscala = function(container) {
         const cfg = JSON.parse(localStorage.getItem('tool_escala_v3')) || { type: '12x36', start: '', folgaoDay: 'none' };
@@ -192,6 +192,9 @@
                 <div class="bg-white dark:bg-gray-900 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-inner">
                     <div id="escala-result" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
                 </div>
+                <div class="mt-3 text-right">
+                    <button onclick="ToolsApp.clearEscala()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Limpar Escala</button>
+                </div>
             </div>
         `;
         container.innerHTML += html;
@@ -213,6 +216,14 @@
         if(!window.currentEscalaView) window.currentEscalaView = new Date();
         window.currentEscalaView.setMonth(window.currentEscalaView.getMonth() + delta);
         ToolsApp.renderEscalaCalendar();
+    };
+
+    window.ToolsApp.clearEscala = function() {
+        if(confirm('Limpar configuração da escala?')) {
+            localStorage.removeItem('tool_escala_v3');
+            document.getElementById('escala-start').value = '';
+            document.getElementById('escala-result').innerHTML = '<div class="col-span-7 text-gray-400 py-4">Escala limpa.</div>';
+        }
     };
 
     window.ToolsApp.renderEscalaCalendar = function() {
@@ -271,7 +282,7 @@
 
 
     // =================================================================
-    // 3. HIDRATAÇÃO (DESIGN JARRA + BONS HÁBITOS)
+    // 3. HIDRATAÇÃO
     // =================================================================
     window.ToolsApp.renderWater = function(container) {
         const today = new Date().toLocaleDateString();
@@ -308,6 +319,9 @@
                     <button onclick="ToolsApp.addWater(500)" class="bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-500 transition-colors text-xs shadow-md pulse-button"><i class="fas fa-bottle-water"></i> +500</button>
                     <button onclick="ToolsApp.addWater(-250)" class="bg-red-50 dark:bg-red-900/20 text-red-600 border border-red-100 dark:border-red-900 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors text-xs">-250</button>
                 </div>
+                <div class="mt-3 text-right">
+                    <button onclick="ToolsApp.clearWater()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Zerar Hoje</button>
+                </div>
             </div>
         `;
         container.innerHTML += html;
@@ -320,6 +334,15 @@
         if(data.count < 0) data.count = 0;
         localStorage.setItem('tool_water_v4', JSON.stringify(data));
         ToolsApp.updateWaterUI(data);
+    };
+
+    window.ToolsApp.clearWater = function() {
+        if(confirm('Zerar o contador de água de hoje?')) {
+            let data = JSON.parse(localStorage.getItem('tool_water_v4')) || {};
+            data.count = 0;
+            localStorage.setItem('tool_water_v4', JSON.stringify(data));
+            ToolsApp.updateWaterUI(data);
+        }
     };
 
     window.ToolsApp.setWaterGoal = function(val) {
@@ -335,7 +358,7 @@
         document.getElementById('water-level').style.height = percent + '%';
     };
 
-    // 4. IMC (Renderização)
+    // 4. IMC
     window.ToolsApp.renderHealth = function(container) {
         let html = `
             <div class="tool-card">
@@ -352,6 +375,9 @@
                 </div>
                 <button onclick="ToolsApp.calcIMC()" class="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-2 rounded font-bold shadow hover:opacity-90 transition-transform active:scale-95">CALCULAR</button>
                 <div id="imc-result" class="mt-3 text-center h-8 font-bold text-sm text-gray-600 dark:text-gray-300"></div>
+                <div class="mt-2 text-right">
+                    <button onclick="ToolsApp.clearIMC()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Limpar Campos</button>
+                </div>
             </div>
         `;
         container.innerHTML += html;
@@ -371,20 +397,39 @@
         document.getElementById('imc-result').innerHTML = `<span class="${color}">IMC ${imc}: ${msg}</span>`;
     };
 
+    window.ToolsApp.clearIMC = function() {
+        document.getElementById('imc-weight').value = '';
+        document.getElementById('imc-height').value = '';
+        document.getElementById('imc-result').innerHTML = '';
+    };
+
     // 5. Notas Rápidas
     window.ToolsApp.renderNotes = function(c) {
         const notes = JSON.parse(localStorage.getItem('tool_quicknotes'))||[];
-        c.innerHTML += `<div class="tool-card"><h3 class="tool-title"><i class="fas fa-sticky-note text-yellow-500"></i> Notas Rápidas</h3><div class="flex gap-2 mb-2"><input id="n-in" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white text-sm" placeholder="Lembrete..."><button onclick="ToolsApp.addN()" class="bg-yellow-500 hover:bg-yellow-600 px-3 rounded text-white shadow"><i class="fas fa-plus"></i></button></div><ul id="n-list" class="space-y-1 max-h-32 overflow-y-auto custom-scrollbar"></ul></div>`;
+        let html = `<div class="tool-card"><h3 class="tool-title"><i class="fas fa-sticky-note text-yellow-500"></i> Notas Rápidas</h3><div class="flex gap-2 mb-2"><input id="n-in" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white text-sm" placeholder="Lembrete..."><button onclick="ToolsApp.addN()" class="bg-yellow-500 hover:bg-yellow-600 px-3 rounded text-white shadow"><i class="fas fa-plus"></i></button></div><ul id="n-list" class="space-y-1 max-h-32 overflow-y-auto custom-scrollbar"></ul><div class="mt-2 text-right"><button onclick="ToolsApp.clearNotes()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Apagar Tudo</button></div></div>`;
+        c.innerHTML += html;
         setTimeout(ToolsApp.updN,100);
     };
     window.ToolsApp.addN=function(){const v=document.getElementById('n-in').value;if(v){const n=JSON.parse(localStorage.getItem('tool_quicknotes'))||[];n.unshift(v);localStorage.setItem('tool_quicknotes',JSON.stringify(n));document.getElementById('n-in').value='';ToolsApp.updN();}};
     window.ToolsApp.updN=function(){const n=JSON.parse(localStorage.getItem('tool_quicknotes'))||[];const l=document.getElementById('n-list');if(l)l.innerHTML=n.map((x,i)=>`<li class="bg-yellow-50 dark:bg-gray-700 border-l-4 border-yellow-400 p-2 text-xs flex justify-between items-center rounded shadow-sm"><span class="dark:text-gray-200">${x}</span><button onclick="ToolsApp.delN(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></li>`).join('');};
     window.ToolsApp.delN=function(i){const n=JSON.parse(localStorage.getItem('tool_quicknotes'));n.splice(i,1);localStorage.setItem('tool_quicknotes',JSON.stringify(n));ToolsApp.updN();};
+    window.ToolsApp.clearNotes = function() {
+        if(confirm('Apagar todas as notas?')) {
+            localStorage.removeItem('tool_quicknotes');
+            ToolsApp.updN();
+        }
+    };
 
     // 6. Planejador
     window.ToolsApp.renderPlanner = function(c) {
        const t=localStorage.getItem('tool_planner')||'';
-       c.innerHTML+=`<div class="tool-card"><h3 class="tool-title"><i class="fas fa-book text-indigo-500"></i> Planejador</h3><textarea id="pl-t" class="w-full h-24 p-2 border rounded dark:bg-gray-700 dark:text-white text-xs resize-none" placeholder="Escreva suas metas...">${t}</textarea><button onclick="localStorage.setItem('tool_planner',document.getElementById('pl-t').value);alert('Salvo!')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1 rounded text-xs mt-2 font-bold shadow">Salvar</button></div>`;
+       c.innerHTML+=`<div class="tool-card"><h3 class="tool-title"><i class="fas fa-book text-indigo-500"></i> Planejador</h3><textarea id="pl-t" class="w-full h-24 p-2 border rounded dark:bg-gray-700 dark:text-white text-xs resize-none" placeholder="Escreva suas metas...">${t}</textarea><div class="flex justify-between mt-2"><button onclick="ToolsApp.clearPlanner()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Limpar Texto</button><button onclick="localStorage.setItem('tool_planner',document.getElementById('pl-t').value);alert('Salvo!')" class="bg-indigo-600 hover:bg-indigo-500 text-white py-1 px-3 rounded text-xs font-bold shadow">Salvar</button></div></div>`;
+    };
+    window.ToolsApp.clearPlanner = function() {
+        if(confirm('Limpar o texto do planejador?')) {
+            localStorage.removeItem('tool_planner');
+            document.getElementById('pl-t').value = '';
+        }
     };
 
 })();
