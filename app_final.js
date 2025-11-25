@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL COMPLETA E CORRIGIDA) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL CORRIGIDA - SAVEDNOTE FIX) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-    // --- AUDIOBOOK (TEXT TO SPEECH - CORREÇÃO VELOCIDADE) ---
+    // --- AUDIOBOOK (TEXT TO SPEECH - VELOCIDADE 0.8) ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'pt-BR';
         
-        // VELOCIDADE MAIS LENTA (0.8) PARA MELHOR COMPREENSÃO
+        // VELOCIDADE AJUSTADA (0.8)
         utterance.rate = 0.8; 
 
         utterance.onstart = () => {
@@ -638,6 +638,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
+                // Correção do "savedNote is not defined"
+                const savedNote = localStorage.getItem('note-' + id) || '';
+
                 let allQuestions = null;
                 try { allQuestions = await loadQuestionBank(id); } catch(error) { console.error(error); }
 
@@ -682,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // --- LÓGICA DO SIMULADO (CORREÇÃO VISUAL DE LAYOUT) ---
+    // --- LÓGICA DO SIMULADO (LAYOUT CORRIGIDO - TIMER NO TOPO) ---
     async function startSimuladoMode(moduleData) {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
@@ -692,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
         simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
         currentSimuladoQuestionIndex = 0;
 
-        // CORREÇÃO: Timer em um container separado, título abaixo com margem
+        // CORREÇÃO: Container Wrapper com Padding e Timer Sticky
         contentArea.innerHTML = `
             <div class="relative pt-4 pb-12">
                 
@@ -702,9 +705,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="simulado-progress text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Questão <span id="q-current">1</span> / ${activeSimuladoQuestions.length}</span>
                 </div>
                 
-                <!-- TÍTULO (COM ESPAÇAMENTO PARA NÃO SER TAMPADO) -->
-                <div class="mt-6 mb-6 px-2">
-                     <h3 class="text-xl md:text-2xl font-bold text-center text-gray-800 dark:text-white border-b pb-2">${moduleData.title}</h3>
+                <!-- TÍTULO DO SIMULADO (ABAIXO DO TIMER) -->
+                <div class="mt-6 mb-6 px-2 text-center">
+                     <h3 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white border-b pb-2 inline-block">${moduleData.title}</h3>
                 </div>
 
                 <!-- ÁREA DA QUESTÃO -->
