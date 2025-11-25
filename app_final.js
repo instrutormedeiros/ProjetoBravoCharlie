@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL ATUALIZADA E COMPLETA) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL COMPLETA E CORRIGIDA) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedQuestionBanks = {}; 
     let currentUserData = null; 
 
-    // --- VARIÁVEIS SIMULADO ---
+    // --- VARIÁVEIS PARA O SIMULADO ---
     let simuladoTimerInterval = null;
     let simuladoTimeLeft = 0;
     let activeSimuladoQuestions = [];
     let userAnswers = {};
-    let currentSimuladoQuestionIndex = 0; // Para paginação
+    let currentSimuladoQuestionIndex = 0; 
 
-    // --- SELETORES GERAIS ---
+    // --- SELETORES DO DOM ---
     const toastContainer = document.getElementById('toast-container');
     const sidebar = document.getElementById('off-canvas-sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-// --- AUDIOBOOK (TEXT TO SPEECH) ---
+    // --- AUDIOBOOK (TEXT TO SPEECH - CORREÇÃO VELOCIDADE) ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
@@ -84,10 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'pt-BR';
         
-        // AJUSTE DE VELOCIDADE SOLICITADO
-        // No mobile, 1.1 fica muito rápido. Vamos reduzir.
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        utterance.rate = isMobile ? 0.9 : 1.0; 
+        // VELOCIDADE MAIS LENTA (0.8) PARA MELHOR COMPREENSÃO
+        utterance.rate = 0.8; 
 
         utterance.onstart = () => {
             document.getElementById('audio-btn-icon')?.classList.remove('fa-headphones');
@@ -521,7 +519,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadQuestionBank(moduleId) {
         if (cachedQuestionBanks[moduleId]) return cachedQuestionBanks[moduleId];
         if (typeof QUIZ_DATA === 'undefined') return null;
-        return QUIZ_DATA[moduleId] || null;
+        const questions = QUIZ_DATA[moduleId];
+        if (!questions || !Array.isArray(questions) || questions.length === 0) return null; 
+        cachedQuestionBanks[moduleId] = questions;
+        return questions;
     }
 
     // --- FUNÇÃO DE GERAÇÃO DE QUESTÕES PARA SIMULADO ---
@@ -534,7 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const cat = moduleCategories[catKey];
             for (let i = cat.range[0]; i <= cat.range[1]; i++) {
                 const modId = `module${i}`;
-                // Se QUIZ_DATA não estiver carregado, tente usar o global
                 if (typeof QUIZ_DATA !== 'undefined' && QUIZ_DATA[modId]) {
                     questionsByCategory[catKey].push(...QUIZ_DATA[modId]);
                 }
@@ -553,6 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadModuleContent(id) {
         if (!id || !moduleContent[id]) return;
+        const d = moduleContent[id];
         const num = parseInt(id.replace('module', ''));
         let moduleCategory = null;
         for (const key in moduleCategories) {
@@ -566,13 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentModuleId = id;
         localStorage.setItem('gateBombeiroLastModule', id);
-        const d = moduleContent[id];
-        const savedNote = localStorage.getItem('note-' + id) || ''; 
-        const categoryColor = getCategoryColor(id);
         
-        // Limpa áudio se estiver tocando
         if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
-        // Limpa timer se estiver rodando
         if (simuladoTimerInterval) clearInterval(simuladoTimerInterval);
 
         contentArea.style.opacity = '0';
@@ -598,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 document.getElementById('start-simulado-btn').addEventListener('click', () => startSimuladoMode(d));
             } 
-            // --- MÓDULO FERRAMENTAS ---
+            // --- MÓDULO FERRAMENTAS (NOVO) ---
             else if (id === 'module56') {
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
@@ -607,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 `;
                 const grid = document.getElementById('tools-grid');
-                // Chama a renderização das ferramentas se o script estiver carregado
+                // Chama a renderização das ferramentas
                 if (typeof ToolsApp !== 'undefined') {
                     ToolsApp.renderPonto(grid);
                     ToolsApp.renderEscala(grid);
@@ -622,9 +618,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- MODO AULA NORMAL ---
             else {
                 let html = `
-                    <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${categoryColor} fa-fw"></i>${d.title}</h3>
+                    <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
                     
-                    <!-- AUDIOBOOK BUTTON -->
                     <div id="audio-btn" class="audio-controls mb-6" onclick="window.speakContent()">
                         <i id="audio-btn-icon" class="fas fa-headphones text-lg mr-2"></i>
                         <span id="audio-btn-text">Ouvir Aula</span>
@@ -647,8 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try { allQuestions = await loadQuestionBank(id); } catch(error) { console.error(error); }
 
                 if (allQuestions && allQuestions.length > 0) {
-                    const questionsToDisplay = 4;
-                    const count = Math.min(allQuestions.length, questionsToDisplay); 
+                    const count = Math.min(allQuestions.length, 4); 
                     const shuffledQuestions = shuffleArray([...allQuestions]); 
                     const selectedQuestions = shuffledQuestions.slice(0, count);
                     
@@ -688,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // --- LÓGICA DO SIMULADO PAGINADO (Questão por Questão) ---
+    // --- LÓGICA DO SIMULADO (CORREÇÃO VISUAL DE LAYOUT) ---
     async function startSimuladoMode(moduleData) {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
@@ -698,22 +692,32 @@ document.addEventListener('DOMContentLoaded', () => {
         simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
         currentSimuladoQuestionIndex = 0;
 
-        renderSimuladoUI(moduleData);
-    }
-
-    function renderSimuladoUI(moduleData) {
+        // CORREÇÃO: Timer em um container separado, título abaixo com margem
         contentArea.innerHTML = `
-            <div id="simulado-timer-bar" class="simulado-header-sticky">
-                <span class="simulado-timer"><i class="fas fa-clock mr-2"></i><span id="timer-display">60:00</span></span>
-                <span class="simulado-progress">Questão <span id="q-current">1</span> de ${activeSimuladoQuestions.length}</span>
-            </div>
-            <h3 class="text-2xl font-bold my-4 text-center">${moduleData.title}</h3>
-            <div id="question-display-area" class="simulado-question-container"></div>
-            <div class="mt-8 flex justify-between items-center pb-10">
-                <button id="sim-prev-btn" class="sim-nav-btn sim-btn-prev" style="visibility: hidden;"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                <button id="sim-next-btn" class="sim-nav-btn sim-btn-next">Próxima <i class="fas fa-arrow-right ml-2"></i></button>
+            <div class="relative pt-4 pb-12">
+                
+                <!-- HEADER COM TIMER (FIXO NO TOPO) -->
+                <div id="simulado-timer-bar" class="simulado-header-sticky shadow-lg" style="top: 6rem;">
+                    <span class="simulado-timer flex items-center"><i class="fas fa-clock mr-2 text-lg"></i><span id="timer-display">60:00</span></span>
+                    <span class="simulado-progress text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Questão <span id="q-current">1</span> / ${activeSimuladoQuestions.length}</span>
+                </div>
+                
+                <!-- TÍTULO (COM ESPAÇAMENTO PARA NÃO SER TAMPADO) -->
+                <div class="mt-6 mb-6 px-2">
+                     <h3 class="text-xl md:text-2xl font-bold text-center text-gray-800 dark:text-white border-b pb-2">${moduleData.title}</h3>
+                </div>
+
+                <!-- ÁREA DA QUESTÃO -->
+                <div id="question-display-area" class="simulado-question-container"></div>
+                
+                <!-- NAVEGAÇÃO -->
+                <div class="mt-8 flex justify-between items-center">
+                    <button id="sim-prev-btn" class="sim-nav-btn sim-btn-prev shadow" style="visibility: hidden;"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
+                    <button id="sim-next-btn" class="sim-nav-btn sim-btn-next shadow">Próxima <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
             </div>
         `;
+        
         contentArea.classList.remove('hidden');
         loadingSpinner.classList.add('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -728,21 +732,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSimuladoQuestion(index) {
         const q = activeSimuladoQuestions[index];
         const container = document.getElementById('question-display-area');
-        
-        // Salva resposta anterior se existir
         const savedAnswer = userAnswers[q.id] || null;
-
+        
         let html = `
-            <div class="bg-white dark:bg-gray-900 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <p class="font-bold text-xl mb-6 text-gray-800 dark:text-gray-100">${index + 1}. ${q.question}</p>
+            <div class="bg-white dark:bg-gray-900 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 animate-slide-in">
+                <p class="font-bold text-lg mb-6 text-gray-800 dark:text-white">${index+1}. ${q.question}</p>
                 <div class="space-y-3">
         `;
         for (const key in q.options) {
             const isChecked = savedAnswer === key ? 'checked' : '';
             html += `
                 <label class="flex items-center p-4 rounded border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <input type="radio" name="q-current" value="${key}" class="mr-4 w-5 h-5 text-orange-600 focus:ring-orange-500" ${isChecked} onchange="registerSimuladoAnswer('${q.id}', '${key}')">
-                    <span class="text-lg text-gray-700 dark:text-gray-300"><strong class="mr-2 text-orange-500">${key.toUpperCase()})</strong> ${q.options[key]}</span>
+                    <input type="radio" name="q-curr" value="${key}" class="mr-4 w-5 h-5 text-orange-600 focus:ring-orange-500" ${isChecked} onchange="registerSimuladoAnswer('${q.id}', '${key}')">
+                    <span class="text-base text-gray-700 dark:text-gray-300"><strong class="mr-2 text-orange-500">${key.toUpperCase()})</strong> ${q.options[key]}</span>
                 </label>
             `;
         }
@@ -751,17 +753,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('q-current').innerText = index + 1;
         
-        // Botões
         const prevBtn = document.getElementById('sim-prev-btn');
         const nextBtn = document.getElementById('sim-next-btn');
         
         prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
         if (index === activeSimuladoQuestions.length - 1) {
             nextBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> ENTREGAR';
-            nextBtn.classList.replace('bg-secondary', 'bg-green-600');
-            nextBtn.classList.replace('hover:bg-secondary', 'hover:bg-green-500');
+            nextBtn.className = "sim-nav-btn bg-green-600 text-white hover:bg-green-500 shadow-lg transform hover:scale-105 transition-transform";
         } else {
             nextBtn.innerHTML = 'Próxima <i class="fas fa-arrow-right ml-2"></i>';
+            nextBtn.className = "sim-nav-btn sim-btn-next";
         }
     }
 
@@ -770,8 +771,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newIndex >= 0 && newIndex < activeSimuladoQuestions.length) {
             currentSimuladoQuestionIndex = newIndex;
             showSimuladoQuestion(newIndex);
+            window.scrollTo({ top: 100, behavior: 'smooth' });
         } else if (newIndex >= activeSimuladoQuestions.length) {
-            if(confirm("Deseja realmente entregar o simulado?")) {
+            if(confirm("Tem certeza que deseja entregar o simulado?")) {
                 finishSimulado(moduleId);
             }
         }
@@ -801,7 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(simuladoTimerInterval);
         let correctCount = 0;
         const total = activeSimuladoQuestions.length;
-        let feedbackHtml = '<div class="space-y-6">';
+        let feedbackHtml = '<div class="space-y-4">';
 
         activeSimuladoQuestions.forEach((q, i) => {
             const selected = userAnswers[q.id];
@@ -809,14 +811,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if(isCorrect) correctCount++;
             
             const statusClass = isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20';
-            const statusIcon = isCorrect ? '<i class="fas fa-check text-green-600"></i>' : '<i class="fas fa-times text-red-600"></i>';
             
             feedbackHtml += `
                 <div class="p-4 rounded border-l-4 ${statusClass}">
-                    <p class="font-bold text-gray-800 dark:text-gray-200">${i+1}. ${q.question} ${statusIcon}</p>
-                    <p class="text-sm mt-2 text-gray-600 dark:text-gray-400">Sua resposta: <strong>${selected ? selected.toUpperCase() : 'Nenhuma'}</strong></p>
-                    ${!isCorrect ? `<p class="text-sm text-green-600 font-bold">Correta: ${q.answer.toUpperCase()}) ${q.options[q.answer]}</p>` : ''}
-                    <p class="text-xs mt-1 italic text-gray-500">${q.explanation || ''}</p>
+                    <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${i+1}. ${q.question}</p>
+                    <div class="flex justify-between mt-2 text-xs">
+                        <span class="text-gray-600 dark:text-gray-400">Sua: <strong>${selected ? selected.toUpperCase() : '-'}</strong></span>
+                        <span class="text-green-600 font-bold">Correta: ${q.answer.toUpperCase()}</span>
+                    </div>
                 </div>
             `;
         });
@@ -825,11 +827,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const score = (correctCount / total) * 10;
         const finalHtml = `
             <div class="simulado-result-card mb-8 animate-slide-in">
-                <h2 class="text-2xl font-bold mb-4">Resultado Final</h2>
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Resultado Final</h2>
                 <div class="simulado-score-circle">${score.toFixed(1)}</div>
-                <p class="text-lg">Você acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.</p>
+                <p class="text-lg text-gray-600 dark:text-gray-300">Acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.</p>
             </div>
-            <h4 class="text-xl font-bold mb-4">Gabarito Detalhado</h4>
+            <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Gabarito</h4>
             ${feedbackHtml}
             <div class="text-center mt-8"><button onclick="location.reload()" class="action-button">Voltar ao Início</button></div>
         `;
@@ -837,7 +839,6 @@ document.addEventListener('DOMContentLoaded', () => {
         contentArea.innerHTML = finalHtml;
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // Marca como concluído se nota > 7 (Opcional, vou marcar sempre por enquanto)
         if (!completedModules.includes(moduleId)) {
             completedModules.push(moduleId);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
