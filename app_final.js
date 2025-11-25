@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL CORRIGIDA - SAVEDNOTE FIX) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL CORRIGIDA - SIMULADO LAYOUT FIX) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // --- LÓGICA DO SIMULADO (LAYOUT CORRIGIDO - TIMER NO TOPO) ---
+    // --- LÓGICA DO SIMULADO (LAYOUT CORRIGIDO V2) ---
     async function startSimuladoMode(moduleData) {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
@@ -695,18 +695,18 @@ document.addEventListener('DOMContentLoaded', () => {
         simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
         currentSimuladoQuestionIndex = 0;
 
-        // CORREÇÃO: Container Wrapper com Padding e Timer Sticky
+        // REMOVIDO style="top: 6rem" E AUMENTADO O MARGIN-TOP (mt-10)
         contentArea.innerHTML = `
             <div class="relative pt-4 pb-12">
                 
-                <!-- HEADER COM TIMER (FIXO NO TOPO) -->
-                <div id="simulado-timer-bar" class="simulado-header-sticky shadow-lg" style="top: 6rem;">
+                <!-- HEADER COM TIMER (FIXO NO TOPO VIA CSS) -->
+                <div id="simulado-timer-bar" class="simulado-header-sticky shadow-lg">
                     <span class="simulado-timer flex items-center"><i class="fas fa-clock mr-2 text-lg"></i><span id="timer-display">60:00</span></span>
                     <span class="simulado-progress text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Questão <span id="q-current">1</span> / ${activeSimuladoQuestions.length}</span>
                 </div>
                 
-                <!-- TÍTULO DO SIMULADO (ABAIXO DO TIMER) -->
-                <div class="mt-6 mb-6 px-2 text-center">
+                <!-- TÍTULO DO SIMULADO (ESPAÇAMENTO AUMENTADO) -->
+                <div class="mt-10 mb-6 px-2 text-center">
                      <h3 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white border-b pb-2 inline-block">${moduleData.title}</h3>
                 </div>
 
