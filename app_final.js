@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-    // --- AUDIOBOOK ---
+// --- AUDIOBOOK (TEXT TO SPEECH) ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
@@ -76,20 +76,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const text = document.createElement('div');
-        text.innerHTML = moduleContent[currentModuleId].content;
-        const cleanText = text.textContent || text.innerText || "";
+        // Prepara o texto limpo (sem tags HTML)
+        const div = document.createElement('div');
+        div.innerHTML = moduleContent[currentModuleId].content;
+        const cleanText = div.textContent || div.innerText || "";
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'pt-BR';
-        utterance.rate = 1.1; // Um pouco mais rápido para não ficar monótono
+        
+        // AJUSTE DE VELOCIDADE SOLICITADO
+        // No mobile, 1.1 fica muito rápido. Vamos reduzir.
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        utterance.rate = isMobile ? 0.9 : 1.0; 
 
         utterance.onstart = () => {
             document.getElementById('audio-btn-icon')?.classList.remove('fa-headphones');
             document.getElementById('audio-btn-icon')?.classList.add('fa-stop');
-            document.getElementById('audio-btn-text').textContent = 'Parar';
+            document.getElementById('audio-btn-text').textContent = 'Parar Áudio';
             document.getElementById('audio-btn').classList.add('audio-playing');
         };
+        
         utterance.onend = () => {
             document.getElementById('audio-btn-icon')?.classList.remove('fa-stop');
             document.getElementById('audio-btn-icon')?.classList.add('fa-headphones');
