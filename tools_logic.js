@@ -39,7 +39,6 @@
         const customInput = document.getElementById('ponto-custom-time').value;
         let dateObj = customInput ? new Date(customInput) : new Date();
         
-        // Timestamp para ordenação precisa
         const entry = { 
             id: Date.now(), 
             type: type, 
@@ -49,7 +48,6 @@
         
         const points = JSON.parse(localStorage.getItem('tool_ponto')) || [];
         points.push(entry);
-        // Ordena do mais novo para o mais antigo
         points.sort((a, b) => b.timestamp - a.timestamp);
         
         localStorage.setItem('tool_ponto', JSON.stringify(points));
@@ -57,9 +55,7 @@
         ToolsApp.updatePontoList();
     };
 
-    // Função auxiliar para calcular horas trabalhadas no dia
     function calculateDailyHours(dayPoints) {
-        // Ordena crescente para cálculo (Manhã -> Noite)
         const sorted = [...dayPoints].sort((a, b) => a.timestamp - b.timestamp);
         let totalMs = 0;
         let openEntry = null;
@@ -90,7 +86,6 @@
             return;
         }
 
-        // Agrupar por Data (YYYY-MM-DD)
         const grouped = {};
         points.forEach(p => {
             const dateKey = new Date(p.iso).toLocaleDateString('pt-BR');
@@ -99,7 +94,6 @@
         });
 
         let html = '';
-        // Itera pelas datas (chaves)
         Object.keys(grouped).forEach(dateStr => {
             const dayPoints = grouped[dateStr];
             const dailyTotal = calculateDailyHours(dayPoints);
@@ -135,7 +129,7 @@
                 `;
             });
 
-            html += `</div></div>`; // Fecha grupo
+            html += `</div></div>`; 
         });
 
         container.innerHTML = html;
@@ -157,8 +151,6 @@
     // =================================================================
     window.ToolsApp.renderEscala = function(container) {
         const cfg = JSON.parse(localStorage.getItem('tool_escala_v3')) || { type: '12x36', start: '', folgaoDay: 'none' };
-        
-        // Estado local para navegação de mês (não salvo no storage)
         window.currentEscalaView = new Date(); 
 
         let html = `
@@ -191,7 +183,6 @@
                     <button onclick="ToolsApp.saveEscalaConfig()" class="bg-blue-600 text-white py-2 rounded font-bold text-sm hover:bg-blue-500 shadow mt-1">SALVAR & GERAR</button>
                 </div>
                 
-                <!-- Navegação do Calendário -->
                 <div class="flex justify-between items-center mb-2 px-2">
                     <button onclick="ToolsApp.changeEscalaMonth(-1)" class="text-gray-500 hover:text-blue-500"><i class="fas fa-chevron-left"></i></button>
                     <span id="escala-month-label" class="font-bold text-gray-700 dark:text-white uppercase text-sm">Mês</span>
@@ -238,50 +229,29 @@
         monthLabel.textContent = viewDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         resultDiv.innerHTML = '';
 
-        // Cabeçalho
         const weeks = ['D','S','T','Q','Q','S','S'];
         weeks.forEach(d => resultDiv.innerHTML += `<div class="font-bold p-1 text-gray-400 border-b border-gray-200 dark:border-gray-700 mb-1">${d}</div>`);
 
         const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // Espaços vazios antes do dia 1
         for(let i=0; i<firstDayOfMonth; i++) resultDiv.innerHTML += `<div></div>`;
 
-        // Dados da configuração
-        const startDate = new Date(cfg.start + 'T12:00:00'); // Fix timezone issue
+        const startDate = new Date(cfg.start + 'T12:00:00'); 
         const folgaoTargetDay = cfg.folgaoDay === 'none' ? -1 : parseInt(cfg.folgaoDay);
         const cycleStep = cfg.type === '12x36' ? 2 : 3;
 
-        // Renderiza dias
         for (let day = 1; day <= daysInMonth; day++) {
             const currentDayDate = new Date(year, month, day, 12, 0, 0);
             let cellClass = 'bg-gray-100 dark:bg-gray-800 text-gray-400';
             let content = day;
             let title = '';
 
-            // Cálculo do Plantão
             const diffTime = currentDayDate - startDate;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             if (diffDays >= 0 && diffDays % cycleStep === 0) {
-                // Teoricamente é dia de trabalho
-                // Verificar Folgão (A cada 15 dias aproximado / Alternado)
-                // Lógica Simplificada Robusta: Se cair no dia da semana do folgão, verificar se é o ciclo de folga.
-                // Na 12x36, se trabalha D-S-T-Q... você trabalha no dia da semana específico a cada 14 dias.
-                // Ex: Trab Sábado dia 1. Trab Sábado dia 15.
-                // O usuário quer "Folgão a cada 15 dias". Isso significa pular UM SIM e UM NÃO?
-                // Ou pular sempre que cair no dia?
-                // Normalmente, "Folgão" significa que você tem uma folga extra no dia que cairia seu plantão no fds.
-                // Se a escala cai no Sábado a cada 14 dias, e você folga a cada 15 (ou seja, 2 semanas), 
-                // significa que você SEMPRE folga nesse dia da semana específico quando cair?
-                // Vamos assumir a regra mais benéfica: Se cair no dia do Folgão, é Folga.
-                
                 if (folgaoTargetDay !== -1 && currentDayDate.getDay() === folgaoTargetDay) {
-                     // Aqui entra a lógica da "alternância" se necessário.
-                     // Mas pela descrição "Folgão é a cada 15 dias", e a escala 12x36 cai no mesmo dia da semana a cada 14 dias,
-                     // implica que praticamente todo plantão de Sábado vira folga, ou é alternado.
-                     // Vou implementar: Se cair no dia, vira OFF.
                      cellClass = 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-bold border border-green-500';
                      title = 'Folgão';
                 } else {
@@ -290,7 +260,6 @@
                 }
             }
 
-            // Destaque para o dia de hoje
             const today = new Date();
             if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
                 cellClass += ' ring-2 ring-blue-500 ring-offset-1';
@@ -366,7 +335,7 @@
         document.getElementById('water-level').style.height = percent + '%';
     };
 
-    // 4. IMC (Mantido igual, apenas renderização)
+    // 4. IMC (Renderização)
     window.ToolsApp.renderHealth = function(container) {
         let html = `
             <div class="tool-card">
@@ -402,7 +371,7 @@
         document.getElementById('imc-result').innerHTML = `<span class="${color}">IMC ${imc}: ${msg}</span>`;
     };
 
-    // 5. Notas Rápidas (Mantido)
+    // 5. Notas Rápidas
     window.ToolsApp.renderNotes = function(c) {
         const notes = JSON.parse(localStorage.getItem('tool_quicknotes'))||[];
         c.innerHTML += `<div class="tool-card"><h3 class="tool-title"><i class="fas fa-sticky-note text-yellow-500"></i> Notas Rápidas</h3><div class="flex gap-2 mb-2"><input id="n-in" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white text-sm" placeholder="Lembrete..."><button onclick="ToolsApp.addN()" class="bg-yellow-500 hover:bg-yellow-600 px-3 rounded text-white shadow"><i class="fas fa-plus"></i></button></div><ul id="n-list" class="space-y-1 max-h-32 overflow-y-auto custom-scrollbar"></ul></div>`;
@@ -412,7 +381,7 @@
     window.ToolsApp.updN=function(){const n=JSON.parse(localStorage.getItem('tool_quicknotes'))||[];const l=document.getElementById('n-list');if(l)l.innerHTML=n.map((x,i)=>`<li class="bg-yellow-50 dark:bg-gray-700 border-l-4 border-yellow-400 p-2 text-xs flex justify-between items-center rounded shadow-sm"><span class="dark:text-gray-200">${x}</span><button onclick="ToolsApp.delN(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-times"></i></button></li>`).join('');};
     window.ToolsApp.delN=function(i){const n=JSON.parse(localStorage.getItem('tool_quicknotes'));n.splice(i,1);localStorage.setItem('tool_quicknotes',JSON.stringify(n));ToolsApp.updN();};
 
-    // 6. Planejador (Mantido)
+    // 6. Planejador
     window.ToolsApp.renderPlanner = function(c) {
        const t=localStorage.getItem('tool_planner')||'';
        c.innerHTML+=`<div class="tool-card"><h3 class="tool-title"><i class="fas fa-book text-indigo-500"></i> Planejador</h3><textarea id="pl-t" class="w-full h-24 p-2 border rounded dark:bg-gray-700 dark:text-white text-xs resize-none" placeholder="Escreva suas metas...">${t}</textarea><button onclick="localStorage.setItem('tool_planner',document.getElementById('pl-t').value);alert('Salvo!')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-1 rounded text-xs mt-2 font-bold shadow">Salvar</button></div>`;
