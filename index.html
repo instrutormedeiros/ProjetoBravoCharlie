@@ -68,10 +68,8 @@
         </button>
     </div>
 
-    <!-- (MANTENHA TODO O RESTO DO HTML DO ARQUIVO ORIGINAL AQUI: SIDEBAR, HEADER, PROGRESS BAR, MAIN WRAPPER...) -->
-    <!-- ... -->
-    
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 opacity-0 pointer-events-none sidebar-overlay lg:hidden"></div>
+    
     <div id="off-canvas-sidebar" class="fixed top-0 left-0 h-full w-4/5 max-w-sm z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
         <div class="p-0 h-full flex flex-col">
             <div class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
@@ -442,9 +440,11 @@
          <button id="focus-menu-exit" title="Sair" class="action-button w-12 h-12 rounded-full p-0 flex items-center justify-center bg-gray-600"><i class="fas fa-times"></i></button>
     </div>
 
+    <!-- SCRIPTS (A ORDEM IMPORTA) -->
     <script src="quizzes.js" defer></script>
     <script src="data.js" defer></script>
     <script src="course.js" defer></script>
+    <script src="tools_logic.js" defer></script> <!-- NOVA LÓGICA FERRAMENTAS -->
     <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
     
