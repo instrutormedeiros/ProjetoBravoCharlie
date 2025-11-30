@@ -410,6 +410,30 @@ function onLoginSuccess(user, userData) {
             alert("Erro ao atualizar: " + e.message);
         }
     };
+   
+    // 4. Excluir Usuário (Do Banco de Dados)
+    window.deleteUser = async function(uid, name, cpf) {
+        const confirm1 = confirm(`TEM CERTEZA que deseja excluir os dados de ${name}?`);
+        if (!confirm1) return;
+        
+        const confirm2 = confirm("ATENÇÃO: Esta ação apagará o progresso e o cadastro do banco de dados.\n(Nota: Para segurança, o login da conta deve ser removido manualmente no Console do Firebase, mas o acesso será revogado aqui). Continuar?");
+        if (!confirm2) return;
+
+        try {
+            // Remove da coleção de usuários
+            await window.__fbDB.collection('users').doc(uid).delete();
+            
+            // Remove da coleção de CPFs (para liberar o CPF)
+            if (cpf && cpf !== 'undefined' && cpf !== 'Sem CPF') {
+                await window.__fbDB.collection('cpfs').doc(cpf).delete();
+            }
+
+            alert("Usuário removido do banco de dados.");
+            openAdminPanel(); // Atualiza a tabela
+        } catch (e) {
+            alert("Erro ao excluir: " + e.message);
+        }
+    };
     
     function checkTrialStatus(expiryDateString) {
         const expiryDate = new Date(expiryDateString);
@@ -1852,18 +1876,17 @@ function onLoginSuccess(user, userData) {
     // Tenta iniciar o monitoramento após 5 segundos
     setTimeout(initVoiceflowLimit, 5000);
 
-   // --- 7. TOUR GUIADO (ONBOARDING - CORRIGIDO V2) ---
+   // --- 7. TOUR GUIADO (ONBOARDING - AJUSTE FINAL MOBILE/DESKTOP) ---
     function startOnboardingTour(isManual = false) {
         // Se for automático e já tiver visto, cancela
         if (!isManual && localStorage.getItem('bravo_tour_completed') === 'true') return;
 
-        // Aguarda renderização
         setTimeout(() => {
             if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
 
             const driver = window.driver.js.driver;
+            const isMobile = window.innerWidth < 768; // Detecta se é celular
             
-            // Verifica botões de instalação
             const installBtnDesktop = document.getElementById('install-app-btn');
             const installBtnMobile = document.getElementById('install-app-btn-mobile');
             
@@ -1872,8 +1895,7 @@ function onLoginSuccess(user, userData) {
                     element: '#accessibility-fab', 
                     popover: { 
                         title: '1. Acessibilidade', 
-                        description: 'Ajuste o tamanho da fonte e contraste aqui no canto inferior direito.', 
-                        // Como o botão está na Direita, o texto fica na Esquerda
+                        description: 'Ajuste o tamanho, a fonte e o espaçamento aqui.', 
                         side: "left", 
                         align: 'end' 
                     } 
@@ -1882,31 +1904,34 @@ function onLoginSuccess(user, userData) {
                     element: '#voiceflow-chat', 
                     popover: { 
                         title: '2. BravoGPT (IA)', 
-                        description: 'Tire dúvidas técnicas com nossa IA aqui no canto inferior esquerdo.', 
-                        // Como o botão está na Esquerda, o texto fica na Direita
-                        side: "right", 
-                        align: 'end' 
+                        description: 'Tire dúvidas com nossa Inteligência Artificial, dedicada a você.', 
+                        // AJUSTE 1: No celular, o balão fica EM CIMA (top) para não cobrir o rodapé
+                        // No desktop, fica à DIREITA (right)
+                        side: isMobile ? "top" : "right", 
+                        align: isMobile ? "center" : "end" 
                     } 
                 }
             ];
 
-            // Adiciona passo de instalação se o botão estiver visível
+            // Passo da Instalação (Condicional)
             if (installBtnDesktop && !installBtnDesktop.classList.contains('hidden')) {
+                // VERSÃO DESKTOP
                 steps.push({ 
                     element: '#install-app-btn', 
                     popover: { 
-                        title: '3. Instale o App', 
-                        description: 'Instale no seu computador para acesso rápido.', 
+                        title: '3. Instale no Computador', 
+                        description: 'Tenha acesso rápido instalando o App no seu Celular ou Computador.', 
                         side: "bottom",
                         align: 'center'
                     } 
                 });
             } else if (installBtnMobile && !installBtnMobile.classList.contains('hidden')) {
+                // AJUSTE 2: VERSÃO MOBILE (Texto corrigido)
                 steps.push({ 
                     element: '#mobile-menu-button', 
                     popover: { 
-                        title: '3. Menu & Instalação', 
-                        description: 'Abra o menu para encontrar a opção <strong>Instalar App</strong>.', 
+                        title: '3. Instale o App', 
+                        description: 'Abra o menu e clique em <strong>Instalar App</strong> para ter o Bravo Charlie no seu celular.', 
                         side: "bottom",
                         align: 'end'
                     } 
@@ -1916,7 +1941,6 @@ function onLoginSuccess(user, userData) {
             const driverObj = driver({
                 showProgress: true,
                 animate: true,
-                // Espaçamento para não grudar no elemento
                 stagePadding: 5,
                 popoverClass: 'driverjs-theme',
                 steps: steps,
@@ -1931,6 +1955,48 @@ function onLoginSuccess(user, userData) {
             driverObj.drive();
         }, 1500);
     }
+ // --- FUNÇÕES QUE FALTAVAM NO ADMIN (EDITAR, NOTA, RESET, EXCLUIR) ---
 
+    // 1. Editar Dados (Nome)
+    window.editUserData = async function(uid, oldName, oldCpf) {
+        const newName = prompt("Editar Nome do Aluno:", oldName);
+        if (newName === null || newName === oldName) return;
+        
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ name: newName });
+            alert("Nome atualizado com sucesso!");
+            openAdminPanel(); // Atualiza a tabela
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
+        }
+    };
+
+    // 2. Nota do Admin (Obs)
+    window.editUserNote = async function(uid, currentNote) {
+        // Remove escape chars se houver
+        const cleanNote = currentNote === 'undefined' ? '' : currentNote;
+        const note = prompt("Nota do Admin (Ex: 'Pagamento pendente', 'VIP'):", cleanNote);
+        if (note === null) return;
+
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ adminNote: note });
+            openAdminPanel(); // Atualiza a tabela
+        } catch (e) {
+            alert("Erro ao salvar nota: " + e.message);
+        }
+    };
+
+    // 3. Resetar Senha (Envia E-mail)
+    window.sendResetEmail = async function(email) {
+        if (!confirm(`Deseja enviar um e-mail de redefinição de senha para ${email}?`)) return;
+        
+        try {
+            await window.__fbAuth.sendPasswordResetEmail(email);
+            alert(`E-mail de redefinição enviado para ${email}. Peça para o aluno verificar a caixa de entrada/spam.`);
+        } catch (e) {
+            alert("Erro ao enviar e-mail: " + e.message);
+        }
+    };
+    
     init();
 });
