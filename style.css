@@ -14,6 +14,10 @@
     --info-border: #90cdf4; 
     --panel-bg: #ffffff; 
     --border-color: #e2e8f0;
+    
+    /* Cores Específicas do Novo Design */
+    --brand-orange: #f97316;
+    --brand-dark: #111827;
 }
 
 .dark {
@@ -40,11 +44,9 @@ body {
     transition: background-color 0.3s, color 0.3s; 
 }
 
-/* === CORREÇÃO DO TOPO MOBILE (AJUSTADO) === */
-/* Aumentei o padding-top para empurrar o conteúdo para baixo da barra de progresso */
 @media (max-width: 1024px) {
     .main-content-container {
-        padding-top: 12.5rem !important; /* Aumentado de 9.5rem para 12.5rem */
+        padding-top: 12.5rem !important; 
     }
     body { padding-bottom: 80px; }
 }
@@ -92,22 +94,37 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 }
 .animate-gradient { animation: gradient-x 3s ease infinite; }
 
+/* ANIMAÇÃO DEGRADÊ DOURADO - DESENVOLVEDOR (CORREÇÃO PEDIDO 5) */
+.developer-credit {
+    background: linear-gradient(to right, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shine-gold 4s linear infinite;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+@keyframes shine-gold { 
+    to { background-position: 200% center; } 
+}
+
 /* ==========================================================================
    3. LAYOUT E HEADER
    ========================================================================== */
 #main-header { 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px); 
+    backdrop-filter: blur(16px); 
+    -webkit-backdrop-filter: blur(16px); 
 }
 #main-header.scrolled { 
-    background-color: rgba(255, 255, 255, 0.85); 
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); 
+    background-color: rgba(255, 255, 255, 0.9); 
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08); 
 }
 .dark #main-header.scrolled { 
-    background-color: rgba(17, 24, 39, 0.85); 
+    background-color: rgba(17, 24, 39, 0.9); 
 }
 
-/* Barra de Progresso Sticky - Ajuste de Posição */
+/* Barra de Progresso Sticky */
 .sticky-progress-wrapper {
     position: sticky;
     top: 5.5rem; 
@@ -121,10 +138,9 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     transition: top 0.3s ease;
 }
 
-/* AJUSTE CRÍTICO MOBILE: 'top' aumentado para descer a barra e não ficar atrás do header */
 @media (max-width: 1024px) { 
     .sticky-progress-wrapper { 
-        top: 110px; /* Aumentado de 85px para 110px (aprox header height + gap) */
+        top: 110px; 
     } 
 }
 .dark .sticky-progress-wrapper { background-color: rgba(17, 24, 39, 0.85); color: var(--light-text); }
@@ -155,6 +171,25 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     border: 1px solid var(--border-color); 
 }
 
+/* MODO EXAME/PROVA - CORREÇÃO DE ERRO VISUAL (PEDIDO 1) */
+body.exam-mode #main-header,
+body.exam-mode #sticky-progress-wrapper,
+body.exam-mode footer,
+body.exam-mode #back-to-top,
+body.exam-mode #mobile-menu-button,
+body.exam-mode nav.md\:hidden,
+body.exam-mode aside.sidebar {
+    display: none !important;
+}
+
+/* Ajusta o padding quando o header some para não ficar espaço branco */
+body.exam-mode .container.main-content-container {
+    padding-top: 1rem !important;
+}
+body.exam-mode .lg\:w-2\/3 {
+    width: 100% !important; /* Ocupa tela toda */
+}
+
 /* ==========================================================================
    4. BOTÕES E UI ELEMENTS
    ========================================================================== */
@@ -163,12 +198,12 @@ h1, h2, h3 { font-family: 'Lora', serif; }
   background: linear-gradient(90deg, #c1121f, #f77f00);
   color: #fff; font-weight: 700; padding: 0.85rem 2rem;
   border-radius: 0.6rem; border: none; cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(193, 18, 31, 0.3);
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.5s ease;
 }
 .action-button:hover { 
     transform: translateY(-3px); 
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2); 
+    box-shadow: 0 8px 20px rgba(247, 127, 0, 0.4); 
     background: linear-gradient(90deg, #f77f00, #c1121f); 
 }
 .action-button:active { transform: scale(0.98); }
@@ -176,7 +211,6 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     background: #bdbdbd; color: #6c757d; cursor: not-allowed; box-shadow: none; 
 }
 
-/* Ripple Effect */
 .action-button .ripple, .quiz-option .ripple {
   position: absolute; border-radius: 50%; transform: scale(0);
   animation: ripple-effect 0.6s linear; pointer-events: none;
@@ -185,91 +219,56 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 .dark .action-button .ripple { background: rgba(247, 127, 0, 0.45); }
 @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
 
-/* Botão Drive */
 .drive-button { 
     display: flex; align-items: center; justify-content: center; width: 100%; 
-    padding: 1rem; margin: 2rem 0; background: linear-gradient(135deg, #3b82f6, #2563eb); 
-    color: white; font-weight: bold; border-radius: 0.75rem; text-decoration: none; 
-    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); transition: all 0.3s ease; 
-    border: 1px solid rgba(255,255,255,0.2); 
+    padding: 1.25rem; margin: 2rem 0; background: linear-gradient(135deg, #3b82f6, #2563eb); 
+    color: white; font-weight: bold; border-radius: 1rem; text-decoration: none; 
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); transition: all 0.3s ease; 
+    border: 1px solid rgba(255,255,255,0.1); 
 }
 .drive-button:hover { 
-    transform: translateY(-3px); box-shadow: 0 8px 15px rgba(37, 99, 235, 0.4); 
+    transform: translateY(-3px); box-shadow: 0 15px 30px rgba(37, 99, 235, 0.4); 
     background: linear-gradient(135deg, #2563eb, #1d4ed8); 
 }
 .drive-button i { font-size: 1.5rem; margin-right: 0.75rem; }
 
 /* ==========================================================================
-   5. FUNCIONALIDADES
+   5. FUNCIONALIDADES E TOOLS
    ========================================================================== */
-
-/* --- 5.1 BOTÃO VOLTAR AO TOPO --- */
 #back-to-top.action-button {
     border-radius: 50% !important; 
-    width: 35px !important;       
-    height: 35px !important;       
+    width: 40px !important;       
+    height: 40px !important;       
     padding: 0 !important;         
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     bottom: 20px !important;       
     right: 20px !important;
-    font-size: 1rem !important;
+    font-size: 1.2rem !important;
     z-index: 48 !important;        
     background: var(--secondary);
-    opacity: 0.8;
+    opacity: 0.9;
 }
 #back-to-top.action-button:hover {
     opacity: 1;
-    transform: translateY(-3px);
+    transform: translateY(-5px);
 }
 
-/* --- 5.2 MENU DE ACESSIBILIDADE --- */
 #accessibility-fab {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    z-index: 49;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background-color: var(--accent);
-    color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: transform 0.3s ease;
+    position: fixed; bottom: 80px; right: 20px; z-index: 49;
+    width: 45px; height: 45px; border-radius: 50%; background-color: var(--accent);
+    color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: transform 0.3s ease;
 }
 #accessibility-fab:hover { transform: scale(1.1); }
 
 #accessibility-menu {
-    position: fixed;
-    bottom: 140px;
-    right: 20px;
-    background: var(--panel-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 1rem;
-    padding: 1rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    z-index: 49;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 200px;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(20px);
-    transition: all 0.3s ease;
+    position: fixed; bottom: 140px; right: 20px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 49; display: flex; flex-direction: column; gap: 0.5rem; min-width: 200px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease;
 }
 #accessibility-menu.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
 .acc-btn {
-    background: var(--light-bg); border: 1px solid var(--border-color); padding: 0.5rem;
-    border-radius: 0.5rem; text-align: left; cursor: pointer; display: flex; align-items: center;
-    font-size: 0.9rem; color: var(--dark-text);
+    background: var(--light-bg); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 0.5rem; text-align: left; cursor: pointer; display: flex; align-items: center; font-size: 0.9rem; color: var(--dark-text);
 }
 .acc-btn:hover { background: var(--info-bg); }
 .acc-btn i { width: 25px; text-align: center; margin-right: 8px; }
@@ -277,107 +276,33 @@ h1, h2, h3 { font-family: 'Lora', serif; }
 body.dyslexic-font { font-family: 'Comic Sans MS', 'Verdana', sans-serif !important; }
 body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 
-/* --- 5.3 MODO AUDIOBOOK --- */
-.audio-controls {
-    background: transparent;
-    color: var(--secondary);
-    border: 1px solid var(--secondary);
-    padding: 0.3rem 0.8rem;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.75rem;
-    transition: all 0.3s ease;
-    margin-bottom: 1rem;
-}
-.dark .audio-controls { color: var(--light-text); border-color: var(--light-text); }
-
-.audio-controls:hover { background: var(--secondary); color: white; }
-.audio-playing { 
-    background: linear-gradient(to right, #ef4444, #f87171) !important; 
-    color: white !important;
-    border: none;
-    animation: pulse-audio 1.5s infinite; 
-}
-@keyframes pulse-audio { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-
-/* --- 5.4 SIMULADO PAGINADO --- */
+/* SIMULADO STICKY HEADER (OLD - MANTIDO POR COMPATIBILIDADE) */
 .simulado-header-sticky {
-    position: sticky; 
-    top: 5.5rem;
-    z-index: 38;
-    background: var(--panel-bg); 
-    padding: 10px 1rem; 
-    border-bottom: 2px solid var(--primary);
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-    margin-bottom: 1.5rem; 
-    border-radius: 0 0 8px 8px;
+    position: sticky; top: 5.5rem; z-index: 38; background: var(--panel-bg); padding: 10px 1rem; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1.5rem; border-radius: 0 0 8px 8px;
 }
 @media (max-width: 1024px) { .simulado-header-sticky { top: 110px; } }
-
 .simulado-timer { font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.2rem; color: var(--primary); }
 .simulado-progress { font-size: 0.9rem; color: var(--light-text); font-weight: bold; }
 
-/* --- 5.5 FERRAMENTAS --- */
 .tool-card {
-    background: var(--panel-bg); border: 1px solid var(--border-color);
-    border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;
-    height: 100%; display: flex; flex-direction: column;
+    background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; height: 100%; display: flex; flex-direction: column;
 }
 .tool-card:hover { transform: translateY(-2px); border-color: var(--accent); }
 .tool-title { font-size: 1.1rem; font-weight: bold; color: var(--secondary); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
 .dark .tool-title { color: #fff; }
 
-/* JARRA DE ÁGUA */
 .water-jar {
-    width: 100px;
-    height: 140px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 4px solid #cbd5e1; /* Vidro */
-    border-top: none;
-    border-radius: 10px 10px 40px 40px;
-    position: relative;
-    overflow: hidden;
-    margin: 0 auto;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1), inset 0 0 20px rgba(255,255,255,0.5);
-    z-index: 1;
+    width: 100px; height: 140px; background: rgba(255, 255, 255, 0.2); border: 4px solid #cbd5e1; border-top: none; border-radius: 10px 10px 40px 40px; position: relative; overflow: hidden; margin: 0 auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1), inset 0 0 20px rgba(255,255,255,0.5); z-index: 1;
 }
 .dark .water-jar { border-color: #475569; background: rgba(255,255,255,0.05); }
-
 .water-level {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
-    transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.85;
-    box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+    position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%); transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.85; box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
 }
-.water-level::after {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 10px;
-    background: rgba(255,255,255,0.3); transform: skewY(-5deg) translateY(-5px);
-}
-
-.glass-reflection {
-    position: absolute; top: 10px; right: 10px; width: 10px; height: 80%;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0));
-    border-radius: 10px; z-index: 10;
-}
-
-.water-handle {
-    position: absolute; right: 20px; top: 50px; width: 40px; height: 80px;
-    border: 6px solid #cbd5e1; border-left: none; border-radius: 0 20px 20px 0; z-index: 0;
-}
+.water-level::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 10px; background: rgba(255,255,255,0.3); transform: skewY(-5deg) translateY(-5px); }
+.glass-reflection { position: absolute; top: 10px; right: 10px; width: 10px; height: 80%; background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0)); border-radius: 10px; z-index: 10; }
+.water-handle { position: absolute; right: 20px; top: 50px; width: 40px; height: 80px; border: 6px solid #cbd5e1; border-left: none; border-radius: 0 20px 20px 0; z-index: 0; }
 .dark .water-handle { border-color: #475569; }
 
-/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -393,6 +318,22 @@ body.high-spacing { line-height: 2 !important; letter-spacing: 1px !important; }
 .accordion-button .fas { transition: transform 0.3s ease; }
 .accordion-button.active .fas { transform: rotate(180deg); }
 .accordion-panel { padding: 0 0.5rem; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+
+/* NOVO: Estilo para a contagem no sidebar */
+.module-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280; /* Gray 500 */
+    background-color: #e5e7eb; /* Gray 200 */
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: auto;
+    margin-right: 10px;
+}
+.dark .module-count {
+    background-color: #1f2937;
+    color: #9ca3af;
+}
 
 .module-list-item {
   position: relative; padding: 1rem 1.25rem; margin: 0.5rem 0; border-radius: 0.75rem;
@@ -542,28 +483,397 @@ body.focus-mode #main-wrapper { padding-bottom: 2rem; }
 .dark #bottom-nav-theme i { background-color: var(--accent); }
 .dark #bottom-nav-theme i::after { content: '\f185'; transform: translateX(22px) rotate(360deg); color: var(--accent); }
 
-/* MODO SOBREVIVÊNCIA */
-.survival-life-heart {
-    filter: drop-shadow(0 0 5px red);
-    animation: beat 1s infinite;
-}
-@keyframes beat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-}
-
-/* RPG TEXTO */
+.survival-life-heart { filter: drop-shadow(0 0 5px red); animation: beat 1s infinite; }
+@keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 .border-l-4 { border-left-width: 4px; }
 .animate-fade-in { animation: fadeIn 0.5s ease-in; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.bg-gradient-card { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); }
+.card-shine { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(125deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 60%); pointer-events: none; }
 
-/* CARTEIRINHA DIGITAL */
-.bg-gradient-card {
-    background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+/* ==========================================================================
+   7. NOVOS ESTILOS (PLAYER, SIMULADO MODERNO, RPG)
+   ========================================================================== */
+
+/* 7.1 Player de Áudio Moderno */
+.modern-audio-player {
+    background-color: #1f2937; /* Dark background */
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    width: fit-content;
 }
-.card-shine {
+.audio-main-btn {
+    background-color: #2563eb;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+.audio-main-btn:hover { background-color: #1d4ed8; }
+.audio-main-btn.playing { background-color: #dc2626; } /* Red for stop */
+
+.audio-icon-btn {
+    width: 2rem; height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background-color: #374151;
+    color: #d1d5db;
+    transition: all 0.2s;
+}
+.audio-icon-btn:hover { background-color: #4b5563; color: white; }
+
+.audio-speed-select {
+    background-color: transparent;
+    color: #d1d5db;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
+.audio-speed-select option { background-color: #1f2937; }
+
+/* 7.2 Simulado Moderno (Sticky Header) - CORREÇÃO PEDIDO 2 */
+/* Removida margem negativa que causava sobreposição */
+.simulado-header-modern {
+    position: sticky;
+    top: 5.5rem;
+    z-index: 38;
+    background-color: #111827; /* Dark Gray 900 */
+    border-bottom: 2px solid #f97316; /* Orange */
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem; /* Adicionado para não ficar quadrado demais */
+    margin-bottom: 2rem; /* Espaço abaixo do timer */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    gap: 1rem;
+}
+@media (max-width: 1024px) { 
+    .simulado-header-modern { top: 20px; } /* Ajuste top para mobile no modo exame */
+}
+
+.sim-timer-box {
+    display: flex; align-items: center; gap: 0.75rem; 
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fb923c;
+    flex-shrink: 0;
+}
+.sim-count-badge {
+    background-color: #374151;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: #e5e7eb;
+    white-space: nowrap; 
+}
+
+/* 7.3 Cartões de Resposta (Quiz Moderno) */
+.quiz-card-option {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #374151; /* Dark border */
+    background-color: #111827; /* Dark bg by default for cards in example */
+    border-radius: 0.5rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #e5e7eb;
+}
+:root:not(.dark) .quiz-card-option {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.quiz-card-option:hover {
+    border-color: #f97316; /* Orange hover */
+    transform: translateX(4px);
+}
+.quiz-card-option.selected {
+    background-color: #f97316;
+    border-color: #f97316;
+    color: white;
+}
+:root:not(.dark) .quiz-card-option.selected {
+    background-color: #f97316;
+    color: white;
+}
+
+.quiz-letter-box {
+    width: 2rem; height: 2rem;
+    border-radius: 50%;
+    background-color: #374151; /* Dark gray */
+    color: #f97316; /* Orange text */
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+:root:not(.dark) .quiz-letter-box {
+    background-color: #e2e8f0;
+    color: #ea580c;
+}
+.quiz-card-option.selected .quiz-letter-box {
+    background-color: white;
+    color: #f97316;
+}
+
+/* 7.4 Resultado (Gráfico Circular) */
+.circle-chart {
+    position: relative;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem auto;
+    background: conic-gradient(
+        var(--brand-orange) calc(var(--percentage) * 1%), 
+        #374151 0deg
+    );
+    display: flex; align-items: center; justify-content: center;
+}
+.circle-chart::after {
+    content: attr(data-score);
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(125deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 60%);
-    pointer-events: none;
+    width: 100px; height: 100px;
+    background-color: #1f2937; /* Match parent container bg */
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 800; color: white;
 }
+:root:not(.dark) .circle-chart::after {
+    background-color: #ffffff;
+    color: #111827;
+}
+:root:not(.dark) .circle-chart {
+    background: conic-gradient(
+        #ea580c calc(var(--percentage) * 1%), 
+        #e2e8f0 0deg
+    );
+}
+
+.result-progress-bar {
+    height: 0.75rem;
+    background-color: #374151;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+:root:not(.dark) .result-progress-bar { background-color: #e2e8f0; }
+.result-progress-fill {
+    height: 100%;
+    background-color: #3b82f6; /* Blue */
+    width: 0; /* JS animates this */
+    transition: width 1s ease-out;
+}
+
+/* 7.5 Feedback Boxes (Gabarito) */
+.feedback-box {
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    border: 1px solid #374151;
+}
+:root:not(.dark) .feedback-box {
+    background-color: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.feedback-header {
+    padding: 0.75rem 1rem;
+    font-weight: bold;
+    font-size: 0.95rem;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #374151;
+}
+:root:not(.dark) .feedback-header { border-bottom-color: #e2e8f0; }
+
+.feedback-correct .feedback-header { color: #10b981; }
+.feedback-wrong .feedback-header { color: #ef4444; }
+
+.feedback-body { padding: 1rem; }
+
+.answer-row {
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+.answer-row.user-wrong {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid #ef4444;
+    color: #fca5a5;
+}
+:root:not(.dark) .answer-row.user-wrong {
+    background-color: #fef2f2;
+    color: #991b1b;
+}
+
+.answer-row.correct-ref {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-left: 3px solid #10b981;
+    color: #6ee7b7;
+}
+:root:not(.dark) .answer-row.correct-ref {
+    background-color: #ecfdf5;
+    color: #065f46;
+}
+
+.explanation-text {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+:root:not(.dark) .explanation-text { color: #4b5563; }
+
+/* 7.6 RPG Cards */
+.rpg-card-btn {
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-left: 4px solid #3b82f6;
+    padding: 1.25rem;
+    width: 100%; text-align: left;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+    color: white;
+}
+.rpg-card-btn:hover {
+    background-color: #374151;
+    transform: translateX(5px);
+}
+:root:not(.dark) .rpg-card-btn {
+    background-color: white;
+    border-color: #e2e8f0;
+    border-left-color: #3b82f6;
+    color: #1f2937;
+}
+:root:not(.dark) .rpg-card-btn:hover { background-color: #f8fafc; }
+/* ==========================================================================
+   8. NOVOS ESTILOS (TIMER FLUTUANTE & AUDIO CONTROLS) - ADICIONADO AGORA
+   ========================================================================== */
+
+/* Timer "Sticky" (Cola no topo, mas respeita o layout) */
+.simulado-floating-timer {
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 1rem; /* Distância do teto quando "grudar" */
+    z-index: 40;
+    
+    /* Centralização usando margens automáticas (já que não é mais fixed) */
+    margin: 0 auto 2rem auto; 
+    width: fit-content;
+    
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 0.5rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid #ea580c;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* No mobile, mantemos ele no topo (sticky) para não atrapalhar botões embaixo */
+@media (max-width: 768px) {
+    .simulado-floating-timer {
+        top: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Ajuste para os botões do player de áudio ficarem alinhados */
+.audio-controls-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+/* ==========================================================================
+   9. ESTILO DO TOUR GUIADO (DRIVER.JS)
+   ========================================================================== */
+/* Personaliza o popover para combinar com o tema Bravo Charlie */
+.driver-popover.driverjs-theme {
+    background-color: #1f2937; /* Cinza Escuro */
+    color: #ffffff; /* Texto Branco */
+    border: 1px solid #ea580c; /* Borda Laranja */
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+    font-family: 'Lora', serif;
+    color: #fb923c; /* Laranja Claro */
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+    color: #d1d5db; /* Cinza texto */
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Botões do Tour */
+.driver-popover.driverjs-theme button {
+    background-color: #ea580c; /* Laranja */
+    color: white;
+    text-shadow: none;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+.driver-popover.driverjs-theme button:hover {
+    background-color: #c2410c; /* Laranja Escuro */
+}
+.driver-popover.driverjs-theme button.driver-popover-prev-btn {
+    background-color: #374151; /* Cinza para o botão 'Anterior' */
+    color: #9ca3af;
+}
+/* --- CORREÇÃO DO TOUR (DRIVER.JS) --- */
+
+/* Força o container da IA a ter tamanho e posição para o Tour achar */
+#voiceflow-chat {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    width: 60px !important;
+    height: 60px !important;
+    z-index: 45 !important; /* Abaixo do menu, acima do conteúdo */
+    pointer-events: none; /* Deixa o clique passar para o botão real dentro dele */
+}
+
+/* Garante que o botão de acessibilidade fique acima do overlay do tour se necessário */
+#accessibility-fab {
+    z-index: 10001 !important; /* Valor alto para garantir destaque */
+}
+
+/* Ajuste fino do popover do tour */
+.driver-popover.driverjs-theme {
+    max-width: 250px; /* Evita que fique muito largo no mobile */
+}
+

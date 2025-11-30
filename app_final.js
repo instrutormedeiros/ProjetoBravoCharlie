@@ -1,10 +1,13 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL V9 - COMPLETA COM FOTO NA CARTEIRINHA) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL V10.1 - CORREÇÃO TOTAL MODULES) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS DO APP ---
     const contentArea = document.getElementById('content-area');
-    const totalModules = Object.keys(window.moduleContent || {}).length; 
+    
+    // CORREÇÃO AQUI: Definindo a variável globalmente
+    let totalModules = 0; 
+    
     let completedModules = JSON.parse(localStorage.getItem('gateBombeiroCompletedModules_v3')) || [];
     let notifiedAchievements = JSON.parse(localStorage.getItem('gateBombeiroNotifiedAchievements_v3')) || [];
     let currentModuleId = null;
@@ -62,18 +65,35 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-    // --- AUDIOBOOK ---
+    // --- AUDIOBOOK (COM PAUSE, RESUME E STOP) ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-            document.getElementById('audio-btn-icon')?.classList.remove('fa-stop');
-            document.getElementById('audio-btn-icon')?.classList.add('fa-headphones');
-            document.getElementById('audio-btn-text').textContent = 'Ouvir Aula';
-            document.getElementById('audio-btn').classList.remove('audio-playing');
+        const speedSelect = document.getElementById('audio-speed');
+        const rate = speedSelect ? parseFloat(speedSelect.value) : 1.0;
+        const btnIcon = document.getElementById('audio-btn-icon');
+        const btnText = document.getElementById('audio-btn-text');
+        const mainBtn = document.getElementById('audio-main-btn');
+        const synth = window.speechSynthesis;
+
+        // Cenario 1: Está falando -> PAUSAR
+        if (synth.speaking && !synth.paused) {
+            synth.pause();
+            if(btnIcon) { btnIcon.className = 'fas fa-play'; } // Ícone muda para Play
+            if(btnText) btnText.textContent = 'Continuar';
             return;
         }
+
+        // Cenario 2: Está pausado -> RETOMAR
+        if (synth.paused) {
+            synth.resume();
+            if(btnIcon) { btnIcon.className = 'fas fa-pause'; } // Ícone muda para Pause
+            if(btnText) btnText.textContent = 'Pausar';
+            return;
+        }
+
+        // Cenario 3: Não está falando -> INICIAR (Ou reiniciar se houver lixo na memória)
+        if(synth.speaking) synth.cancel(); 
 
         const div = document.createElement('div');
         div.innerHTML = moduleContent[currentModuleId].content;
@@ -81,23 +101,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'pt-BR';
-        utterance.rate = 0.8; 
+        utterance.rate = rate;
 
         utterance.onstart = () => {
-            document.getElementById('audio-btn-icon')?.classList.remove('fa-headphones');
-            document.getElementById('audio-btn-icon')?.classList.add('fa-stop');
-            document.getElementById('audio-btn-text').textContent = 'Parar Áudio';
-            document.getElementById('audio-btn').classList.add('audio-playing');
-        };
-        
-        utterance.onend = () => {
-            document.getElementById('audio-btn-icon')?.classList.remove('fa-stop');
-            document.getElementById('audio-btn-icon')?.classList.add('fa-headphones');
-            document.getElementById('audio-btn-text').textContent = 'Ouvir Aula';
-            document.getElementById('audio-btn').classList.remove('audio-playing');
+            if(btnIcon) btnIcon.className = 'fas fa-pause';
+            if(btnText) btnText.textContent = 'Pausar';
+            if(mainBtn) mainBtn.classList.add('playing');
+            
+            // Cria o botão de STOP (Quadrado Vermelho) dinamicamente se não existir
+            if (!document.getElementById('audio-stop-btn')) {
+                const stopBtn = document.createElement('button');
+                stopBtn.id = 'audio-stop-btn';
+                stopBtn.className = 'audio-icon-btn bg-red-600 hover:bg-red-500 text-white ml-2';
+                stopBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                stopBtn.title = "Parar e Resetar";
+                stopBtn.onclick = (e) => {
+                    e.stopPropagation(); // Evita clicar no container
+                    synth.cancel();
+                    stopBtn.remove();
+                    // Reseta o botão principal
+                    if(btnIcon) btnIcon.className = 'fas fa-headphones';
+                    if(btnText) btnText.textContent = 'Ouvir Aula';
+                    if(mainBtn) mainBtn.classList.remove('playing');
+                };
+                // Insere o botão de stop ao lado do select de velocidade
+                const playerContainer = document.querySelector('.modern-audio-player');
+                if(playerContainer) playerContainer.appendChild(stopBtn);
+            }
         };
 
-        window.speechSynthesis.speak(utterance);
+        utterance.onend = () => {
+            if(btnIcon) btnIcon.className = 'fas fa-headphones';
+            if(btnText) btnText.textContent = 'Ouvir Aula';
+            if(mainBtn) mainBtn.classList.remove('playing');
+            const stopBtn = document.getElementById('audio-stop-btn');
+            if(stopBtn) stopBtn.remove();
+        };
+
+        synth.speak(utterance);
     };
 
     // --- INSTALL PWA ---
@@ -196,16 +237,18 @@ document.addEventListener('DOMContentLoaded', () => {
         setupRippleEffects();
     }
     
-    function onLoginSuccess(user, userData) {
+function onLoginSuccess(user, userData) {
         currentUserData = userData; 
 
         if (document.body.getAttribute('data-app-ready') === 'true') return;
         document.body.setAttribute('data-app-ready', 'true');
         
+        // Fecha modais
         document.getElementById('name-prompt-modal')?.classList.remove('show');
         document.getElementById('name-modal-overlay')?.classList.remove('show');
         document.getElementById('expired-modal')?.classList.remove('show');
         
+        // Saudação
         const greetingEl = document.getElementById('welcome-greeting');
         if(greetingEl) greetingEl.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
         
@@ -213,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
+        // Botões Admin
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
@@ -220,34 +264,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
         checkTrialStatus(userData.acesso_ate);
 
+        // Inicializa contadores
+        totalModules = Object.keys(window.moduleContent || {}).length;
         document.getElementById('total-modules').textContent = totalModules;
         document.getElementById('course-modules-count').textContent = totalModules;
         
+        // Carrega listas e eventos
         populateModuleLists();
         updateProgress();
         addEventListeners(); 
         handleInitialLoad();
+
+        // Inicia Tour Automático (se nunca viu)
+        startOnboardingTour(false); 
     }
 
-    // --- FUNÇÕES ADMIN ---
+    // --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
         adminModal.classList.add('show');
         adminOverlay.classList.add('show');
         const tbody = document.getElementById('admin-table-body');
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando usuários...</td></tr>';
+        
         try {
             const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
             tbody.innerHTML = '';
+            
             snapshot.forEach(doc => {
                 const u = doc.data();
                 const uid = doc.id;
-                const isPremium = u.status === 'premium';
-                const validade = u.acesso_ate ? new Date(u.acesso_ate).toLocaleDateString('pt-BR') : '-';
+                
+                // Verifica status e expiração
+                let statusDisplay = u.status || 'trial';
+                let statusColor = 'bg-gray-100 text-gray-800';
+                
+                const validade = u.acesso_ate ? new Date(u.acesso_ate) : null;
+                const isExpired = validade && new Date() > validade;
+                const validadeStr = validade ? validade.toLocaleDateString('pt-BR') : '-';
+
+                if (u.status === 'premium') {
+                    if (isExpired) {
+                        statusDisplay = 'EXPIRADO';
+                        statusColor = 'bg-red-100 text-red-800';
+                    } else {
+                        statusColor = 'bg-green-100 text-green-800';
+                    }
+                } else {
+                    statusColor = 'bg-yellow-100 text-yellow-800';
+                }
+
                 const cpf = u.cpf || 'Sem CPF';
-                const planoTipo = u.planType || (isPremium ? 'Indefinido' : 'Trial');
+                const planoTipo = u.planType || (u.status === 'premium' ? 'Indefinido' : 'Trial');
                 const deviceInfo = u.last_device || 'Desconhecido';
                 const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
+
                 const row = `
                     <tr class="border-b hover:bg-gray-50 transition-colors">
                         <td class="p-3 font-bold text-gray-800">${u.name}</td>
@@ -255,17 +326,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td class="p-3 text-xs text-gray-500 max-w-[150px] truncate" title="${deviceInfo}">${deviceInfo}</td>
                         <td class="p-3">
                             <div class="flex flex-col items-start">
-                                <span class="px-2 py-1 rounded text-xs font-bold uppercase ${isPremium ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                    ${u.status || 'trial'}
-                                </span>
+                                <span class="px-2 py-1 rounded text-xs font-bold uppercase ${statusColor}">${statusDisplay}</span>
                                 <span class="text-xs text-gray-500 mt-1">${planoTipo}</span>
                             </div>
                         </td>
-                        <td class="p-3 text-sm font-medium">${validade}</td>
+                        <td class="p-3 text-sm font-medium">${validadeStr}</td>
                         <td class="p-3 flex flex-wrap gap-2">
                             <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
-                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Observações"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
-                            <button onclick="manageUserAccess('${uid}', '${u.acesso_ate}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Acesso"><i class="fas fa-calendar-alt"></i></button>
+                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Nota Admin"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
+                            <button onclick="manageUserAccess('${uid}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Plano"><i class="fas fa-calendar-alt"></i></button>
                             <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
                             <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
                         </td>
@@ -278,93 +347,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.editUserData = async function(uid, oldName, oldCpf) {
-        const newName = prompt("Novo nome do aluno:", oldName);
-        if (newName === null) return;
-        const newCpfRaw = prompt("Novo CPF (apenas números):", oldCpf === 'Sem CPF' ? '' : oldCpf);
-        if (newCpfRaw === null) return;
-        const newCpf = newCpfRaw.replace(/\D/g, ''); 
-        if (!newName || !newCpf) { alert("Nome e CPF são obrigatórios."); return; }
-        try {
-            const batch = window.__fbDB.batch();
-            const userRef = window.__fbDB.collection('users').doc(uid);
-            batch.update(userRef, { name: newName, cpf: newCpf });
-            if (oldCpf !== 'Sem CPF' && oldCpf !== newCpf) {
-                batch.delete(window.__fbDB.collection('cpfs').doc(oldCpf));
-                batch.set(window.__fbDB.collection('cpfs').doc(newCpf), { uid: uid });
-            } else if (oldCpf === 'Sem CPF') {
-                batch.set(window.__fbDB.collection('cpfs').doc(newCpf), { uid: uid });
-            }
-            await batch.commit();
-            alert("Dados atualizados!");
-            openAdminPanel();
-        } catch (err) { alert("Erro: " + err.message); }
-    };
+    window.manageUserAccess = async function(uid) {
+        const op = prompt(
+            "Selecione o Plano:\n" +
+            "1 - MENSAL (30 dias)\n" +
+            "2 - SEMESTRAL (180 dias)\n" +
+            "3 - ANUAL (365 dias)\n" +
+            "4 - VITALÍCIO (10 anos)\n" +
+            "5 - REMOVER PREMIUM (Voltar para Trial)\n" +
+            "6 - PERSONALIZADO (Dias)"
+        );
 
-    window.manageUserAccess = async function(uid, currentExpiryStr) {
-        const opcao = prompt("Gerenciar Plano e Validade:\n\n1 - MENSAL (+30 dias)\n2 - SEMESTRAL (+180 dias)\n3 - ANUAL (+365 dias)\n4 - PERMANENTE (10 anos)\n5 - PERSONALIZADO (Adicionar/Remover dias)\n\nDigite o número da opção:");
-        if (!opcao) return;
-        let diasToAdd = 0;
-        let novoPlano = '';
-        if (opcao === '1') { diasToAdd = 30; novoPlano = 'Mensal'; }
-        else if (opcao === '2') { diasToAdd = 180; novoPlano = 'Semestral'; }
-        else if (opcao === '3') { diasToAdd = 365; novoPlano = 'Anual'; }
-        else if (opcao === '4') { diasToAdd = 3650; novoPlano = 'Vitalício'; }
-        else if (opcao === '5') {
-            const diasInput = prompt("Digite a quantidade de dias para adicionar (ex: 15) ou remover (ex: -5):");
-            if(!diasInput) return;
-            diasToAdd = parseInt(diasInput);
-            novoPlano = 'Personalizado';
-        }
-        else { alert("Opção inválida"); return; }
+        if (!op) return;
 
-        const hoje = new Date();
-        let baseDate = new Date(currentExpiryStr);
-        if (isNaN(baseDate.getTime()) || baseDate < hoje) baseDate = hoje;
-        baseDate.setDate(baseDate.getDate() + diasToAdd);
-        const newExpiryISO = baseDate.toISOString();
+        let diasParaAdicionar = 0;
+        let nomePlano = '';
+        let novoStatus = 'premium';
 
-        try {
-            await window.__fbDB.collection('users').doc(uid).update({ status: 'premium', acesso_ate: newExpiryISO, planType: novoPlano });
-            alert("Acesso atualizado com sucesso!");
-            openAdminPanel();
-        } catch (err) { alert("Erro ao atualizar: " + err.message); }
-    };
-
-    window.editUserNote = async function(uid, currentNote) {
-        const newNote = prompt("Observações sobre este aluno:", currentNote);
-        if (newNote === null) return; 
-        try {
-            await window.__fbDB.collection('users').doc(uid).update({ adminNote: newNote });
-            alert("Observação salva.");
-            openAdminPanel();
-        } catch (err) { alert("Erro: " + err.message); }
-    };
-
-    window.deleteUser = async function(uid, name, cpf) {
-        if(confirm(`TEM CERTEZA que deseja excluir o aluno ${name}?`)) {
-            const userConfirm = prompt("Para confirmar, digite DELETAR:");
-            if (userConfirm !== "DELETAR") return;
+        if (op === '1') { diasParaAdicionar = 30; nomePlano = 'Mensal'; }
+        else if (op === '2') { diasParaAdicionar = 180; nomePlano = 'Semestral'; }
+        else if (op === '3') { diasParaAdicionar = 365; nomePlano = 'Anual'; }
+        else if (op === '4') { diasParaAdicionar = 3650; nomePlano = 'Vitalício'; }
+        else if (op === '5') {
+            // Remover Premium
             try {
-                const batch = window.__fbDB.batch();
-                batch.delete(window.__fbDB.collection('users').doc(uid));
-                if (cpf && cpf !== 'Sem CPF' && cpf !== 'undefined') batch.delete(window.__fbDB.collection('cpfs').doc(cpf));
-                await batch.commit();
-                alert("Usuário excluído.");
+                // Define data no passado para expirar
+                const ontem = new Date();
+                ontem.setDate(ontem.getDate() - 1);
+                await window.__fbDB.collection('users').doc(uid).update({
+                    status: 'trial',
+                    acesso_ate: ontem.toISOString(),
+                    planType: 'Cancelado'
+                });
+                alert("Acesso Premium removido.");
                 openAdminPanel();
-            } catch (err) { alert("Erro ao excluir: " + err.message); }
+                return;
+            } catch (e) { alert(e.message); return; }
+        }
+        else if (op === '6') {
+            const i = prompt("Digite a quantidade de dias:");
+            if (!i) return;
+            diasParaAdicionar = parseInt(i);
+            nomePlano = 'Personalizado';
+        } else {
+            return;
+        }
+
+        // Calcula nova data a partir de AGORA
+        const agora = new Date();
+        const novaData = new Date(agora);
+        novaData.setDate(novaData.getDate() + diasParaAdicionar);
+
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({
+                status: novoStatus,
+                acesso_ate: novaData.toISOString(),
+                planType: nomePlano
+            });
+            alert(`Sucesso! Plano ${nomePlano} ativado até ${novaData.toLocaleDateString()}`);
+            openAdminPanel();
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
         }
     };
-
-    window.sendResetEmail = async function(email) {
-        if(confirm(`Enviar e-mail de redefinição de senha para ${email}?`)) {
-            try {
-                await window.__fbAuth.sendPasswordResetEmail(email);
-                alert('E-mail enviado!');
-            } catch(err) { alert('Erro: ' + err.message); }
-        }
-    };
-
+    
     function checkTrialStatus(expiryDateString) {
         const expiryDate = new Date(expiryDateString);
         const today = new Date();
@@ -509,31 +555,59 @@ document.addEventListener('DOMContentLoaded', () => {
         return questions;
     }
 
+  // --- FUNÇÃO 5: BANCO DE QUESTÕES (VERSÃO DEBUG / BLINDADA) ---
     async function generateSimuladoQuestions(config) {
-        const allQuestions = [];
-        const questionsByCategory = {};
-        
-        for (const catKey in moduleCategories) {
-            questionsByCategory[catKey] = [];
-            const cat = moduleCategories[catKey];
-            for (let i = cat.range[0]; i <= cat.range[1]; i++) {
-                const modId = `module${i}`;
-                if (typeof QUIZ_DATA !== 'undefined' && QUIZ_DATA[modId]) {
-                    questionsByCategory[catKey].push(...QUIZ_DATA[modId]);
+        console.log("Iniciando geração de simulado...");
+        const finalExamQuestions = [];
+        const globalSeenSignatures = new Set(); // Rastreia Texto + Opções para unicidade absoluta
+
+        const map = {
+            'rh': [1, 2, 3, 4, 5],
+            'legislacao': [6, 7, 8, 9, 10],
+            'salvamento': [11, 12, 13, 14, 15],
+            'pci': [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
+            'aph_novo': [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+        };
+
+        for (const [catKey, qtyNeeded] of Object.entries(config.distribution)) {
+            let pool = [];
+            const targetModules = map[catKey] || [];
+
+            // 1. Coleta TUDO
+            targetModules.forEach(num => {
+                const modId = `module${num}`;
+                if (window.QUIZ_DATA && window.QUIZ_DATA[modId]) {
+                    pool.push(...window.QUIZ_DATA[modId]);
+                }
+            });
+
+            console.log(`Categoria ${catKey}: ${pool.length} questões encontradas no total.`);
+
+            // 2. Embaralha MUITO BEM
+            pool = shuffleArray(pool); // Mistura 1
+            pool = shuffleArray(pool); // Mistura 2 (Garantia)
+
+            // 3. Seleciona ÚNICAS
+            let addedCount = 0;
+            for (const q of pool) {
+                if (addedCount >= qtyNeeded) break;
+
+                // Assinatura única: Texto da pergunta + Texto da primeira opção (para diferenciar perguntas parecidas)
+                const signature = (q.question + (q.options['a'] || '')).replace(/\s+/g, '').toLowerCase();
+
+                if (!globalSeenSignatures.has(signature)) {
+                    finalExamQuestions.push(q);
+                    globalSeenSignatures.add(signature);
+                    addedCount++;
                 }
             }
-        }
-
-        for (const [catKey, qty] of Object.entries(config.distribution)) {
-            if (questionsByCategory[catKey]) {
-                const shuffled = shuffleArray(questionsByCategory[catKey]);
-                allQuestions.push(...shuffled.slice(0, qty));
-            }
+            console.log(`Categoria ${catKey}: ${addedCount} questões únicas adicionadas.`);
         }
         
-        return shuffleArray(allQuestions);
+        // Embaralha o resultado final
+        return shuffleArray(finalExamQuestions);
     }
-
+      
     // --- CARREGAMENTO DE MÓDULOS (ROTEADOR PRINCIPAL) ---
     async function loadModuleContent(id) {
         if (!id || !moduleContent[id]) return;
@@ -613,8 +687,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 4. RPG (Módulo 61)
             else if (d.isRPG) {
-                contentArea.innerHTML = d.content;
-                document.getElementById('start-rpg-btn').addEventListener('click', () => initRPGGame(d.rpgData));
+                contentArea.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-6 flex items-center text-orange-500">
+                        <i class="fas fa-headset mr-3"></i> Central de Operações
+                    </h3>
+                    <p class="mb-4 text-gray-400">Equipe de prontidão. Temos 3 chamados pendentes. Qual ocorrência você assume?</p>
+                    <div class="space-y-4">
+                        <button id="rpg-opt-1" class="rpg-card-btn group">
+                            <h4 class="font-bold text-lg group-hover:text-orange-500 transition-colors"><i class="fas fa-fire mr-2"></i> Incêndio em Galpão Industrial</h4>
+                            <p class="text-sm text-gray-400 mt-1">Risco de Backdraft. Vítimas possíveis.</p>
+                        </button>
+                        <button id="rpg-opt-2" class="rpg-card-btn group">
+                            <h4 class="font-bold text-lg group-hover:text-blue-500 transition-colors"><i class="fas fa-car-crash mr-2"></i> Acidente Veicular</h4>
+                            <p class="text-sm text-gray-400 mt-1">Vítima presa às ferragens. Trauma grave.</p>
+                        </button>
+                        <button id="rpg-opt-3" class="rpg-card-btn group">
+                            <h4 class="font-bold text-lg group-hover:text-yellow-500 transition-colors"><i class="fas fa-dungeon mr-2"></i> Espaço Confinado (Silo)</h4>
+                            <p class="text-sm text-gray-400 mt-1">Trabalhador inconsciente. Atmosfera desconhecida.</p>
+                        </button>
+                    </div>
+                `;
+                document.getElementById('rpg-opt-1').addEventListener('click', () => initRPGGame(d.rpgData)); 
+                document.getElementById('rpg-opt-2').addEventListener('click', () => alert("Cenário de Acidente Veicular em desenvolvimento!"));
+                document.getElementById('rpg-opt-3').addEventListener('click', () => alert("Cenário de Espaço Confinado em desenvolvimento!"));
             }
 
             // 5. CARTEIRINHA (Módulo 62)
@@ -623,28 +718,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderDigitalID();
             }
 
-            // 6. MODO AULA NORMAL (TEXTO + AUDIO)
+            // 6. MODO AULA NORMAL (TEXTO + AUDIO ATUALIZADO)
             else {
+                let audioHtml = `
+                    <div class="modern-audio-player">
+                        <button id="audio-main-btn" class="audio-main-btn" onclick="window.speakContent()">
+                            <i id="audio-btn-icon" class="fas fa-headphones"></i> <span id="audio-btn-text">Ouvir Aula</span>
+                        </button>
+                        <div class="h-6 w-px bg-gray-600 mx-2"></div>
+                        <select id="audio-speed" class="audio-speed-select" title="Velocidade de Reprodução">
+                            <option value="0.8">0.8x</option>
+                            <option value="1.0" selected>1.0x</option>
+                            <option value="1.2">1.2x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2.0">2.0x</option>
+                        </select>
+                    </div>
+                `;
+
                 let html = `
                     <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
-                    
-                    <div id="audio-btn" class="audio-controls mb-6" onclick="window.speakContent()">
-                        <i id="audio-btn-icon" class="fas fa-headphones text-lg mr-2"></i>
-                        <span id="audio-btn-text">Ouvir Aula</span>
-                    </div>
-
+                    ${audioHtml}
                     <div>${d.content}</div>
                 `;
 
                 const isSpecialModule = ['module53', 'module54', 'module55', 'module56', 'module57', 'module58', 'module59', 'module60', 'module61', 'module62'].includes(id);
 
-                if (d.driveLink) {
-                    if (userIsNotPremium) {
-                        html += `<div class="mt-10 mb-8"><button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden"><div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10"><i class="fas fa-lock text-2xl mr-2"></i></div><span class="blur-[2px] flex items-center"><i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)</span></button><p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p></div>`;
-                    } else {
-                        html += `<div class="mt-10 mb-8"><a href="${d.driveLink}" target="_blank" class="drive-button"><i class="fab fa-google-drive"></i>VER FOTOS E VÍDEOS DESTA MATÉRIA</a></div>`;
-                    }
-                }
+                // --- INICIO BLOCO DRIVE LINK (ATUALIZADO) ---
+        // Verifica se o link existe, não é vazio, e não é o placeholder "EM_BREVE"
+        if (d.driveLink && d.driveLink !== "" && d.driveLink !== "EM_BREVE" && d.driveLink !== "SEU_LINK_DO_DRIVE_AQUI") {
+            if (userIsNotPremium) {
+                html += `<div class="mt-10 mb-8"><button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden"><div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10"><i class="fas fa-lock text-2xl mr-2"></i></div><span class="blur-[2px] flex items-center"><i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)</span></button><p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p></div>`;
+            } else {
+                html += `<div class="mt-10 mb-8"><a href="${d.driveLink}" target="_blank" class="drive-button"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS DESTA MATÉRIA</a></div>`;
+            }
+        } else {
+            // Se não tiver link ou for "EM_BREVE", mostra botão que avisa sem abrir aba
+            html += `<div class="mt-10 mb-8"><button onclick="alert('🚧 Conteúdo em produção! As fotos e vídeos desta matéria estarão disponíveis em breve.')" class="drive-button opacity-70 cursor-wait"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS (EM BREVE)</button></div>`;
+        }
+        // --- FIM BLOCO DRIVE LINK ---
 
                 const savedNote = localStorage.getItem('note-' + id) || '';
 
@@ -656,7 +768,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const shuffledQuestions = shuffleArray([...allQuestions]); 
                     const selectedQuestions = shuffledQuestions.slice(0, count);
                     
-                    let quizHtml = `<div class="quiz-section-separator"></div><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Exercícios de Fixação</h3>`;
+                    // Injeção da frase "Pratique aqui..." (Pedido 6)
+                    let quizHtml = `
+                        <div class="mt-12 text-center">
+                            <span class="bg-gray-100 dark:bg-gray-800 text-gray-500 text-sm py-1 px-3 rounded-full border border-gray-300 dark:border-gray-700">
+                                <i class="fas fa-pencil-alt mr-2"></i> Pratique aqui o que você aprendeu
+                            </span>
+                        </div>
+                        <div class="quiz-section-separator mt-4"></div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Exercícios de Fixação</h3>
+                    `;
+                    
                     selectedQuestions.forEach((q, index) => {
                         const questionNumber = index + 1;
                         quizHtml += `<div class="quiz-block" data-question-id="${q.id}"><p class="font-semibold mt-4 mb-2 text-gray-700 dark:text-gray-200">${questionNumber}. ${q.question}</p><div class="quiz-options-group space-y-2 mb-4">`;
@@ -691,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('next-module')?.classList.remove('blinking-button');
         }, 300);
     }
-
+    
     // === LÓGICA: MODO SOBREVIVÊNCIA ===
     async function initSurvivalGame() {
         survivalLives = 3;
@@ -729,7 +851,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = survivalQuestions[currentSurvivalIndex];
         if(!q) {
-            // Acabaram as questões (Raro)
             contentArea.innerHTML = `<h2 class="text-center text-2xl">Você zerou o banco de questões! Incrível!</h2>`;
             return;
         }
@@ -791,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderRPGScene(sceneId, rpgData) {
         const scene = rpgData.scenes[sceneId];
-        if(!scene) return; // Erro ou fim
+        if(!scene) return; 
 
         let html = `
             <div class="max-w-2xl mx-auto animate-fade-in">
@@ -823,32 +944,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.rpg-choice-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const next = btn.dataset.next;
-                if(next === 'exit') loadModuleContent('module61'); // Reset
+                if(next === 'exit') loadModuleContent('module61'); 
                 else renderRPGScene(next, rpgData);
             });
         });
     }
 
-    // === LÓGICA ATUALIZADA: CARTEIRINHA DIGITAL COM FOTO ===
+    // === LÓGICA: CARTEIRINHA DIGITAL ===
     function renderDigitalID() {
         if (!currentUserData) return;
         
         const container = document.getElementById('id-card-container');
         if (!container) return;
 
-        // Lógica da Foto: Tenta pegar do LocalStorage, senão usa um avatar padrão
         const savedPhoto = localStorage.getItem('user_profile_pic');
         const defaultPhoto = "https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png"; 
         const currentPhoto = savedPhoto || defaultPhoto;
 
-        // Formatação de datas
         const validUntil = new Date(currentUserData.acesso_ate).toLocaleDateString('pt-BR');
         const statusColor = currentUserData.status === 'premium' ? 'text-yellow-400' : 'text-gray-400';
         
         container.innerHTML = `
             <div class="relative w-full max-w-md bg-gradient-card rounded-xl overflow-hidden shadow-2xl text-white font-sans transform transition hover:scale-[1.01] duration-300">
                 <div class="card-shine"></div>
-                
                 <div class="bg-red-700 p-4 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="bg-white p-1 rounded-full">
@@ -861,12 +979,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <i class="fas fa-wifi text-white/50 rotate-90"></i>
                 </div>
-
                 <div class="p-6 relative z-10">
-                    
                     <div class="flex justify-between items-start mb-6">
                         <div class="flex items-center gap-4">
-                            
                             <div class="relative group cursor-pointer" onclick="document.getElementById('profile-pic-input').click()" title="Clique para alterar a foto">
                                 <div class="w-20 h-20 rounded-lg border-2 border-white/30 overflow-hidden bg-gray-800">
                                     <img id="id-card-photo" src="${currentPhoto}" class="w-full h-full object-cover">
@@ -876,18 +991,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                                 <input type="file" id="profile-pic-input" class="hidden" accept="image/*" onchange="window.updateProfilePic(this)">
                             </div>
-
                             <div>
                                 <p class="text-xs text-gray-400 uppercase mb-1">Nome do Aluno</p>
                                 <h2 class="text-lg font-bold text-white tracking-wide leading-tight max-w-[150px] break-words">${currentUserData.name}</h2>
                             </div>
                         </div>
-
                         <div class="bg-white p-1 rounded">
                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUserData.email}" class="w-14 h-14">
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <p class="text-[10px] text-gray-400 uppercase">CPF</p>
@@ -909,7 +1021,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>
-
                 <div class="bg-black/30 p-3 text-center border-t border-white/10">
                     <p class="text-[9px] text-gray-500">Uso pessoal e intransferível. Toque na foto para alterar.</p>
                 </div>
@@ -920,7 +1031,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    // === FUNÇÃO GLOBAL PARA UPLOAD DE FOTO ===
     window.updateProfilePic = function(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -932,35 +1042,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // === FUNÇÕES PADRÃO DO APP ===
+   // === FUNÇÕES SIMULADO (NORMAL - SEM MODO FOCO) ===
     async function startSimuladoMode(moduleData) {
+        // Pausar áudio se estiver tocando (Pedido 2 - parte A)
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
 
+        // Gera questões sem repetição
         activeSimuladoQuestions = await generateSimuladoQuestions(moduleData.simuladoConfig);
         userAnswers = {};
         simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
         currentSimuladoQuestionIndex = 0;
 
+        // --- 4. TIMER STICKY (HTML ATUALIZADO) ---
         contentArea.innerHTML = `
-            <div class="relative pt-4 pb-12">
-                <div id="simulado-timer-bar" class="simulado-header-sticky shadow-lg">
-                    <span class="simulado-timer flex items-center"><i class="fas fa-clock mr-2 text-lg"></i><span id="timer-display">60:00</span></span>
-                    <span class="simulado-progress text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Questão <span id="q-current">1</span> / ${activeSimuladoQuestions.length}</span>
+            <div class="pt-4 pb-12 relative">
+                
+                <div id="simulado-timer-bar" class="simulado-floating-timer">
+                    <i class="fas fa-clock text-orange-500"></i>
+                    <span id="timer-display" class="timer-text mx-2">--:--</span>
+                    <div class="h-4 w-px bg-gray-600 mx-2"></div>
+                    <span class="text-xs text-gray-300">Questão <span id="q-current">1</span>/${activeSimuladoQuestions.length}</span>
                 </div>
                 
-                <div class="mt-10 mb-6 px-2 text-center">
-                     <h3 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white border-b pb-2 inline-block">${moduleData.title}</h3>
+                <div class="mt-4 mb-8 text-center px-4">
+                     <h3 class="text-2xl md:text-3xl font-bold text-blue-900 dark:text-white border-b-2 border-orange-500 inline-block pb-2">
+                        ${moduleData.title}
+                     </h3>
+                     <p class="text-sm text-gray-500 mt-3"><i class="fas fa-info-circle"></i> Modo Prova: O resultado sai ao final.</p>
                 </div>
 
                 <div id="question-display-area" class="simulado-question-container"></div>
                 
-                <div class="mt-8 flex justify-between items-center">
-                    <button id="sim-prev-btn" class="sim-nav-btn sim-btn-prev shadow" style="visibility: hidden;"><i class="fas fa-arrow-left mr-2"></i> Anterior</button>
-                    <button id="sim-next-btn" class="sim-nav-btn sim-btn-next shadow">Próxima <i class="fas fa-arrow-right ml-2"></i></button>
+                <div class="mt-8 flex justify-between items-center px-2">
+                    <button id="sim-prev-btn" class="action-button bg-gray-600" style="visibility: hidden;">
+                        <i class="fas fa-arrow-left mr-2"></i> Anterior
+                    </button>
+                    <button id="sim-next-btn" class="action-button">
+                        Próxima <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
                 </div>
             </div>
         `;
+        // --- FIM HTML SIMULADO ---
         
         contentArea.classList.remove('hidden');
         loadingSpinner.classList.add('hidden');
@@ -972,24 +1100,35 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sim-next-btn').addEventListener('click', () => navigateSimulado(1, moduleData.id));
         document.getElementById('sim-prev-btn').addEventListener('click', () => navigateSimulado(-1, moduleData.id));
     }
-
+    
+    // --- FUNÇÃO AUXILIAR: EXIBIR QUESTÃO (CORRIGIDA - USO DE INDEX) ---
     function showSimuladoQuestion(index) {
         const q = activeSimuladoQuestions[index];
         const container = document.getElementById('question-display-area');
-        const savedAnswer = userAnswers[q.id] || null;
+        
+        // CORREÇÃO: Usa o INDEX para recuperar a resposta, não o ID
+        // Isso impede que a resposta da Q1 apareça na Q3 se elas tiverem o mesmo ID
+        const savedAnswer = userAnswers[index] || null; 
         
         let html = `
-            <div class="bg-white dark:bg-gray-900 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700 animate-slide-in">
-                <p class="font-bold text-lg mb-6 text-gray-800 dark:text-white">${index+1}. ${q.question}</p>
+            <div class="bg-gray-100 dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-800 animate-slide-in">
+                <div class="flex items-start mb-6">
+                    <div class="w-1 h-8 bg-orange-500 mr-3 mt-1 rounded"></div>
+                    <p class="font-bold text-lg text-gray-800 dark:text-white leading-relaxed">
+                        ${q.question}
+                    </p>
+                </div>
                 <div class="space-y-3">
         `;
+        
         for (const key in q.options) {
-            const isChecked = savedAnswer === key ? 'checked' : '';
+            const isSelected = savedAnswer === key ? 'selected' : '';
+            // CORREÇÃO: Passamos o INDEX na função onclick
             html += `
-                <label class="flex items-center p-4 rounded border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <input type="radio" name="q-curr" value="${key}" class="mr-4 w-5 h-5 text-orange-600 focus:ring-orange-500" ${isChecked} onchange="registerSimuladoAnswer('${q.id}', '${key}')">
-                    <span class="text-base text-gray-700 dark:text-gray-300"><strong class="mr-2 text-orange-500">${key.toUpperCase()})</strong> ${q.options[key]}</span>
-                </label>
+                <div class="quiz-card-option ${isSelected}" onclick="selectSimuladoOption(${index}, '${key}', this)">
+                    <div class="quiz-letter-box">${key.toUpperCase()}</div>
+                    <div class="font-medium flex-1">${q.options[key]}</div>
+                </div>
             `;
         }
         html += `</div></div>`;
@@ -1003,12 +1142,27 @@ document.addEventListener('DOMContentLoaded', () => {
         prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
         if (index === activeSimuladoQuestions.length - 1) {
             nextBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> ENTREGAR';
-            nextBtn.className = "sim-nav-btn bg-green-600 text-white hover:bg-green-500 shadow-lg transform hover:scale-105 transition-transform";
+            nextBtn.className = "sim-nav-btn bg-green-600 text-white hover:bg-green-500 shadow-lg transform hover:scale-105 transition-transform px-6 py-2 rounded font-bold";
         } else {
             nextBtn.innerHTML = 'Próxima <i class="fas fa-arrow-right ml-2"></i>';
-            nextBtn.className = "sim-nav-btn sim-btn-next";
+            nextBtn.className = "sim-nav-btn bg-blue-600 text-white hover:bg-blue-500 px-6 py-2 rounded font-bold";
         }
     }
+
+    // Função auxiliar para selecionar a opção visualmente
+    window.selectSimuladoOption = function(index, key, element) {
+        // Remove seleção anterior
+        const parent = element.parentElement;
+        parent.querySelectorAll('.quiz-card-option').forEach(el => el.classList.remove('selected'));
+        // Adiciona à atual
+        element.classList.add('selected');
+        // Salva resposta usando o ÍNDICE
+        registerSimuladoAnswer(index, key);
+    };
+
+    window.registerSimuladoAnswer = function(index, answer) {
+        userAnswers[index] = answer; // Salva na posição 0, 1, 2...
+    };
 
     function navigateSimulado(direction, moduleId) {
         const newIndex = currentSimuladoQuestionIndex + direction;
@@ -1043,39 +1197,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+   // === FINALIZAÇÃO DO SIMULADO ===
     function finishSimulado(moduleId) {
         clearInterval(simuladoTimerInterval);
+        
         let correctCount = 0;
         const total = activeSimuladoQuestions.length;
-        let feedbackHtml = '<div class="space-y-4">';
+        let feedbackHtml = '<div class="space-y-6 mt-8">';
 
         activeSimuladoQuestions.forEach((q, i) => {
-            const selected = userAnswers[q.id];
+            const selected = userAnswers[i]; // 'i' é o índice do loop (0, 1, 2...)
             const isCorrect = selected === q.answer;
             if(isCorrect) correctCount++;
             
-            const statusClass = isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20';
-            const correctAnswerText = q.options[q.answer];
-            const selectedAnswerText = selected ? q.options[selected] : "Não respondeu";
+            const boxClass = isCorrect ? 'feedback-correct' : 'feedback-wrong';
+            const icon = isCorrect ? 'fa-check-circle' : 'fa-times-circle';
             const explanation = q.explanation || "Sem explicação disponível.";
 
-            feedbackHtml += `
-                <div class="p-4 rounded border-l-4 ${statusClass} mb-4">
-                    <p class="font-bold text-gray-800 dark:text-gray-200 text-sm mb-3">${i+1}. ${q.question}</p>
-                    <div class="grid grid-cols-1 gap-3 text-xs mb-3">
-                        <div class="p-2 rounded ${isCorrect ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">
-                            <span class="font-bold block mb-1">Sua Resposta:</span> 
-                            ${selected ? selected.toUpperCase() + ') ' + selectedAnswerText : 'Em branco'}
-                        </div>
-                        ${!isCorrect ? `
-                        <div class="p-2 rounded bg-green-50 text-green-800 dark:bg-green-900/50 dark:text-green-300 border border-green-200 dark:border-green-800">
-                            <span class="font-bold block mb-1">Resposta Correta:</span> 
-                            ${q.answer.toUpperCase()}) ${correctAnswerText}
-                        </div>
-                        ` : ''}
+            let optionsHtml = '';
+            for (const key in q.options) {
+                let rowClass = 'bg-gray-50 dark:bg-gray-800 text-gray-500'; 
+                let iconStatus = '';
+
+                if (key === q.answer) {
+                    rowClass = 'answer-row correct-ref'; 
+                    iconStatus = '<i class="fas fa-check text-green-500 float-right"></i>';
+                } else if (key === selected && !isCorrect) {
+                    rowClass = 'answer-row user-wrong'; 
+                    iconStatus = '<i class="fas fa-times text-red-500 float-right"></i>';
+                }
+
+                optionsHtml += `
+                    <div class="${rowClass}">
+                        <strong class="mr-2 uppercase">${key})</strong> ${q.options[key]} ${iconStatus}
                     </div>
-                    <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400">
-                        <strong><i class="fas fa-info-circle mr-1 text-blue-500"></i> Explicação:</strong><br> ${explanation}
+                `;
+            }
+
+            feedbackHtml += `
+                <div class="feedback-box ${boxClass}">
+                    <div class="feedback-header">
+                        <span>${i+1}. ${q.question}</span>
+                        <i class="fas ${icon} text-xl"></i>
+                    </div>
+                    <div class="feedback-body bg-white dark:bg-gray-900">
+                        <div class="mb-3 text-xs font-bold text-gray-400 uppercase">SUA RESPOSTA: <span class="${isCorrect ? 'text-green-500' : 'text-red-500'}">${selected ? selected.toUpperCase() : 'NENHUMA'}</span></div>
+                        ${optionsHtml}
+                        <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <p class="text-xs font-bold text-blue-500 mb-1"><i class="fas fa-info-circle"></i> EXPLICAÇÃO:</p>
+                            <p class="explanation-text">${explanation}</p>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1083,15 +1254,31 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackHtml += '</div>';
 
         const score = (correctCount / total) * 10;
+        const percentage = (correctCount / total) * 100;
+
         const finalHtml = `
-            <div class="simulado-result-card mb-8 animate-slide-in">
-                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Resultado Final</h2>
-                <div class="simulado-score-circle">${score.toFixed(1)}</div>
-                <p class="text-lg text-gray-600 dark:text-gray-300">Acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões.</p>
+            <div class="text-center animate-slide-in">
+                <h2 class="text-3xl font-serif font-bold mb-6 text-blue-900 dark:text-white">Resultado Final</h2>
+                
+                <div class="circle-chart" style="--percentage: ${percentage}" data-score="${score.toFixed(1)}"></div>
+                
+                <p class="text-gray-600 dark:text-gray-300 mb-2">Você acertou <strong>${correctCount}</strong> de <strong>${total}</strong> questões (${percentage.toFixed(0)}%).</p>
+                
+                <div class="w-full max-w-md mx-auto bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-8 overflow-hidden">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <button onclick="location.reload()" class="action-button">
+                        <i class="fas fa-undo mr-2"></i> Voltar ao Início
+                    </button>
+                </div>
+
+                <div class="text-left">
+                    <h3 class="text-xl font-bold text-blue-500 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2"><i class="fas fa-clipboard-check mr-2"></i> Gabarito Detalhado</h3>
+                    ${feedbackHtml}
+                </div>
             </div>
-            <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white border-b pb-2">Gabarito & Explicações</h4>
-            ${feedbackHtml}
-            <div class="text-center mt-8"><button onclick="location.reload()" class="action-button">Voltar ao Início</button></div>
         `;
         
         contentArea.innerHTML = finalHtml;
@@ -1194,9 +1381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function goToHomePage() {
         localStorage.removeItem('gateBombeiroLastModule'); 
-        
         if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
-
         if (contentArea) contentArea.innerHTML = getWelcomeContent();
         document.getElementById('module-nav')?.classList.add('hidden');
         document.querySelectorAll('.module-list-item.active').forEach(i => i.classList.remove('active'));
@@ -1212,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getWelcomeContent() {
-        return `<div class="text-center py-8"><div class="floating inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6"><i class="fas fa-fire-extinguisher text-6xl text-red-600"></i></div><h2 class="text-4xl font-bold mb-4 text-blue-900 dark:text-white">Torne-se um Profissional de Elite</h2><p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">Bem-vindo ao <strong class="font-bold text-orange-500 dark:text-orange-400">Curso de Formação para Bombeiro Civil e Brigadista</strong>.</p><button id="start-course" class="action-button pulse text-lg"><i class="fas fa-play-circle mr-2"></i> Iniciar Curso Agora</button></div>`;
+        return `<div class="text-center py-8"><div class="floating inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6"><i class="fas fa-fire-extinguisher text-6xl text-red-600"></i></div><h2 class="text-4xl font-bold mb-4 text-blue-900 dark:text-white">Torne-se um Bombeiro de Elite</h2><p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">Bem-vindo ao <strong class="font-bold text-orange-500 dark:text-orange-400">Curso de Formação para Bombeiro Civil e Brigadista</strong>.</p><button id="start-course" class="action-button pulse text-lg"><i class="fas fa-play-circle mr-2"></i> Iniciar Curso Agora</button></div>`;
     }
 
     function setupProtection() {
@@ -1238,10 +1423,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function shuffleArray(array) {
-        let newArray = [...array]; 
+        let newArray = [...array];
         for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [newArray[i], newArray[j]] = [newArray[i], newArray[i]];
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
         }
         return newArray;
     }
@@ -1286,13 +1471,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mobile-module-container').innerHTML = getModuleListHTML();
     }
 
+    // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM CONTADORES ---
     function getModuleListHTML() {
         let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2><div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo..."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div><div class="module-accordion-container space-y-2">`;
+        
         for (const k in moduleCategories) {
             const cat = moduleCategories[k];
             const isLocked = cat.isPremium && (!currentUserData || currentUserData.status !== 'premium');
             const lockIcon = isLocked ? '<i class="fas fa-lock text-xs ml-2 text-yellow-500"></i>' : '';
-            html += `<div><button class="accordion-button"><span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title} ${lockIcon}</span><i class="fas fa-chevron-down"></i></button><div class="accordion-panel">`;
+            
+            // CÁLCULO DE CONTADORES
+            let catTotal = 0;
+            let catCompleted = 0;
+            for(let i = cat.range[0]; i <= cat.range[1]; i++) {
+                const mid = `module${i}`;
+                if(moduleContent[mid]) {
+                    catTotal++;
+                    if(completedModules.includes(mid)) catCompleted++;
+                }
+            }
+
+            html += `<div><button class="accordion-button"><span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title} ${lockIcon}</span> <span class="module-count">${catCompleted}/${catTotal}</span> <i class="fas fa-chevron-down"></i></button><div class="accordion-panel">`;
+            
             for (let i = cat.range[0]; i <= cat.range[1]; i++) {
                 const m = moduleContent[`module${i}`];
                 if (m) {
@@ -1314,6 +1514,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateProgress() {
+        // CORREÇÃO: Check para evitar divisão por zero
+        if (totalModules === 0) return;
+        
         const p = (completedModules.length / totalModules) * 100;
         document.getElementById('progress-text').textContent = `${p.toFixed(0)}%`;
         document.getElementById('completed-modules-count').textContent = completedModules.length;
@@ -1322,6 +1525,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateModuleListStyles();
         checkAchievements();
+        // Atualiza contadores do sidebar
+        populateModuleLists(); 
+        
         if (totalModules > 0 && completedModules.length === totalModules) showCongratulations();
     }
 
@@ -1431,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const n = parseInt(currentModuleId.replace('module',''));
         prevModule.disabled = (n === 1);
-        nextModule.disabled = (n === totalModules); // Agora totalModules inclui até o 62
+        nextModule.disabled = (n === totalModules); 
     }
     function setupQuizListeners() {
         document.querySelectorAll('.quiz-option').forEach(o => o.addEventListener('click', handleQuizOptionClick));
@@ -1486,7 +1692,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const n = parseInt(currentModuleId.replace('module',''));
             if(n < totalModules) loadModuleContent(`module${n+1}`);
             nextButton?.classList.remove('blinking-button');
-        });
+            });
+
+            // --- ADICIONE ISTO NO FINAL DA FUNÇÃO addEventListeners ---
+        
+        // Botão manual do Tour (Garante que funcione mesmo clicando várias vezes)
+        const tourBtn = document.getElementById('restart-tour-btn');
+        if (tourBtn) {
+            // Removemos clone para limpar ouvintes antigos e adicionamos o novo
+            const newTourBtn = tourBtn.cloneNode(true);
+            tourBtn.parentNode.replaceChild(newTourBtn, tourBtn);
+            
+            newTourBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log("Iniciando tour manual..."); 
+                startOnboardingTour(true);
+            });
+        }
+        
 
         // 2. Busca
         document.body.addEventListener('input', e => {
@@ -1602,6 +1825,111 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('close-congrats')?.addEventListener('click', () => { document.getElementById('congratulations-modal').classList.remove('show'); document.getElementById('modal-overlay').classList.remove('show'); });
         closeAchButton?.addEventListener('click', hideAchievementModal);
         achievementOverlay?.addEventListener('click', hideAchievementModal);
+    }
+// ... (restante do código anterior) ...
+
+    // --- 6. LIMITE IA (BRAVOGPT) - COLE AQUI ---
+    function initVoiceflowLimit() {
+        if (!window.voiceflow || !window.voiceflow.chat) return;
+
+        window.voiceflow.chat.on('user:message', () => {
+            const today = new Date().toLocaleDateString();
+            const key = `ai_usage_${today}`;
+            let count = parseInt(localStorage.getItem(key) || '0') + 1;
+            localStorage.setItem(key, count);
+
+            const isPremium = currentUserData && currentUserData.status === 'premium';
+            const limit = isPremium ? 50 : 5; // 50 Premium, 5 Free
+
+            if (count > limit) {
+                alert(`⚠️ Limite diário de IA atingido (${count-1}/${limit}).\nVolte amanhã ou assine o Premium para mais interações.`);
+                // Oculta o chat forçadamente
+                const chatDiv = document.getElementById('voiceflow-chat');
+                if(chatDiv) chatDiv.style.display = 'none';
+            }
+        });
+    }
+    // Tenta iniciar o monitoramento após 5 segundos
+    setTimeout(initVoiceflowLimit, 5000);
+
+   // --- 7. TOUR GUIADO (ONBOARDING - CORRIGIDO V2) ---
+    function startOnboardingTour(isManual = false) {
+        // Se for automático e já tiver visto, cancela
+        if (!isManual && localStorage.getItem('bravo_tour_completed') === 'true') return;
+
+        // Aguarda renderização
+        setTimeout(() => {
+            if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
+
+            const driver = window.driver.js.driver;
+            
+            // Verifica botões de instalação
+            const installBtnDesktop = document.getElementById('install-app-btn');
+            const installBtnMobile = document.getElementById('install-app-btn-mobile');
+            
+            const steps = [
+                { 
+                    element: '#accessibility-fab', 
+                    popover: { 
+                        title: '1. Acessibilidade', 
+                        description: 'Ajuste o tamanho da fonte e contraste aqui no canto inferior direito.', 
+                        // Como o botão está na Direita, o texto fica na Esquerda
+                        side: "left", 
+                        align: 'end' 
+                    } 
+                },
+                { 
+                    element: '#voiceflow-chat', 
+                    popover: { 
+                        title: '2. BravoGPT (IA)', 
+                        description: 'Tire dúvidas técnicas com nossa IA aqui no canto inferior esquerdo.', 
+                        // Como o botão está na Esquerda, o texto fica na Direita
+                        side: "right", 
+                        align: 'end' 
+                    } 
+                }
+            ];
+
+            // Adiciona passo de instalação se o botão estiver visível
+            if (installBtnDesktop && !installBtnDesktop.classList.contains('hidden')) {
+                steps.push({ 
+                    element: '#install-app-btn', 
+                    popover: { 
+                        title: '3. Instale o App', 
+                        description: 'Instale no seu computador para acesso rápido.', 
+                        side: "bottom",
+                        align: 'center'
+                    } 
+                });
+            } else if (installBtnMobile && !installBtnMobile.classList.contains('hidden')) {
+                steps.push({ 
+                    element: '#mobile-menu-button', 
+                    popover: { 
+                        title: '3. Menu & Instalação', 
+                        description: 'Abra o menu para encontrar a opção <strong>Instalar App</strong>.', 
+                        side: "bottom",
+                        align: 'end'
+                    } 
+                });
+            }
+
+            const driverObj = driver({
+                showProgress: true,
+                animate: true,
+                // Espaçamento para não grudar no elemento
+                stagePadding: 5,
+                popoverClass: 'driverjs-theme',
+                steps: steps,
+                onDestroyed: () => {
+                    if (!isManual) localStorage.setItem('bravo_tour_completed', 'true');
+                },
+                nextBtnText: 'Próximo',
+                prevBtnText: 'Voltar',
+                doneBtnText: 'Concluir'
+            });
+
+            driverObj.drive();
+        }, 1500);
     }
 
     init();
