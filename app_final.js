@@ -1997,6 +1997,14 @@ function onLoginSuccess(user, userData) {
             alert("Erro ao enviar e-mail: " + e.message);
         }
     };
+    // --- FUNÇÃO PIX ---
+    window.copyPixKey = function(key) {
+        navigator.clipboard.writeText(key).then(() => {
+            alert("Chave PIX copiada: " + key);
+        }).catch(err => {
+            prompt("Copie a chave manualmente:", key);
+        });
+    };
     
     init();
 });
