@@ -227,6 +227,20 @@ function init() {
         
         if (typeof FirebaseCourse !== 'undefined') {
             FirebaseCourse.init(firebaseConfig);
+            // Aguarda o Firebase estar pronto
+setTimeout(() => {
+    if (window.fbDB) {
+        console.log("✅ Firebase inicializado com sucesso!");
+    } else {
+        console.warn("⚠️ Firebase ainda não inicializou. Aguardando...");
+        setTimeout(() => {
+            if (window.fbDB) {
+                console.log("✅ Firebase inicializado (2ª tentativa)!");
+            }
+        }, 3000);
+    }
+}, 2000);
+
             setupAuthEventListeners(); 
             
             document.getElementById('logout-button')?.addEventListener('click', FirebaseCourse.signOutUser);
