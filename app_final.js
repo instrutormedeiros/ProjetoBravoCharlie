@@ -2285,7 +2285,7 @@ window.openManagerPanel = async function() {
 // FUNÇÃO AUXILIAR: RENDERIZA A TABELA (USADA NO INÍCIO E NO FILTRO)
 window.renderManagerTable = function(usersList) {
     const tbody = document.getElementById('manager-table-body');
-    const totalCourseModules = 52;
+    const totalCourseModules = Object.keys(window.moduleContent || {}).length || 62;
     let html = '';
     let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
 
