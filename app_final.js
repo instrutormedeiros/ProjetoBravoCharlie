@@ -2466,13 +2466,29 @@ window.toggleManagerRole = async function(uid, currentStatus) {
         }
     }
 };
-   // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (ATUALIZADA) ---
+  // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
 window.saveProgressToCloud = function() {
     if (currentUserData && currentUserData.uid) {
+        // 1. Tenta pegar da variável global
+        let modulesToSave = completedModules;
+        
+        // 2. Se estiver vazia, tenta pegar forçado do LocalStorage (GARANTIA)
+        if (!modulesToSave || modulesToSave.length === 0) {
+            const localData = localStorage.getItem('gateBombeiroCompletedModules_v3');
+            if (localData) {
+                modulesToSave = JSON.parse(localData);
+                completedModules = modulesToSave; // Atualiza a global também
+            }
+        }
+
+        console.log("Enviando para nuvem:", modulesToSave); // Para você ver no console
+
         return window.__fbDB.collection('users').doc(currentUserData.uid).update({
-            completedModules: completedModules
+            completedModules: modulesToSave
         }).then(() => {
             console.log("Progresso salvo com sucesso!");
+            // Atualiza o objeto local do usuário para refletir a mudança imediata
+            currentUserData.completedModules = modulesToSave;
         }).catch(err => console.error("Erro ao salvar progresso:", err));
     }
     return Promise.resolve();
