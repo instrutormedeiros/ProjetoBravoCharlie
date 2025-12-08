@@ -206,7 +206,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
 
-    function init() {
+function init() {
+    document.body.classList.add('landing-active');
+    
+    // ---> ADICIONE ISSO AQUI:
+    setTimeout(initScrollReveal, 100); // Inicia os observadores de animação
+    
         setupProtection();
         setupTheme();
         
@@ -228,41 +233,76 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('logout-expired-button')?.addEventListener('click', FirebaseCourse.signOutUser);
             document.getElementById('logout-button-header')?.addEventListener('click', FirebaseCourse.signOutUser);
 
-            FirebaseCourse.checkAuth((user, userData) => {
-                onLoginSuccess(user, userData);
-            });
+            // === CORREÇÃO CRÍTICA: LÓGICA DE LOGIN VS CAPA ===
+            
+            // 1. Garante que o modal de login comece FECHADO para exibir a capa
+            const loginModal = document.getElementById('name-prompt-modal');
+            const loginOverlay = document.getElementById('name-modal-overlay');
+            if(loginModal) loginModal.classList.remove('show');
+            if(loginOverlay) loginOverlay.classList.remove('show');
+
+            // 2. Verifica se o usuário JÁ estava logado antes (Sessão salva)
+            const isLogged = localStorage.getItem('my_session_id');
+
+            if (isLogged) {
+                // Se já tem sessão, faz a verificação silenciosa no fundo
+                // O usuário vê a Capa, mas o sistema já vai logando por trás
+                FirebaseCourse.checkAuth((user, userData) => {
+                    onLoginSuccess(user, userData);
+                });
+            } 
+            // SE NÃO TIVER SESSÃO, NÃO FAZ NADA! 
+            // O modal só abrirá quando o usuário clicar em "ACESSAR PLATAFORMA" na capa.
         }
         
         setupHeaderScroll();
         setupRippleEffects();
     }
-    
-function onLoginSuccess(user, userData) {
+
+    function onLoginSuccess(user, userData) {
+        // --- NOVO: GARANTE QUE A CAPA SUMA NO REFRESH ---
+        const landing = document.getElementById('landing-hero');
+        if (landing) landing.classList.add('hidden'); // Esconde a capa
+        document.body.classList.remove('landing-active'); // Destrava rolagem
+        // ------------------------------------------------
+
         currentUserData = userData; 
 
         if (document.body.getAttribute('data-app-ready') === 'true') return;
-        document.body.setAttribute('data-app-ready', 'true');
         
-        // Fecha modais
+        // Fecha modais e overlays para liberar a tela
         document.getElementById('name-prompt-modal')?.classList.remove('show');
         document.getElementById('name-modal-overlay')?.classList.remove('show');
         document.getElementById('expired-modal')?.classList.remove('show');
         
-        // Saudação
+        // Saudação personalizada
         const greetingEl = document.getElementById('welcome-greeting');
         if(greetingEl) greetingEl.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
         
+        // Marca d'água de segurança
+        const printWatermark = document.getElementById('print-watermark');
         if (printWatermark) {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
-        // Botões Admin
+        // Libera Botões Admin (se for admin)
+        const adminBtn = document.getElementById('admin-panel-btn');
+        const mobileAdminBtn = document.getElementById('mobile-admin-btn');
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
 
         checkTrialStatus(userData.acesso_ate);
+
+        // --- PROGRESSO SINCRONIZADO NA NUVEM ---
+        // Se o usuário tem progresso salvo no banco de dados, usamos ele.
+        if (userData.completedModules && Array.isArray(userData.completedModules)) {
+            completedModules = userData.completedModules;
+            // Atualiza o local para garantir sincronia
+            localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
+            console.log("Progresso recuperado da nuvem.");
+        }
 
         // Inicializa contadores
         totalModules = Object.keys(window.moduleContent || {}).length;
@@ -275,10 +315,29 @@ function onLoginSuccess(user, userData) {
         addEventListeners(); 
         handleInitialLoad();
 
-        // Inicia Tour Automático (se nunca viu)
+       // Inicia Tour Automático (se nunca viu)
         startOnboardingTour(false); 
-    }
 
+        // --- CORREÇÃO BLINDADA B2B ---
+        // Verifica se a intenção de abrir o painel existe
+        if (localStorage.getItem('open_manager_after_login') === 'true') {
+            localStorage.removeItem('open_manager_after_login'); // Limpa a memória
+            
+            // Tenta abrir o painel após 1.5 segundos
+            setTimeout(() => {
+                const modal = document.getElementById('manager-modal');
+                if (modal && typeof openManagerPanel === 'function') {
+                    openManagerPanel();
+                } else {
+                    // Se falhar (elemento não existe ainda), tenta de novo em 3 segundos
+                    console.log("Tentativa 1 falhou, tentando novamente...");
+                    setTimeout(() => {
+                        if(typeof openManagerPanel === 'function') openManagerPanel();
+                    }, 3000);
+                }
+            }, 1500); 
+        }
+    }
     // --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
@@ -337,6 +396,7 @@ function onLoginSuccess(user, userData) {
                             <button onclick="manageUserAccess('${uid}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Plano"><i class="fas fa-calendar-alt"></i></button>
                             <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
                             <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
+                            <button onclick="toggleManagerRole('${uid}', ${u.isManager})" class="${u.isManager ? 'bg-purple-600' : 'bg-gray-400'} hover:bg-purple-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alternar Gestor"><i class="fas fa-briefcase"></i></button>
                         </td>
                     </tr>
                 `;
@@ -461,6 +521,10 @@ function onLoginSuccess(user, userData) {
     function setupAuthEventListeners() {
         const nameField = document.getElementById('name-field-container');
         const cpfField = document.getElementById('cpf-field-container'); 
+        const phoneField = document.getElementById('phone-field-container'); // NOVO
+        const phoneInput = document.getElementById('phone-input'); // NOVO
+        const companyField = document.getElementById('company-field-container'); // NOVO
+        const companyInput = document.getElementById('company-input'); // NOVO
         const nameInput = document.getElementById('name-input');
         const cpfInput = document.getElementById('cpf-input'); 
         const emailInput = document.getElementById('email-input');
@@ -481,6 +545,22 @@ function onLoginSuccess(user, userData) {
         const closePayModal = document.getElementById('close-payment-modal-btn');
         const loginModalOverlay = document.getElementById('name-modal-overlay');
         const loginModal = document.getElementById('name-prompt-modal');
+        // ... (Logo após as definições das variáveis dentro de setupAuthEventListeners)
+
+        // --- LÓGICA DO ENTER PARA LOGIN ---
+        // Se apertar Enter no campo de senha, clica no botão de entrar
+        passwordInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                btnLogin.click();
+            }
+        });
+
+        // (Opcional) Se apertar Enter no email, pula para a senha
+        emailInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                passwordInput.focus();
+            }
+        });
 
         function openPaymentModal() {
             expiredModal.classList.add('show');
@@ -511,6 +591,8 @@ function onLoginSuccess(user, userData) {
             signupGroup.classList.remove('hidden');
             nameField.classList.remove('hidden');
             cpfField.classList.remove('hidden'); 
+            phoneField.classList.remove('hidden'); // MOSTRAR TELEFONE
+            companyField.classList.remove('hidden');
             authTitle.textContent = "Criar Nova Conta";
             authMsg.textContent = "Cadastre-se para o Período de Experiência.";
             feedback.textContent = "";
@@ -520,7 +602,9 @@ function onLoginSuccess(user, userData) {
             signupGroup.classList.add('hidden');
             nameField.classList.add('hidden');
             cpfField.classList.add('hidden'); 
-            authTitle.textContent = "Área do Aluno";
+            phoneField.classList.add('hidden'); // ESCONDER TELEFONE
+            companyField.classList.add('hidden');
+            authTitle.textContent = "Acesso ao Sistema";
             authMsg.textContent = "Acesso Restrito";
             feedback.textContent = "";
         });
@@ -544,11 +628,13 @@ function onLoginSuccess(user, userData) {
             }
         });
         btnSignup?.addEventListener('click', async () => {
+            const phone = phoneInput.value; // NOVO
+            const company = companyInput.value; // NOVO
             const name = nameInput.value;
             const email = emailInput.value;
             const password = passwordInput.value;
             const cpf = cpfInput.value;
-            if (!name || !email || !password || !cpf) {
+            if (!name || !email || !password || !cpf || !phone) {
                 feedback.textContent = "Todos os campos são obrigatórios.";
                 feedback.className = "text-center text-sm mt-4 font-semibold text-red-500";
                 return;
@@ -556,7 +642,7 @@ function onLoginSuccess(user, userData) {
             feedback.textContent = "Criando conta...";
             feedback.className = "text-center text-sm mt-4 text-blue-400 font-semibold";
             try {
-                await FirebaseCourse.signUpWithEmail(name, email, password, cpf);
+                await FirebaseCourse.signUpWithEmail(name, email, password, cpf, company, phone);
                 feedback.textContent = "Sucesso! Iniciando...";
             } catch (error) {
                 feedback.className = "text-center text-sm mt-4 text-red-400 font-semibold";
@@ -2005,6 +2091,305 @@ function onLoginSuccess(user, userData) {
             prompt("Copie a chave manualmente:", key);
         });
     };
+
+    // --- LÓGICA DA LANDING PAGE PROFISSIONAL ---
+
+// Rola suavemente até a história
+window.scrollToStory = function() {
+    const section = document.getElementById('story-section');
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Entra no sistema e verifica login (VERSÃO OTIMIZADA PARA MOBILE)
+window.enterSystem = function() {
+    const landing = document.getElementById('landing-hero');
     
+    if (landing) {
+        // 1. Prepara a animação (Hardware Acceleration)
+        landing.style.willChange = 'transform, opacity';
+        landing.style.transition = 'transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.8s ease';
+        
+        // 2. Força o navegador a reconhecer o estado atual antes de mudar
+        requestAnimationFrame(() => {
+            // Aplica o movimento
+            landing.style.transform = 'translate3d(0, -100%, 0)'; // translate3d ativa a GPU do celular
+            landing.style.opacity = '0';
+        });
+    }
+
+    // 3. Aguarda a animação terminar para destravar o scroll e remover a capa
+    setTimeout(() => {
+        if (landing) landing.classList.add('hidden'); // Remove do DOM
+        document.body.classList.remove('landing-active'); // Destrava a rolagem do corpo principal SÓ AGORA
+        
+        // Verifica autenticação
+        if (!currentUserData) {
+            console.log("Ativando verificação de autenticação...");
+            if (typeof FirebaseCourse !== 'undefined') {
+                FirebaseCourse.checkAuth((user, userData) => {
+                    onLoginSuccess(user, userData);
+                });
+            }
+        }
+    }, 800); // Tempo sincronizado com a transição (0.8s)
+}
+// --- SISTEMA DE ANIMAÇÃO E NOTEBOOK (COM DICA MOBILE) ---
+function initScrollReveal() {
+    const laptop = document.getElementById('laptop-lid');
+    const heroContainer = document.getElementById('landing-hero');
+    const tapHint = document.getElementById('notebook-tap-hint');
+
+    // Função Unificada: Abre o notebook e esconde a dica
+    const openLaptop = () => {
+        if (laptop && !laptop.classList.contains('open')) {
+            // 1. Abre a tampa
+            laptop.classList.add('open');
+            
+            // 2. Some com a dica visualmente
+            if (tapHint) {
+                tapHint.style.opacity = '0'; // Fica transparente
+                // Remove do layout após o efeito visual (0.5s)
+                setTimeout(() => {
+                    tapHint.style.display = 'none'; 
+                }, 500);
+            }
+        }
+    };
+
+    // --- A. GATILHO POR ROLAGEM (Desktop/Geral) ---
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Anima textos
+                if (entry.target.classList.contains('reveal-on-scroll')) {
+                    entry.target.classList.remove('opacity-0', 'translate-y-10', 'translate-x-10', '-translate-x-10', 'scale-95');
+                    observer.unobserve(entry.target);
+                }
+                
+                // Anima Notebook (Se o navegador detectar a rolagem)
+                if (entry.target.id === 'laptop-lid') {
+                    openLaptop(); 
+                    observer.unobserve(entry.target);
+                }
+            }
+        });
+    }, {
+        threshold: 0.1, // Sensibilidade alta (10%)
+        root: heroContainer // Importante para detectar dentro da capa
+    });
+
+    // Registra elementos
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+    if (laptop) observer.observe(laptop);
+
+    // --- B. GATILHO POR TOQUE (Mobile/Interação) ---
+    if (laptop) {
+        // Se clicar no próprio notebook
+        laptop.addEventListener('click', openLaptop);
+        
+        // Se clicar na área envolta (wrapper) - ajuda em telas pequenas
+        const wrapper = document.querySelector('.laptop-wrapper');
+        if(wrapper) {
+            wrapper.addEventListener('click', openLaptop);
+            wrapper.addEventListener('touchstart', openLaptop, {passive: true});
+        }
+    }
+}
+// Rolar para a próxima seção
+window.scrollToNextSection = function() {
+    const section = document.getElementById('features-section');
+    if(section) section.scrollIntoView({ behavior: 'smooth' });
+}
+    // --- FUNÇÃO PARA INICIAR LOGIN COMO GESTOR ---
+window.startManagerLogin = function() {
+    // 1. Salva na memória que o usuário quer ir para o painel
+    localStorage.setItem('open_manager_after_login', 'true');
+    
+    // 2. Chama a função que abre o modal de login
+    enterSystem();
+};
+  // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
+let managerCachedUsers = [];
+
+// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 2.0 (COM FILTRO E EDIÇÃO) ---
+window.openManagerPanel = async function() {
+    // 1. Verificações de Segurança
+    if (!currentUserData) { enterSystem(); return; }
+    if (currentUserData.isAdmin !== true && currentUserData.isManager !== true) {
+        alert("⛔ ACESSO NEGADO\n\nSua conta não possui permissão de Gestor.");
+        return;
+    }
+
+    const modal = document.getElementById('manager-modal');
+    const overlay = document.getElementById('admin-modal-overlay');
+    
+    modal.classList.add('show');
+    overlay.classList.add('show');
+    
+    document.getElementById('close-manager-modal').onclick = () => {
+        modal.classList.remove('show');
+        overlay.classList.remove('show');
+    };
+
+    const tbody = document.getElementById('manager-table-body');
+    const filterSelect = document.getElementById('mgr-filter-turma');
+    
+    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>';
+
+    try {
+        // Busca usuários no banco
+        const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
+        
+        managerCachedUsers = []; // Limpa cache
+        let uniqueTurmas = new Set(); // Para guardar nomes únicos de turmas
+
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            u.uid = doc.id; // Guarda o ID para edição
+            u.company = u.company || 'Particular'; // Garante valor padrão
+            managerCachedUsers.push(u);
+            uniqueTurmas.add(u.company);
+        });
+
+        // Popula o Filtro de Turmas
+        filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+        uniqueTurmas.forEach(turma => {
+            filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+        });
+
+        // Renderiza a tabela inicial (Todos)
+        renderManagerTable(managerCachedUsers);
+
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+    }
+};
+
+// FUNÇÃO AUXILIAR: RENDERIZA A TABELA (USADA NO INÍCIO E NO FILTRO)
+window.renderManagerTable = function(usersList) {
+    const tbody = document.getElementById('manager-table-body');
+    const totalCourseModules = 52;
+    let html = '';
+    let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
+
+    if (usersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado neste filtro.</td></tr>';
+        return;
+    }
+
+    usersList.forEach(u => {
+        // Dados
+        const phone = u.phone || 'Não informado';
+        const modulesDone = u.completedModules ? u.completedModules.length : 0;
+        
+        // Status e Validade
+        let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded-full font-bold uppercase">TRIAL</span>';
+        if (u.status === 'premium') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded-full font-bold uppercase">PREMIUM</span>';
+        
+        let validadeStr = '-';
+        if (u.acesso_ate) {
+            const dataValidade = new Date(u.acesso_ate);
+            validadeStr = dataValidade.toLocaleDateString('pt-BR');
+            if (new Date() > dataValidade) validadeStr = `<span class="text-red-500 font-bold">${validadeStr} (Exp)</span>`;
+        }
+
+        // Progresso
+        const percent = Math.min(100, Math.round((modulesDone / totalCourseModules) * 100));
+        let progressColor = 'bg-red-500';
+        if (percent > 30) progressColor = 'bg-yellow-500';
+        if (percent > 80) progressColor = 'bg-green-500';
+
+        // Estatísticas
+        stats.total++;
+        if (percent >= 100) stats.completed++;
+        else if (percent > 0) stats.progress++;
+        else stats.pending++;
+
+        html += `
+            <tr class="hover:bg-gray-50 border-b border-gray-100 group">
+                <td class="px-4 py-3">
+                    <div class="font-bold text-gray-800">${u.name}</div>
+                    <div class="text-xs text-gray-500">${u.email}</div>
+                </td>
+                <td class="px-4 py-3 text-gray-600 text-xs">
+                    <i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}
+                </td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100">${u.company}</span>
+                        <button onclick="editUserClass('${u.uid}', '${u.company}')" class="text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100" title="Mudar Turma">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center">
+                        <div class="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
+                            <div class="${progressColor} h-1.5 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                        <span class="text-xs font-bold text-gray-600">${percent}%</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3">${statusBadge}</td>
+                <td class="px-4 py-3 text-xs font-mono text-gray-600">${validadeStr}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+
+    // Atualiza Cards de Estatística
+    document.getElementById('mgr-total-users').innerText = stats.total;
+    document.getElementById('mgr-completed').innerText = stats.completed;
+    document.getElementById('mgr-progress').innerText = stats.progress;
+    document.getElementById('mgr-pending').innerText = stats.pending;
+};
+
+// FUNÇÃO DE FILTRO (ACIONADA PELO SELECT)
+window.filterManagerTable = function() {
+    const selectedTurma = document.getElementById('mgr-filter-turma').value;
+    
+    if (selectedTurma === 'TODOS') {
+        renderManagerTable(managerCachedUsers);
+    } else {
+        const filtered = managerCachedUsers.filter(u => u.company === selectedTurma);
+        renderManagerTable(filtered);
+    }
+};
+
+// FUNÇÃO DE EDITAR TURMA
+window.editUserClass = async function(uid, oldClass) {
+    const newClass = prompt("Digite o novo nome da Turma/Empresa:", oldClass);
+    
+    if (newClass && newClass !== oldClass) {
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ 
+                company: newClass.toUpperCase() 
+            });
+            alert("Turma atualizada com sucesso!");
+            openManagerPanel(); // Recarrega para atualizar dados e filtros
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
+        }
+    }
+};
+    // Função para dar/tirar poder de Gestor
+window.toggleManagerRole = async function(uid, currentStatus) {
+    const novoStatus = !currentStatus; // Inverte (se era true vira false, e vice-versa)
+    const acao = novoStatus ? "PROMOVER" : "REMOVER";
+    
+    if(confirm(`Deseja ${acao} este usuário como Gestor de Empresa?`)) {
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ 
+                isManager: novoStatus 
+            });
+            alert(`Sucesso! Permissão de Gestor ${novoStatus ? 'CONCEDIDA' : 'REMOVIDA'}.`);
+            openAdminPanel(); // Atualiza a lista
+        } catch(e) {
+            alert("Erro: " + e.message);
+        }
+    }
+};
     init();
 });
