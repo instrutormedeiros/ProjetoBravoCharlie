@@ -322,24 +322,26 @@ function init() {
         startOnboardingTour(false); 
 
         // --- CORREÇÃO BLINDADA B2B ---
-        // Verifica se a intenção de abrir o painel existe
-        if (localStorage.getItem('open_manager_after_login') === 'true') {
-            localStorage.removeItem('open_manager_after_login'); // Limpa a memória
-            
-            // Tenta abrir o painel após 1.5 segundos
+// Verifica se a intenção de abrir o painel existe
+if (localStorage.getItem("openmanagerafterlogin") === "true") {
+    localStorage.removeItem("openmanagerafterlogin");
+    
+    // Aguarda o Firebase estar pronto antes de abrir o painel
+    setTimeout(() => {
+        if (window.fbDB && typeof openManagerPanel === "function") {
+            console.log("🔓 Abrindo painel do gestor automaticamente...");
+            openManagerPanel();
+        } else {
+            console.warn("⚠️ Firebase ainda não está pronto. Tentando novamente em 3 segundos...");
             setTimeout(() => {
-                const modal = document.getElementById('manager-modal');
-                if (modal && typeof openManagerPanel === 'function') {
+                if (window.fbDB && typeof openManagerPanel === "function") {
                     openManagerPanel();
-                } else {
-                    // Se falhar (elemento não existe ainda), tenta de novo em 3 segundos
-                    console.log("Tentativa 1 falhou, tentando novamente...");
-                    setTimeout(() => {
-                        if(typeof openManagerPanel === 'function') openManagerPanel();
-                    }, 3000);
                 }
-            }, 1500); 
+            }, 3000);
         }
+    }, 2000);  // Aumentei de 1500ms para 2000ms
+}
+
     // --- TRAVA DE SEGURANÇA (ADICIONE ISTO AQUI) ---
         // Isso impede que os botões sejam duplicados quando o banco atualiza
         document.body.setAttribute('data-app-ready', 'true');
@@ -2244,79 +2246,94 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 4.0 (FORCE SERVER FETCH) ---
 window.openManagerPanel = async function() {
-    // 1. Verificações de Segurança
-    if (!currentUserData) { enterSystem(); return; }
-    if (currentUserData.isAdmin !== true && currentUserData.isManager !== true) {
-        alert("⛔ ACESSO NEGADO\n\nSua conta não possui permissão de Gestor.");
+    // ========================================
+    // PROTEÇÃO: Aguarda o Firebase estar pronto
+    // ========================================
+    if (!window.fbDB) {
+        console.error("❌ Firebase não inicializado ainda!");
+        alert("Sistema ainda carregando. Aguarde alguns segundos e tente novamente.");
+        return;
+    }
+    
+    if (!currentUserData) {
+        alert("Você precisa estar logado como gestor.");
         return;
     }
 
-    const modal = document.getElementById('manager-modal');
-    const overlay = document.getElementById('admin-modal-overlay');
+    const modal = document.getElementById("manager-modal");
+    const overlay = document.getElementById("admin-modal-overlay");
     
-    modal.classList.add('show');
-    overlay.classList.add('show');
-    
-    // --- Botão de Sincronizar Manual ---
-    const headerTitleDiv = modal.querySelector('.bg-blue-900 > div');
-    if (headerTitleDiv && !document.getElementById('mgr-force-sync-btn')) {
-        const btn = document.createElement('button');
-        btn.id = 'mgr-force-sync-btn';
-        btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
-        btn.innerHTML = '<i class="fas fa-sync"></i> Atualizar Lista';
-        btn.onclick = function() {
-            window.openManagerPanel(); // Recarrega a lista
-        };
-        headerTitleDiv.appendChild(btn);
+    if (!modal || !overlay) {
+        console.error("❌ Elementos do painel não encontrados no HTML");
+        return;
     }
-    // ------------------------------------------
 
-    document.getElementById('close-manager-modal').onclick = () => {
-        modal.classList.remove('show');
-        overlay.classList.remove('show');
+    modal.classList.add("show");
+    overlay.classList.add("show");
+
+    // Mostra o nome da empresa/turma do gestor
+    const companyNameEl = document.getElementById("manager-company-name");
+    if (companyNameEl) {
+        companyNameEl.textContent = currentUserData.company || "Sem Turma Definida";
+    }
+
+    document.getElementById("close-manager-modal").onclick = () => {
+        modal.classList.remove("show");
+        overlay.classList.remove("show");
     };
 
-    const tbody = document.getElementById('manager-table-body');
-    const filterSelect = document.getElementById('mgr-filter-turma');
-    
-    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Buscando dados recentes na nuvem...</td></tr>';
+    const tbody = document.getElementById("manager-table-body");
+    const filterSelect = document.getElementById("mgr-filter-turma");
+
+    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>`;
 
     try {
-       const snapshot = await window.fbDB.collection("users").orderBy("name").get({ source: "server" });
-console.log("📊 TOTAL DE USUÁRIOS CARREGADOS:", snapshot.size);
+        // ========================================
+        // CORREÇÃO: Força buscar dados novos do servidor
+        // ========================================
+        console.log("📊 Buscando usuários do Firebase...");
+        const snapshot = await window.fbDB.collection("users").orderBy("name").get({ source: "server" });
+        
+        console.log("✅ Total de usuários encontrados:", snapshot.size);
 
-snapshot.forEach(doc => {
-    const u = doc.data()
-    console.log("👤 Usuário:", u.name, "| Progresso:", u.completedModules);  // ← DEBUG
-    u.uid = doc.id
-    u.company = u.company || "Particular"
-    
-    // Garante que completedModules seja sempre um array
-    if (!u.completedModules || !Array.isArray(u.completedModules)) {
-        u.completedModules = [];
-    }
-    
-    managerCachedUsers.push(u)
-    uniqueTurmas.add(u.company)
-})
+        managerCachedUsers = [];
+        let uniqueTurmas = new Set();
 
-        // Refaz o filtro apenas se estiver vazio ou se quiser resetar
-        if(filterSelect.options.length <= 1) {
-            filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
-            uniqueTurmas.forEach(turma => {
-                filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
-            });
-        }
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            u.uid = doc.id;
+            u.company = u.company || "Particular";
+            
+            // ========================================
+            // CORREÇÃO CRÍTICA: Garante que completedModules seja array
+            // ========================================
+            if (!u.completedModules || !Array.isArray(u.completedModules)) {
+                u.completedModules = [];
+            }
+            
+            // DEBUG: Mostra no console o progresso de cada aluno
+            console.log("👤", u.name, "| Progresso:", u.completedModules.length, "módulos");
+            
+            managerCachedUsers.push(u);
+            uniqueTurmas.add(u.company);
+        });
 
+        // Popula o filtro de turmas
+        filterSelect.innerHTML = `<option value="TODOS">Todas as Turmas</option>`;
+        [...uniqueTurmas].sort().forEach(t => {
+            filterSelect.innerHTML += `<option value="${t}">${t}</option>`;
+        });
+
+        // Renderiza a tabela
         renderManagerTable(managerCachedUsers);
 
-    } catch (error) {
-        console.error(error);
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados: ' + error.message + '</td></tr>';
+    } catch (err) {
+        console.error("❌ Erro ao carregar usuários:", err);
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
     }
 };
+
 
 // FUNÇÃO AUXILIAR: RENDERIZA A TABELA (VERSÃO FINAL BLINDADA)
 window.renderManagerTable = function(usersList) {
