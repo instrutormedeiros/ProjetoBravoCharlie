@@ -2315,10 +2315,12 @@ window.openManagerPanel = async function() {
     }
 };
 
-// FUNÇÃO AUXILIAR: RENDERIZA A TABELA (USADA NO INÍCIO E NO FILTRO)
+// FUNÇÃO AUXILIAR: RENDERIZA A TABELA (VERSÃO FINAL BLINDADA)
 window.renderManagerTable = function(usersList) {
     const tbody = document.getElementById('manager-table-body');
+    // Correção 1: Contagem total dinâmica
     const totalCourseModules = Object.keys(window.moduleContent || {}).length || 62;
+    
     let html = '';
     let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
 
@@ -2330,7 +2332,10 @@ window.renderManagerTable = function(usersList) {
     usersList.forEach(u => {
         // Dados
         const phone = u.phone || 'Não informado';
-        const modulesDone = u.completedModules ? u.completedModules.length : 0;
+        
+        // --- AQUI ESTÁ A SUA CORREÇÃO (BLINDAGEM DE ARRAY) ---
+        const modulesDone = (u.completedModules && Array.isArray(u.completedModules)) ? u.completedModules.length : 0;
+        // -----------------------------------------------------
         
         // Status e Validade
         let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded-full font-bold uppercase">TRIAL</span>';
@@ -2343,8 +2348,12 @@ window.renderManagerTable = function(usersList) {
             if (new Date() > dataValidade) validadeStr = `<span class="text-red-500 font-bold">${validadeStr} (Exp)</span>`;
         }
 
-        // Progresso
-        const percent = Math.min(100, Math.round((modulesDone / totalCourseModules) * 100));
+        // Progresso (Cálculo seguro)
+        let percent = 0;
+        if (totalCourseModules > 0) {
+            percent = Math.min(100, Math.round((modulesDone / totalCourseModules) * 100));
+        }
+        
         let progressColor = 'bg-red-500';
         if (percent > 30) progressColor = 'bg-yellow-500';
         if (percent > 80) progressColor = 'bg-green-500';
@@ -2362,13 +2371,13 @@ window.renderManagerTable = function(usersList) {
                     <div class="text-xs text-gray-500">${u.email}</div>
                 </td>
                 <td class="px-4 py-3 text-gray-600 text-xs">
-    <div class="flex items-center gap-2">
-        <span><i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}</span>
-        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Editar WhatsApp">
-            <i class="fas fa-pencil-alt"></i>
-        </button>
-    </div>
-</td>
+                    <div class="flex items-center gap-2">
+                        <span><i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}</span>
+                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Editar WhatsApp">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                </td>
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100">${u.company}</span>
