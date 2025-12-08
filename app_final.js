@@ -2244,8 +2244,7 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 2.0 (COM FILTRO E EDIÇÃO) ---
-// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 3.0 (COM BOTÃO SYNC) ---
+// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 4.0 (FORCE SERVER FETCH) ---
 window.openManagerPanel = async function() {
     // 1. Verificações de Segurança
     if (!currentUserData) { enterSystem(); return; }
@@ -2260,31 +2259,15 @@ window.openManagerPanel = async function() {
     modal.classList.add('show');
     overlay.classList.add('show');
     
-    // --- NOVO: Botão de Sincronizar Manual ---
+    // --- Botão de Sincronizar Manual ---
     const headerTitleDiv = modal.querySelector('.bg-blue-900 > div');
     if (headerTitleDiv && !document.getElementById('mgr-force-sync-btn')) {
         const btn = document.createElement('button');
         btn.id = 'mgr-force-sync-btn';
         btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
-        btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
-        btn.onclick = async function() {
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            btn.disabled = true;
-            await window.saveProgressToCloud();
-            
-            // Recarrega a tabela após 1 segundo
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-check"></i> Atualizado!';
-                btn.className = 'mt-2 bg-blue-600 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1';
-                // Recarrega os dados da tabela
-                window.openManagerPanel();
-                
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
-                    btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
-                }, 2000);
-            }, 1000);
+        btn.innerHTML = '<i class="fas fa-sync"></i> Atualizar Lista';
+        btn.onclick = function() {
+            window.openManagerPanel(); // Recarrega a lista
         };
         headerTitleDiv.appendChild(btn);
     }
@@ -2298,10 +2281,12 @@ window.openManagerPanel = async function() {
     const tbody = document.getElementById('manager-table-body');
     const filterSelect = document.getElementById('mgr-filter-turma');
     
-    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Buscando dados recentes na nuvem...</td></tr>';
 
     try {
-        const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
+        // --- AQUI ESTÁ A CORREÇÃO MÁGICA ---
+        // { source: 'server' } obriga o navegador a ir buscar o dado novo na internet
+        const snapshot = await window.__fbDB.collection('users').orderBy('name').get({ source: 'server' });
         
         managerCachedUsers = []; 
         let uniqueTurmas = new Set(); 
@@ -2314,16 +2299,19 @@ window.openManagerPanel = async function() {
             uniqueTurmas.add(u.company);
         });
 
-        filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
-        uniqueTurmas.forEach(turma => {
-            filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
-        });
+        // Refaz o filtro apenas se estiver vazio ou se quiser resetar
+        if(filterSelect.options.length <= 1) {
+            filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+            uniqueTurmas.forEach(turma => {
+                filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+            });
+        }
 
         renderManagerTable(managerCachedUsers);
 
     } catch (error) {
         console.error(error);
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados: ' + error.message + '</td></tr>';
     }
 };
 
