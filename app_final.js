@@ -292,6 +292,14 @@ function init() {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
+// Libera Botão de Gestor se for manager
+const managerBtn = document.getElementById("manager-panel-btn");
+if (userData.isManager === true) {
+    if (managerBtn) {
+        managerBtn.classList.remove("hidden");
+        console.log("✅ Botão de gestor liberado!");
+    }
+}
 
         checkTrialStatus(userData.acesso_ate);
 
@@ -1821,6 +1829,15 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
             if(n < totalModules) loadModuleContent(`module${n+1}`);
             nextButton?.classList.remove('blinking-button');
             });
+        // Listener do botão do painel de gestor
+const managerPanelBtn = document.getElementById("manager-panel-btn");
+if (managerPanelBtn) {
+    managerPanelBtn.addEventListener("click", () => {
+        console.log("🔓 Botão de gestor clicado!");
+        openManagerPanel();
+    });
+}
+
 // --- NOVO: Botão Manual de Salvar Progresso (Rodapé) ---
 document.getElementById('manual-sync-btn')?.addEventListener('click', async () => {
     const btn = document.getElementById('manual-sync-btn');
