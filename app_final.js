@@ -2295,6 +2295,11 @@ window.openManagerPanel = async function() {
             const u = doc.data();
             u.uid = doc.id; 
             u.company = u.company || 'Particular'; 
+            // Garante que completedModules seja sempre um array
+if (!u.completedModules || !Array.isArray(u.completedModules)) {
+    u.completedModules = [];
+}
+
             managerCachedUsers.push(u);
             uniqueTurmas.add(u.company);
         });
