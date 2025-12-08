@@ -1819,7 +1819,24 @@ function init() {
             if(n < totalModules) loadModuleContent(`module${n+1}`);
             nextButton?.classList.remove('blinking-button');
             });
+// --- NOVO: Botão Manual de Salvar Progresso (Rodapé) ---
+document.getElementById('manual-sync-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('manual-sync-btn');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
+    btn.disabled = true;
 
+    try {
+        await window.saveProgressToCloud(); // Chama a função blindada que já criamos
+        alert("✅ Sucesso!\nSeu progresso foi salvo na nuvem.");
+    } catch (error) {
+        alert("❌ Erro ao salvar: " + error.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
             // --- ADICIONE ISTO NO FINAL DA FUNÇÃO addEventListeners ---
         
         // Botão manual do Tour (Garante que funcione mesmo clicando várias vezes)
