@@ -2284,25 +2284,23 @@ window.openManagerPanel = async function() {
     tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Buscando dados recentes na nuvem...</td></tr>';
 
     try {
-        // --- AQUI ESTÁ A CORREÇÃO MÁGICA ---
-        // { source: 'server' } obriga o navegador a ir buscar o dado novo na internet
-        const snapshot = await window.__fbDB.collection('users').orderBy('name').get({ source: 'server' });
-        
-        managerCachedUsers = []; 
-        let uniqueTurmas = new Set(); 
+       const snapshot = await window.fbDB.collection("users").orderBy("name").get({ source: "server" });
+console.log("📊 TOTAL DE USUÁRIOS CARREGADOS:", snapshot.size);
 
-        snapshot.forEach(doc => {
-            const u = doc.data();
-            u.uid = doc.id; 
-            u.company = u.company || 'Particular'; 
-            // Garante que completedModules seja sempre um array
-if (!u.completedModules || !Array.isArray(u.completedModules)) {
-    u.completedModules = [];
-}
-
-            managerCachedUsers.push(u);
-            uniqueTurmas.add(u.company);
-        });
+snapshot.forEach(doc => {
+    const u = doc.data()
+    console.log("👤 Usuário:", u.name, "| Progresso:", u.completedModules);  // ← DEBUG
+    u.uid = doc.id
+    u.company = u.company || "Particular"
+    
+    // Garante que completedModules seja sempre um array
+    if (!u.completedModules || !Array.isArray(u.completedModules)) {
+        u.completedModules = [];
+    }
+    
+    managerCachedUsers.push(u)
+    uniqueTurmas.add(u.company)
+})
 
         // Refaz o filtro apenas se estiver vazio ou se quiser resetar
         if(filterSelect.options.length <= 1) {
@@ -2487,6 +2485,7 @@ window.toggleManagerRole = async function(uid, currentStatus) {
 };
  // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
 window.saveProgressToCloud = function() {
+    console.log("🔥 SALVANDO PROGRESSO - INICIADO");  // ← ADICIONE AQUI
     if (currentUserData && currentUserData.uid) {
         // 1. Tenta pegar da variável global
         let modulesToSave = completedModules;
