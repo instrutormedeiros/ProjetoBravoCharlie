@@ -337,7 +337,12 @@ function init() {
                 }
             }, 1500); 
         }
+    // --- TRAVA DE SEGURANÇA (ADICIONE ISTO AQUI) ---
+        // Isso impede que os botões sejam duplicados quando o banco atualiza
+        document.body.setAttribute('data-app-ready', 'true');
+
     }
+    
     // --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
     window.openAdminPanel = async function() {
         if (!currentUserData || !currentUserData.isAdmin) return;
