@@ -2228,6 +2228,7 @@ window.startManagerLogin = function() {
 let managerCachedUsers = [];
 
 // --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 2.0 (COM FILTRO E EDIÇÃO) ---
+// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 3.0 (COM BOTÃO SYNC) ---
 window.openManagerPanel = async function() {
     // 1. Verificações de Segurança
     if (!currentUserData) { enterSystem(); return; }
@@ -2242,6 +2243,36 @@ window.openManagerPanel = async function() {
     modal.classList.add('show');
     overlay.classList.add('show');
     
+    // --- NOVO: Botão de Sincronizar Manual ---
+    const headerTitleDiv = modal.querySelector('.bg-blue-900 > div');
+    if (headerTitleDiv && !document.getElementById('mgr-force-sync-btn')) {
+        const btn = document.createElement('button');
+        btn.id = 'mgr-force-sync-btn';
+        btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
+        btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
+        btn.onclick = async function() {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            btn.disabled = true;
+            await window.saveProgressToCloud();
+            
+            // Recarrega a tabela após 1 segundo
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Atualizado!';
+                btn.className = 'mt-2 bg-blue-600 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1';
+                // Recarrega os dados da tabela
+                window.openManagerPanel();
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
+                    btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
+                }, 2000);
+            }, 1000);
+        };
+        headerTitleDiv.appendChild(btn);
+    }
+    // ------------------------------------------
+
     document.getElementById('close-manager-modal').onclick = () => {
         modal.classList.remove('show');
         overlay.classList.remove('show');
@@ -2253,27 +2284,24 @@ window.openManagerPanel = async function() {
     tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>';
 
     try {
-        // Busca usuários no banco
         const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
         
-        managerCachedUsers = []; // Limpa cache
-        let uniqueTurmas = new Set(); // Para guardar nomes únicos de turmas
+        managerCachedUsers = []; 
+        let uniqueTurmas = new Set(); 
 
         snapshot.forEach(doc => {
             const u = doc.data();
-            u.uid = doc.id; // Guarda o ID para edição
-            u.company = u.company || 'Particular'; // Garante valor padrão
+            u.uid = doc.id; 
+            u.company = u.company || 'Particular'; 
             managerCachedUsers.push(u);
             uniqueTurmas.add(u.company);
         });
 
-        // Popula o Filtro de Turmas
         filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
         uniqueTurmas.forEach(turma => {
             filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
         });
 
-        // Renderiza a tabela inicial (Todos)
         renderManagerTable(managerCachedUsers);
 
     } catch (error) {
@@ -2438,13 +2466,16 @@ window.toggleManagerRole = async function(uid, currentStatus) {
         }
     }
 };
-    // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE ---
-function saveProgressToCloud() {
+   // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (ATUALIZADA) ---
+window.saveProgressToCloud = function() {
     if (currentUserData && currentUserData.uid) {
-        window.__fbDB.collection('users').doc(currentUserData.uid).update({
+        return window.__fbDB.collection('users').doc(currentUserData.uid).update({
             completedModules: completedModules
+        }).then(() => {
+            console.log("Progresso salvo com sucesso!");
         }).catch(err => console.error("Erro ao salvar progresso:", err));
     }
+    return Promise.resolve();
 }
     init();
 });
