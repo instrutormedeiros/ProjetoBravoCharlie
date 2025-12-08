@@ -207,6 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 function init() {
+    // ========================================
+    // AGUARDA O FIREBASE CARREGAR
+    // ========================================
+    if (typeof firebase === 'undefined') {
+        console.warn("⚠️ Firebase não carregado ainda. Aguardando...");
+        setTimeout(init, 500); // Tenta novamente em 0.5 segundos
+        return;
+    }
+    
+    console.log("✅ Firebase carregado! Iniciando sistema...");
     document.body.classList.add('landing-active');
     
     // ---> ADICIONE ISSO AQUI:
