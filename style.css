@@ -35,13 +35,15 @@
     --border-color: #374151;
 }
 
-body { 
-    font-family: 'Lato', sans-serif; 
-    scroll-behavior: smooth; 
-    background-color: var(--light-bg); 
-    color: var(--dark-text); 
-    padding-bottom: 70px; /* Espaço para menu mobile */
-    transition: background-color 0.3s, color 0.3s; 
+body {
+    min-height: 100vh; /* Ocupa no mínimo a tela toda */
+    height: auto;      /* Permite crescer com o conteúdo (FIM DA ROLAGEM INFINITA) */
+    font-family: 'Lato', sans-serif;
+    scroll-behavior: smooth;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    padding-bottom: 70px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 @media (max-width: 1024px) {
@@ -101,7 +103,7 @@ h1, h2, h3 { font-family: 'Lora', serif; }
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: shine-gold 4s linear infinite;
+    animation: shine-gold 8s linear infinite;
     font-weight: 800;
     letter-spacing: 0.5px;
 }
@@ -261,6 +263,11 @@ body.exam-mode .lg\:w-2\/3 {
     color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: transform 0.3s ease;
 }
 #accessibility-fab:hover { transform: scale(1.1); }
+/* --- CORREÇÃO: ESCONDER ACESSIBILIDADE NA CAPA --- */
+body.landing-active #accessibility-fab,
+body.landing-active #accessibility-menu {
+    display: none !important;
+}
 
 #accessibility-menu {
     position: fixed; bottom: 140px; right: 20px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 1rem; padding: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 49; display: flex; flex-direction: column; gap: 0.5rem; min-width: 200px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s ease;
@@ -876,4 +883,121 @@ body.focus-mode #main-wrapper { padding-bottom: 2rem; }
 .driver-popover.driverjs-theme {
     max-width: 250px; /* Evita que fique muito largo no mobile */
 }
+
+/* Animação de Entrada dos Elementos */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 60px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Background fixo para efeito Parallax no mobile */
+.bg-fixed {
+    background-attachment: fixed;
+}
+
+/* Scrollbar invisível na capa para elegância */
+#landing-hero::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+/* CAPA: comportamento em tela cheia, mas controlada por classe no BODY */
+#landing-hero {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background-color: #050a14;
+
+    /* Habilita rolagem suave e elástica apenas na capa */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+
+    /* Altura total correta em celulares */
+    height: 100vh;
+    height: 100dvh; /* Dynamic Viewport Height */
+}
+
+/* Conteúdo interno da capa */
+#landing-hero > div {
+    min-height: 100%;
+    height: auto !important;
+    position: relative;
+    padding-bottom: 0 !important;
+}
+
+/* Quando a landing está ativa: o BODY NÃO rola */
+body.landing-active {
+    overflow: hidden;          /* o corpo não rola, só a capa */
+    padding-bottom: 0 !important;
+}
+
+/* Botão com corte diagonal (usado na capa) */
+.clip-path-slant {
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+    border-radius: 4px;
+}
+
+/* Dá um respiro para a fonte itálica não cortar na capa */
+.fix-text-clip {
+    padding-right: 0.2em;
+}
+
+/* --- EFEITO NOTEBOOK 3D DA CAPA --- */
+.laptop-wrapper {
+    perspective: 1000px;              /* Cria o ambiente 3D */
+    perspective-origin: 50% 100%;
+}
+
+.laptop-lid {
+    transform-origin: bottom;
+    transform-style: preserve-3d;
+    transition: transform 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    /* Começa fechado */
+    transform: rotateX(-90deg);
+
+    /* Força a GPU do celular a renderizar isso */
+    will-change: transform;
+    -webkit-backface-visibility: hidden; /* Ajuda no Safari/iOS */
+}
+
+/* Classe que abre a tampa do notebook */
+.laptop-lid.open {
+    transform: rotateX(0deg) !important; /* garante que nada sobrescreva */
+}
+
+/* Detalhes do Accordion (FAQ) da capa */
+details > summary {
+    list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details[open] summary ~ * {
+    animation: sweep .5s ease-in-out;
+}
+
+@keyframes sweep {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
+
+
+
 
