@@ -1,7 +1,7 @@
-/* sw.js — Service Worker V4 (Forçando atualização para exibir Ferramentas)
+/* sw.js — Service Worker V8 (Forçando atualização para exibir Ferramentas)
    - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v7'; // <--- MUDAMOS PARA V7
+const CACHE_NAME = 'pbc-static-v8'; // <--- MUDAMOS PARA V8
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
