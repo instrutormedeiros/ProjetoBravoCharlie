@@ -2313,8 +2313,13 @@ window.renderManagerTable = function(usersList) {
                     <div class="text-xs text-gray-500">${u.email}</div>
                 </td>
                 <td class="px-4 py-3 text-gray-600 text-xs">
-                    <i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}
-                </td>
+    <div class="flex items-center gap-2">
+        <span><i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}</span>
+        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Editar WhatsApp">
+            <i class="fas fa-pencil-alt"></i>
+        </button>
+    </div>
+</td>
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100">${u.company}</span>
@@ -2369,6 +2374,32 @@ window.editUserClass = async function(uid, oldClass) {
             });
             alert("Turma atualizada com sucesso!");
             openManagerPanel(); // Recarrega para atualizar dados e filtros
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
+        }
+    }
+};
+    // FUNÇÃO DE EDITAR TELEFONE (NOVO)
+window.editUserPhone = async function(uid, oldPhone) {
+    // Se for "Não informado", limpa o campo para digitar do zero
+    const cleanPhone = oldPhone === 'Não informado' ? '' : oldPhone;
+    
+    const newPhone = prompt("Digite o novo WhatsApp/Telefone:", cleanPhone);
+    
+    // Verifica se digitou algo e se é diferente do anterior
+    if (newPhone !== null && newPhone !== cleanPhone) {
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ 
+                phone: newPhone 
+            });
+            alert("Telefone atualizado com sucesso!");
+            // Recarrega o painel para mostrar a mudança
+            if(typeof openManagerPanel === 'function') {
+                openManagerPanel(); 
+            } else {
+                // Fallback caso esteja no painel admin geral
+                openAdminPanel(); 
+            }
         } catch (e) {
             alert("Erro ao atualizar: " + e.message);
         }
