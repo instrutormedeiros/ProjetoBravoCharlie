@@ -32,7 +32,7 @@
   }
 
   // --- 2. CADASTRO BLINDADO COM FINGERPRINT ---
-  window.FirebaseCourse.signUpWithEmail = async function(name, email, password, cpfRaw, companyName, phoneNumber){
+  window.FirebaseCourse.signUpWithEmail = async function(name, email, password, cpfRaw){
     const cpf = cpfRaw.replace(/[^\d]+/g,'');
     if (!validarCPF(cpf)) throw new Error("CPF inválido.");
 
@@ -62,8 +62,6 @@
           email: email,
           cpf: cpf,
           status: 'trial',
-          phone: phoneNumber, // NOVO: Salva o telefone aqui
-          company: companyName || 'Particular', // NOVO: Salva a turma ou 'Particular' se vazio
           acesso_ate: trialEndDate,
           current_session_id: sessionId,
           last_device: userAgent, // Grava o dispositivo

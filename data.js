@@ -1867,4 +1867,3 @@ if (typeof window !== 'undefined') {
   window.moduleContent = moduleContent;
   window.moduleCategories = moduleCategories;
 }
-
