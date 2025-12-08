@@ -2466,13 +2466,13 @@ window.toggleManagerRole = async function(uid, currentStatus) {
         }
     }
 };
-  // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
+ // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
 window.saveProgressToCloud = function() {
     if (currentUserData && currentUserData.uid) {
         // 1. Tenta pegar da variável global
         let modulesToSave = completedModules;
         
-        // 2. Se estiver vazia, tenta pegar forçado do LocalStorage (GARANTIA)
+        // 2. BLINDAGEM: Se estiver vazia, pega direto da memória física do navegador
         if (!modulesToSave || modulesToSave.length === 0) {
             const localData = localStorage.getItem('gateBombeiroCompletedModules_v3');
             if (localData) {
@@ -2481,13 +2481,13 @@ window.saveProgressToCloud = function() {
             }
         }
 
-        console.log("Enviando para nuvem:", modulesToSave); // Para você ver no console
+        console.log("Enviando para nuvem:", modulesToSave); // <--- SE NÃO APARECER ISSO NO CONSOLE, O CÓDIGO TÁ VELHO
 
         return window.__fbDB.collection('users').doc(currentUserData.uid).update({
             completedModules: modulesToSave
         }).then(() => {
             console.log("Progresso salvo com sucesso!");
-            // Atualiza o objeto local do usuário para refletir a mudança imediata
+            // Atualiza o objeto local para o painel ler na hora
             currentUserData.completedModules = modulesToSave;
         }).catch(err => console.error("Erro ao salvar progresso:", err));
     }
