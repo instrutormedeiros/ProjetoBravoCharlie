@@ -316,6 +316,16 @@ setTimeout(() => {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
+        // ========================================
+// MOSTRA BOTÃO DO PAINEL PARA TODOS
+// (Depois vamos restringir apenas para gestores)
+// ========================================
+const managerPanelBtn = document.getElementById("open-manager-panel-btn");
+if (managerPanelBtn) {
+    managerPanelBtn.style.display = "inline-block";
+    console.log("✅ Botão do Painel de Gestor ATIVADO!");
+}
+
 // Libera Botão de Gestor se for manager
 const managerBtn = document.getElementById("manager-panel-btn");
 if (userData.isManager === true) {
@@ -2288,32 +2298,39 @@ window.startManagerLogin = function() {
 let managerCachedUsers = [];
 
 window.openManagerPanel = async function() {
-    // ========================================
-    // PROTEÇÃO: Aguarda o Firebase estar pronto
-    // ========================================
-    if (!window.fbDB) {
-        console.error("❌ Firebase não inicializado ainda!");
-        alert("Sistema ainda carregando. Aguarde alguns segundos e tente novamente.");
-        return;
+    console.log("🔓 Tentando abrir painel do gestor...");
+    
+    // Aguarda até 10 segundos pelo Firebase
+    let attempts = 0;
+    while (!window.fbDB && attempts < 20) {
+        console.log("⏳ Aguardando Firebase... Tentativa", attempts + 1);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
     }
     
-    if (!currentUserData) {
-        alert("Você precisa estar logado como gestor.");
+    if (!window.fbDB) {
+        alert("❌ Erro: Firebase não inicializou. Recarregue a página e aguarde 15 segundos antes de clicar.");
         return;
     }
+
+    if (!currentUserData) {
+        alert("❌ Você precisa estar logado.");
+        return;
+    }
+
+    console.log("✅ Firebase OK! Abrindo painel...");
 
     const modal = document.getElementById("manager-modal");
     const overlay = document.getElementById("admin-modal-overlay");
     
     if (!modal || !overlay) {
-        console.error("❌ Elementos do painel não encontrados no HTML");
+        alert("❌ Erro: Elementos do painel não encontrados no HTML. Verifique o index.html");
         return;
     }
 
     modal.classList.add("show");
     overlay.classList.add("show");
 
-    // Mostra o nome da empresa/turma do gestor
     const companyNameEl = document.getElementById("manager-company-name");
     if (companyNameEl) {
         companyNameEl.textContent = currentUserData.company || "Sem Turma Definida";
@@ -2325,53 +2342,37 @@ window.openManagerPanel = async function() {
     };
 
     const tbody = document.getElementById("manager-table-body");
-    const filterSelect = document.getElementById("mgr-filter-turma");
-
     tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>`;
 
     try {
-        // ========================================
-        // CORREÇÃO: Força buscar dados novos do servidor
-        // ========================================
         console.log("📊 Buscando usuários do Firebase...");
         const snapshot = await window.fbDB.collection("users").orderBy("name").get({ source: "server" });
         
         console.log("✅ Total de usuários encontrados:", snapshot.size);
 
-        managerCachedUsers = [];
-        let uniqueTurmas = new Set();
-
+        let users = [];
         snapshot.forEach(doc => {
             const u = doc.data();
             u.uid = doc.id;
             u.company = u.company || "Particular";
             
-            // ========================================
-            // CORREÇÃO CRÍTICA: Garante que completedModules seja array
-            // ========================================
             if (!u.completedModules || !Array.isArray(u.completedModules)) {
                 u.completedModules = [];
             }
             
-            // DEBUG: Mostra no console o progresso de cada aluno
             console.log("👤", u.name, "| Progresso:", u.completedModules.length, "módulos");
-            
-            managerCachedUsers.push(u);
-            uniqueTurmas.add(u.company);
+            users.push(u);
         });
 
-        // Popula o filtro de turmas
-        filterSelect.innerHTML = `<option value="TODOS">Todas as Turmas</option>`;
-        [...uniqueTurmas].sort().forEach(t => {
-            filterSelect.innerHTML += `<option value="${t}">${t}</option>`;
-        });
-
-        // Renderiza a tabela
-        renderManagerTable(managerCachedUsers);
+        if (typeof renderManagerTable === 'function') {
+            renderManagerTable(users);
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: Função renderManagerTable não encontrada</td></tr>`;
+        }
 
     } catch (err) {
         console.error("❌ Erro ao carregar usuários:", err);
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: ${err.message}</td></tr>`;
     }
 };
 
