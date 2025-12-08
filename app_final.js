@@ -295,13 +295,16 @@ function init() {
 
         checkTrialStatus(userData.acesso_ate);
 
-        // --- PROGRESSO SINCRONIZADO NA NUVEM ---
-        // Se o usuário tem progresso salvo no banco de dados, usamos ele.
-        if (userData.completedModules && Array.isArray(userData.completedModules)) {
+        // --- PROGRESSO SINCRONIZADO (BIDIRECIONAL) ---
+        if (userData.completedModules && Array.isArray(userData.completedModules) && userData.completedModules.length > 0) {
+            // Se o banco tem dados, usa o banco (prioridade nuvem)
             completedModules = userData.completedModules;
-            // Atualiza o local para garantir sincronia
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
             console.log("Progresso recuperado da nuvem.");
+        } else if (completedModules.length > 0) {
+            // Se o banco está vazio, mas o aluno tem progresso local, ENVIA para o banco
+            console.log("Sincronizando progresso local para a nuvem...");
+            saveProgressToCloud();
         }
 
         // Inicializa contadores
@@ -1402,6 +1405,10 @@ function init() {
         if (!completedModules.includes(moduleId)) {
             completedModules.push(moduleId);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
+            
+            // ADICIONADO: Salva no banco de dados
+            saveProgressToCloud();
+            
             updateProgress();
         }
     }
@@ -1723,6 +1730,10 @@ function init() {
         if (id && !completedModules.includes(id)) {
             completedModules.push(id);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
+            
+            // ADICIONADO: Salva no banco de dados agora
+            saveProgressToCloud();
+
             updateProgress();
             b.disabled = true;
             b.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Concluído';
@@ -2427,5 +2438,13 @@ window.toggleManagerRole = async function(uid, currentStatus) {
         }
     }
 };
+    // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE ---
+function saveProgressToCloud() {
+    if (currentUserData && currentUserData.uid) {
+        window.__fbDB.collection('users').doc(currentUserData.uid).update({
+            completedModules: completedModules
+        }).catch(err => console.error("Erro ao salvar progresso:", err));
+    }
+}
     init();
 });
