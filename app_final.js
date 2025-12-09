@@ -2312,15 +2312,18 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// CORREÇÃO: Função completa com Filtro Dinâmico e Correção de Erros
+// ============================================================
+// BLOCO CORRIGIDO: GESTÃO DE EQUIPE, FILTRO E PROGRESSO
+// ============================================================
+
+// 1. Função Principal: Abrir Painel
 window.openManagerPanel = async function() {
     console.log("🔓 Abrindo Painel do Gestor...");
 
-    // 1. Definição do Banco de Dados
     const db = window.__fbDB || window.fbDB; 
     
     if (!db) {
-        alert("⏳ O sistema ainda está carregando. Tente novamente em alguns segundos.");
+        alert("⏳ Sistema carregando. Tente novamente.");
         return;
     }
     if (!currentUserData) {
@@ -2328,23 +2331,20 @@ window.openManagerPanel = async function() {
         return;
     }
 
-    // 2. Selecionar Elementos Visuais
     const modal = document.getElementById("manager-modal");
     const overlay = document.getElementById("admin-modal-overlay");
     const tbody = document.getElementById("manager-table-body");
     const titleEl = document.getElementById("manager-company-name");
-    const filterSelect = document.getElementById('mgr-filter-turma'); // O seletor de filtro
+    const filterSelect = document.getElementById('mgr-filter-turma');
 
     if (!modal || !overlay) return;
 
-    // 3. Abrir o Modal
     modal.classList.add("show");
     overlay.classList.add("show");
 
-    // 4. Mudar o Subtítulo (Pedido do Usuário)
+    // Título atualizado
     if (titleEl) titleEl.textContent = "Gestão de equipe";
     
-    // Configura botão fechar
     const closeBtn = document.getElementById("close-manager-modal");
     if (closeBtn) {
         closeBtn.onclick = () => {
@@ -2355,76 +2355,64 @@ window.openManagerPanel = async function() {
         };
     }
 
-    // Mostrar Loading
-    if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Buscando dados...</td></tr>`;
-    }
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Buscando dados...</td></tr>`;
 
-    // 5. Busca de Dados
     try {
         const snapshot = await db.collection("users").get();
-        
         let users = [];
-        // Set para guardar nomes únicos de turmas (evita duplicados)
         let turmasEncontradas = new Set();
 
         snapshot.forEach(doc => {
             const u = doc.data();
             u.uid = doc.id;
-            // Padroniza a turma (Maiúsculo e sem espaços extras)
+            // Padroniza o nome da turma para o filtro funcionar (Maiúsculo e sem espaços)
             u.company = (u.company || "Particular").trim().toUpperCase();
             if (!u.completedModules) u.completedModules = [];
             
             users.push(u);
-            turmasEncontradas.add(u.company); // Adiciona à lista de filtros
+            turmasEncontradas.add(u.company);
         });
 
-        // Ordenar alunos por nome
         users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-        // Cache global para o filtro funcionar
         window.managerCachedUsers = users;
 
-        // --- 6. PREENCHER O FILTRO AUTOMATICAMENTE ---
+        // Preenche o filtro automaticamente com as turmas existentes
         if (filterSelect) {
-            // Limpa opções antigas e mantém a padrão
             filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
-            
-            // Converte o Set para Array, ordena e cria as opções
             Array.from(turmasEncontradas).sort().forEach(turma => {
                 filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
             });
         }
 
-      // --- FUNÇÃO 1: FILTRO INTELIGENTE (IGNORA MAIÚSCULAS E ESPAÇOS) ---
+        renderManagerTable(users);
+
+    } catch (err) {
+        console.error("Erro:", err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: ${err.message}</td></tr>`;
+    }
+};
+
+// 2. Função de Filtro Inteligente
 window.filterManagerTable = function() {
     const select = document.getElementById('mgr-filter-turma');
     const selectedTurma = select ? select.value : 'TODOS';
     
-    // Se não tiver dados carregados, para.
     if (!window.managerCachedUsers) return;
 
     let filteredList = window.managerCachedUsers;
 
     if (selectedTurma !== 'TODOS') {
-        filteredList = window.managerCachedUsers.filter(u => {
-            // Normaliza os dados para comparar (Tudo maiúsculo, sem espaços nas pontas)
-            const turmaAluno = (u.company || "Particular").toString().toUpperCase().trim();
-            const turmaFiltro = selectedTurma.toString().toUpperCase().trim();
-            
-            return turmaAluno === turmaFiltro;
-        });
+        filteredList = window.managerCachedUsers.filter(u => u.company === selectedTurma);
     }
 
     renderManagerTable(filteredList);
 };
 
-// --- FUNÇÃO 2: RENDERIZAR TABELA COM PROGRESSO CORRIGIDO ---
+// 3. Função de Tabela com Progresso Corrigido
 window.renderManagerTable = function(usersList) {
     const tbody = document.getElementById('manager-table-body');
     if (!tbody) return;
 
-    // Pega o total de módulos do sistema ou usa 62 como padrão
     const totalCourseModules = (window.moduleContent && Object.keys(window.moduleContent).length > 0) 
         ? Object.keys(window.moduleContent).length 
         : 62;
@@ -2434,49 +2422,40 @@ window.renderManagerTable = function(usersList) {
 
     if (!usersList || usersList.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Nenhum aluno encontrado nesta turma.</td></tr>';
+        updateManagerStats(stats);
         return;
     }
 
     usersList.forEach(u => {
-        // --- CÁLCULO DE PROGRESSO ---
-        // Garante que é um array. Se não for, vira array vazio.
         const completedArr = (Array.isArray(u.completedModules)) ? u.completedModules : [];
         const modulesDone = completedArr.length;
         
-        // Regra de 3 para porcentagem
         let percent = 0;
         if (totalCourseModules > 0) {
             percent = Math.round((modulesDone / totalCourseModules) * 100);
         }
-        if (percent > 100) percent = 100; // Trava em 100%
+        if (percent > 100) percent = 100;
 
-        // Define cor da barra
-        let progressColor = 'bg-gray-300'; // 0%
+        let progressColor = 'bg-gray-300';
         if (percent > 0) progressColor = 'bg-red-500';
         if (percent > 30) progressColor = 'bg-yellow-500';
         if (percent > 80) progressColor = 'bg-green-500';
         if (percent === 100) progressColor = 'bg-blue-600';
 
-        // --- ESTATÍSTICAS ---
         stats.total++;
         if (percent >= 100) stats.completed++;
         else if (percent > 0) stats.progress++;
         else stats.pending++;
 
-        // --- DADOS VISUAIS ---
         const phone = u.phone || 'Não informado';
         const turma = u.company || 'Particular';
         
-        let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded font-bold uppercase">TRIAL</span>';
-        if (u.status === 'premium') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded font-bold uppercase">PREMIUM</span>';
+        let statusBadge = u.status === 'premium' 
+            ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded font-bold uppercase">PREMIUM</span>' 
+            : '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded font-bold uppercase">TRIAL</span>';
 
-        let validadeStr = '-';
-        if (u.acesso_ate) {
-            const dataVal = new Date(u.acesso_ate);
-            validadeStr = dataVal.toLocaleDateString('pt-BR');
-        }
+        let validadeStr = u.acesso_ate ? new Date(u.acesso_ate).toLocaleDateString('pt-BR') : '-';
 
-        // --- LINHA DA TABELA ---
         html += `
             <tr class="hover:bg-gray-50 border-b border-gray-100 group transition-colors">
                 <td class="px-4 py-3">
@@ -2485,27 +2464,22 @@ window.renderManagerTable = function(usersList) {
                 </td>
                 <td class="px-4 py-3 text-xs text-gray-600">
                     <div class="flex items-center gap-2">
-                        ${phone !== 'Não informado' ? '<i class="fab fa-whatsapp text-green-500"></i>' : ''} 
-                        ${phone}
-                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
+                        ${phone !== 'Não informado' ? '<i class="fab fa-whatsapp text-green-500"></i>' : ''} ${phone}
+                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
                     </div>
                 </td>
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100 uppercase">${turma}</span>
-                        <button onclick="editUserClass('${u.uid}', '${turma}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
+                        <button onclick="editUserClass('${u.uid}', '${turma}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
                     </div>
                 </td>
-                <td class="px-4 py-3" title="${modulesDone} de ${totalCourseModules} módulos">
-                    <div class="flex items-center">
-                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                <td class="px-4 py-3" title="${modulesDone}/${totalCourseModules}">
+                    <div class="flex items-center w-full max-w-[140px]">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
                             <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
-                        <span class="text-xs font-bold text-gray-700">${percent}%</span>
+                        <span class="text-xs font-bold text-gray-700 w-8 text-right">${percent}%</span>
                     </div>
                 </td>
                 <td class="px-4 py-3">${statusBadge}</td>
@@ -2515,14 +2489,15 @@ window.renderManagerTable = function(usersList) {
     });
 
     tbody.innerHTML = html;
+    updateManagerStats(stats);
+};
 
-    // Atualiza os contadores do topo
+function updateManagerStats(stats) {
     if(document.getElementById('mgr-total-users')) document.getElementById('mgr-total-users').innerText = stats.total;
     if(document.getElementById('mgr-completed')) document.getElementById('mgr-completed').innerText = stats.completed;
     if(document.getElementById('mgr-progress')) document.getElementById('mgr-progress').innerText = stats.progress;
     if(document.getElementById('mgr-pending')) document.getElementById('mgr-pending').innerText = stats.pending;
-};
-
+}
 // FUNÇÃO DE EDITAR TURMA
 window.editUserClass = async function(uid, oldClass) {
     const newClass = prompt("Digite o novo nome da Turma/Empresa:", oldClass);
