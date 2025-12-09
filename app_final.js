@@ -2374,28 +2374,7 @@ window.openManagerPanel = async function() {
         `;
     }
 
-    // 5. Busca de Dados (Aqui o 'await' funcionará porque a função agora é 'async')
-    try {
-        const snapshot = await db.collection("users").get();
-        
-        let users = [];
-        snapshot.forEach(doc => {
-            const u = doc.data();
-            u.uid = doc.id;
-            u.company = u.company || "Particular";
-            if (!u.completedModules) u.completedModules = [];
-            users.push(u);
-        });
-
-        // Ordenar por nome via Javascript (evita erro de índice no Firebase)
-        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-        // Salvar na memória para filtros
-        window.managerCachedUsers = users;
-
-        console.log(`✅ ${users.length} alunos carregados.`);
-
-        // 6. Renderizar a Tabela
+          // 6. Renderizar a Tabela
         if (typeof renderManagerTable === 'function') {
             renderManagerTable(users);
         } else {
