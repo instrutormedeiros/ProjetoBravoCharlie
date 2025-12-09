@@ -2396,94 +2396,116 @@ window.openManagerPanel = async function() {
             });
         }
 
-        // 7. Renderizar a Tabela Inicial (Todos)
-        if (typeof renderManagerTable === 'function') {
-            renderManagerTable(users);
-        }
+      // --- FUNÇÃO 1: FILTRO INTELIGENTE (IGNORA MAIÚSCULAS E ESPAÇOS) ---
+window.filterManagerTable = function() {
+    const select = document.getElementById('mgr-filter-turma');
+    const selectedTurma = select ? select.value : 'TODOS';
+    
+    // Se não tiver dados carregados, para.
+    if (!window.managerCachedUsers) return;
 
-    } catch (err) {
-        console.error("❌ Erro:", err);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro de Conexão: ${err.message}</td></tr>`;
+    let filteredList = window.managerCachedUsers;
+
+    if (selectedTurma !== 'TODOS') {
+        filteredList = window.managerCachedUsers.filter(u => {
+            // Normaliza os dados para comparar (Tudo maiúsculo, sem espaços nas pontas)
+            const turmaAluno = (u.company || "Particular").toString().toUpperCase().trim();
+            const turmaFiltro = selectedTurma.toString().toUpperCase().trim();
+            
+            return turmaAluno === turmaFiltro;
+        });
     }
+
+    renderManagerTable(filteredList);
 };
 
-// FUNÇÃO AUXILIAR: RENDERIZA A TABELA (VERSÃO FINAL BLINDADA)
+// --- FUNÇÃO 2: RENDERIZAR TABELA COM PROGRESSO CORRIGIDO ---
 window.renderManagerTable = function(usersList) {
     const tbody = document.getElementById('manager-table-body');
-    // Correção 1: Contagem total dinâmica
-    const totalCourseModules = Object.keys(window.moduleContent || {}).length || 62;
-    
+    if (!tbody) return;
+
+    // Pega o total de módulos do sistema ou usa 62 como padrão
+    const totalCourseModules = (window.moduleContent && Object.keys(window.moduleContent).length > 0) 
+        ? Object.keys(window.moduleContent).length 
+        : 62;
+
     let html = '';
     let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
 
-    if (usersList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado neste filtro.</td></tr>';
+    if (!usersList || usersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Nenhum aluno encontrado nesta turma.</td></tr>';
         return;
     }
 
     usersList.forEach(u => {
-        // Dados
-        const phone = u.phone || 'Não informado';
+        // --- CÁLCULO DE PROGRESSO ---
+        // Garante que é um array. Se não for, vira array vazio.
+        const completedArr = (Array.isArray(u.completedModules)) ? u.completedModules : [];
+        const modulesDone = completedArr.length;
         
-        // --- AQUI ESTÁ A SUA CORREÇÃO (BLINDAGEM DE ARRAY) ---
-        const modulesDone = (u.completedModules && Array.isArray(u.completedModules)) ? u.completedModules.length : 0;
-        // -----------------------------------------------------
-        
-        // Status e Validade
-        let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded-full font-bold uppercase">TRIAL</span>';
-        if (u.status === 'premium') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded-full font-bold uppercase">PREMIUM</span>';
-        
-        let validadeStr = '-';
-        if (u.acesso_ate) {
-            const dataValidade = new Date(u.acesso_ate);
-            validadeStr = dataValidade.toLocaleDateString('pt-BR');
-            if (new Date() > dataValidade) validadeStr = `<span class="text-red-500 font-bold">${validadeStr} (Exp)</span>`;
-        }
-
-        // Progresso (Cálculo seguro)
+        // Regra de 3 para porcentagem
         let percent = 0;
         if (totalCourseModules > 0) {
-            percent = Math.min(100, Math.round((modulesDone / totalCourseModules) * 100));
+            percent = Math.round((modulesDone / totalCourseModules) * 100);
         }
-        
-        let progressColor = 'bg-red-500';
+        if (percent > 100) percent = 100; // Trava em 100%
+
+        // Define cor da barra
+        let progressColor = 'bg-gray-300'; // 0%
+        if (percent > 0) progressColor = 'bg-red-500';
         if (percent > 30) progressColor = 'bg-yellow-500';
         if (percent > 80) progressColor = 'bg-green-500';
+        if (percent === 100) progressColor = 'bg-blue-600';
 
-        // Estatísticas
+        // --- ESTATÍSTICAS ---
         stats.total++;
         if (percent >= 100) stats.completed++;
         else if (percent > 0) stats.progress++;
         else stats.pending++;
 
+        // --- DADOS VISUAIS ---
+        const phone = u.phone || 'Não informado';
+        const turma = u.company || 'Particular';
+        
+        let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded font-bold uppercase">TRIAL</span>';
+        if (u.status === 'premium') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded font-bold uppercase">PREMIUM</span>';
+
+        let validadeStr = '-';
+        if (u.acesso_ate) {
+            const dataVal = new Date(u.acesso_ate);
+            validadeStr = dataVal.toLocaleDateString('pt-BR');
+        }
+
+        // --- LINHA DA TABELA ---
         html += `
-            <tr class="hover:bg-gray-50 border-b border-gray-100 group">
+            <tr class="hover:bg-gray-50 border-b border-gray-100 group transition-colors">
                 <td class="px-4 py-3">
-                    <div class="font-bold text-gray-800">${u.name}</div>
+                    <div class="font-bold text-gray-800 text-sm">${u.name || 'Sem Nome'}</div>
                     <div class="text-xs text-gray-500">${u.email}</div>
                 </td>
-                <td class="px-4 py-3 text-gray-600 text-xs">
+                <td class="px-4 py-3 text-xs text-gray-600">
                     <div class="flex items-center gap-2">
-                        <span><i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}</span>
-                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Editar WhatsApp">
+                        ${phone !== 'Não informado' ? '<i class="fab fa-whatsapp text-green-500"></i>' : ''} 
+                        ${phone}
+                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
                             <i class="fas fa-pencil-alt"></i>
                         </button>
                     </div>
                 </td>
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100">${u.company}</span>
-                        <button onclick="editUserClass('${u.uid}', '${u.company}')" class="text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100" title="Mudar Turma">
+                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100 uppercase">${turma}</span>
+                        <button onclick="editUserClass('${u.uid}', '${turma}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
                             <i class="fas fa-pencil-alt"></i>
                         </button>
                     </div>
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3" title="${modulesDone} de ${totalCourseModules} módulos">
                     <div class="flex items-center">
-                        <div class="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
-                            <div class="${progressColor} h-1.5 rounded-full" style="width: ${percent}%"></div>
+                        <div class="w-20 bg-gray-200 rounded-full h-2 mr-2">
+                            <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
-                        <span class="text-xs font-bold text-gray-600">${percent}%</span>
+                        <span class="text-xs font-bold text-gray-700">${percent}%</span>
                     </div>
                 </td>
                 <td class="px-4 py-3">${statusBadge}</td>
@@ -2494,23 +2516,11 @@ window.renderManagerTable = function(usersList) {
 
     tbody.innerHTML = html;
 
-    // Atualiza Cards de Estatística
-    document.getElementById('mgr-total-users').innerText = stats.total;
-    document.getElementById('mgr-completed').innerText = stats.completed;
-    document.getElementById('mgr-progress').innerText = stats.progress;
-    document.getElementById('mgr-pending').innerText = stats.pending;
-};
-
-// FUNÇÃO DE FILTRO (ACIONADA PELO SELECT)
-window.filterManagerTable = function() {
-    const selectedTurma = document.getElementById('mgr-filter-turma').value;
-    
-    if (selectedTurma === 'TODOS') {
-        renderManagerTable(managerCachedUsers);
-    } else {
-        const filtered = managerCachedUsers.filter(u => u.company === selectedTurma);
-        renderManagerTable(filtered);
-    }
+    // Atualiza os contadores do topo
+    if(document.getElementById('mgr-total-users')) document.getElementById('mgr-total-users').innerText = stats.total;
+    if(document.getElementById('mgr-completed')) document.getElementById('mgr-completed').innerText = stats.completed;
+    if(document.getElementById('mgr-progress')) document.getElementById('mgr-progress').innerText = stats.progress;
+    if(document.getElementById('mgr-pending')) document.getElementById('mgr-pending').innerText = stats.pending;
 };
 
 // FUNÇÃO DE EDITAR TURMA
