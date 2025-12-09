@@ -322,11 +322,16 @@ setTimeout(() => {
         // ========================================
         const painelBtn = document.getElementById("open-manager-panel-btn");
         
-        // Se for gestor OU admin, libera o botão
+        // ========================================
+        // LÓGICA DO BOTÃO FLUTUANTE DE GESTOR
+        // ========================================
+        const managerFab = document.getElementById("manager-fab");
+        
+        // Se for gestor OU admin, mostra o botão flutuante
         if (userData.isManager === true || userData.isAdmin === true) {
-            if (painelBtn) {
-                painelBtn.classList.remove("hidden"); // Usa classe do Tailwind, não style inline
-                console.log("✅ Botão de Painel Gestor liberado para:", userData.name);
+            if (managerFab) {
+                managerFab.classList.remove("hidden"); // Remove a classe que esconde
+                console.log("✅ Botão Flutuante de Gestor ATIVADO para:", userData.name);
             }
         }
 
@@ -2293,85 +2298,72 @@ window.startManagerLogin = function() {
 let managerCachedUsers = [];
 
 window.openManagerPanel = async function() {
-        console.log("🔓 Tentando abrir painel do gestor...");
+        console.log("🔓 Abrindo Painel do Gestor...");
         
-        // Aguarda até 10 segundos pelo Firebase
-        let attempts = 0;
-        while (!window.fbDB && attempts < 20) {
-            console.log("⏳ Aguardando Firebase... Tentativa", attempts + 1);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            attempts++;
-        }
-        
+        // 1. Verifica se o Firebase está pronto
         if (!window.fbDB) {
-            alert("❌ Erro: Firebase não inicializou. Recarregue a página e aguarde 15 segundos antes de clicar.");
+            alert("⏳ O sistema ainda está carregando. Aguarde alguns segundos.");
             return;
         }
 
+        // 2. Verifica Login
         if (!currentUserData) {
-            alert("❌ Você precisa estar logado.");
+            alert("❌ Erro de segurança: Usuário não identificado.");
             return;
         }
 
-        console.log("✅ Firebase OK! Abrindo painel...");
-
+        // 3. Abre o Modal
         const modal = document.getElementById("manager-modal");
-        const overlay = document.getElementById("admin-modal-overlay");
+        const overlay = document.getElementById("admin-modal-overlay"); // Reutilizando overlay existente ou crie um específico
         
-        if (!modal || !overlay) {
-            alert("❌ Erro: Elementos do painel não encontrados no HTML. Verifique o index.html");
-            return;
+        if (modal) modal.classList.add("show");
+        if (overlay) overlay.classList.add("show");
+
+        // Nome da Empresa no Título
+        const titleEl = document.getElementById("manager-company-name");
+        if(titleEl) titleEl.textContent = currentUserData.company || "Visão Geral";
+
+        // Botão Fechar
+        const closeBtn = document.getElementById("close-manager-modal");
+        if(closeBtn) {
+            closeBtn.onclick = () => {
+                modal.classList.remove("show");
+                if (overlay) overlay.classList.remove("show");
+            };
         }
 
-        modal.classList.add("show");
-        overlay.classList.add("show");
-
-        const companyNameEl = document.getElementById("manager-company-name");
-        if (companyNameEl) {
-            companyNameEl.textContent = currentUserData.company || "Sem Turma Definida";
-        }
-
-        document.getElementById("close-manager-modal").onclick = () => {
-            modal.classList.remove("show");
-            overlay.classList.remove("show");
-        };
-
+        // 4. Carrega os Dados
         const tbody = document.getElementById("manager-table-body");
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Buscando dados em tempo real...</td></tr>`;
 
         try {
-            console.log("📊 Buscando usuários do Firebase...");
-            const snapshot = await window.fbDB.collection("users").orderBy("name").get({ source: "server" });
+            // Busca todos os usuários ordenados por nome
+            const snapshot = await window.fbDB.collection("users").orderBy("name").get();
             
-            console.log("✅ Total de usuários encontrados:", snapshot.size);
-
             let users = [];
             snapshot.forEach(doc => {
                 const u = doc.data();
                 u.uid = doc.id;
-                u.company = u.company || "Particular";
-                
-                if (!u.completedModules || !Array.isArray(u.completedModules)) {
-                    u.completedModules = [];
-                }
-                
-                // console.log("👤", u.name, "| Progresso:", u.completedModules.length, "módulos");
+                // Garante que o array de módulos existe para não quebrar a conta
+                if (!u.completedModules) u.completedModules = [];
                 users.push(u);
             });
 
-            // --- SALVA NA VARIÁVEL GLOBAL PARA O FILTRO FUNCIONAR ---
-            window.managerCachedUsers = users; 
-            // --------------------------------------------------------
+            // SALVA NA VARIÁVEL GLOBAL (CRUCIAL PARA OS FILTROS FUNCIONAREM)
+            window.managerCachedUsers = users;
 
+            console.log(`✅ ${users.length} alunos carregados.`);
+
+            // Chama a função que desenha a tabela (se ela existir)
             if (typeof renderManagerTable === 'function') {
                 renderManagerTable(users);
             } else {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: Função renderManagerTable não encontrada</td></tr>`;
+                console.error("Função renderManagerTable não encontrada.");
             }
 
         } catch (err) {
-            console.error("❌ Erro ao carregar usuários:", err);
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: ${err.message}</td></tr>`;
+            console.error("❌ Erro ao buscar dados:", err);
+            if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
         }
     };
 
