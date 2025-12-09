@@ -2312,53 +2312,54 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// CORREÇÃO: Substitua a função window.openManagerPanel inteira por esta:
+// CORREÇÃO CRÍTICA: A palavra 'async' é OBRIGATÓRIA aqui para não travar o site
 window.openManagerPanel = async function() {
     console.log("🔓 Abrindo Painel do Gestor...");
 
-    // 1. Verificações de Segurança (CORRIGIDO PARA __fbDB)
-    // O firebase-init.js define __fbDB, então usamos ele aqui
+    // 1. Correção do Banco de Dados (Pega o __fbDB definido no firebase-init.js)
     const db = window.__fbDB || window.fbDB; 
     
+    // Verificação de segurança
     if (!db) {
-        alert("⏳ O sistema ainda está conectando ao banco de dados. Aguarde um momento e tente novamente.");
+        alert("⏳ O banco de dados ainda está conectando. Aguarde 5 segundos e tente novamente.");
         return;
     }
+    
     if (!currentUserData) {
         alert("❌ Erro: Usuário não identificado. Faça login novamente.");
         return;
     }
 
-    // 2. Selecionar Elementos do Painel
+    // 2. Selecionar Elementos do HTML
     const modal = document.getElementById("manager-modal");
     const overlay = document.getElementById("admin-modal-overlay");
     const tbody = document.getElementById("manager-table-body");
     const titleEl = document.getElementById("manager-company-name");
 
     if (!modal || !overlay) {
-        console.error("Modal ou Overlay não encontrados no DOM.");
-        alert("Erro visual: O painel não pôde ser aberto (elementos HTML ausentes).");
+        console.error("Modal do gestor não encontrado no HTML.");
         return;
     }
 
-    // 3. Abrir o Modal
+    // 3. Abrir o Modal Visualmente
     modal.classList.add("show");
     overlay.classList.add("show");
 
     if (titleEl) titleEl.textContent = currentUserData.company || "Visão Geral da Equipe";
     
+    // Configura botão de fechar
     const closeBtn = document.getElementById("close-manager-modal");
     if (closeBtn) {
         closeBtn.onclick = () => {
             modal.classList.remove("show");
-            // Só fecha o overlay se o admin modal não estiver aberto também
+            // Só fecha o fundo escuro se o admin não estiver aberto
             if (!document.getElementById("admin-modal")?.classList.contains("show")) {
                 overlay.classList.remove("show");
             }
         };
     }
 
-    // 4. Mostrar Loading
+    // 4. Mostrar "Carregando..."
     if (tbody) {
         tbody.innerHTML = `
             <tr>
@@ -2371,6 +2372,48 @@ window.openManagerPanel = async function() {
             </tr>
         `;
     }
+
+    // 5. Busca de Dados (Aqui usamos o 'db' correto e o 'await' funciona porque a função é async)
+    try {
+        const snapshot = await db.collection("users").get();
+        
+        let users = [];
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            u.uid = doc.id;
+            u.company = u.company || "Particular";
+            if (!u.completedModules) u.completedModules = [];
+            users.push(u);
+        });
+
+        // Ordenar por nome
+        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+        // Salvar na memória para filtros
+        window.managerCachedUsers = users;
+
+        console.log(`✅ ${users.length} alunos carregados.`);
+
+        // 6. Renderizar a Tabela
+        if (typeof renderManagerTable === 'function') {
+            renderManagerTable(users);
+        } else {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable não encontrada.</td></tr>`;
+        }
+
+    } catch (err) {
+        console.error("❌ Erro ao buscar dados:", err);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
+                        Erro de Conexão: ${err.message}
+                    </td>
+                </tr>
+            `;
+        }
+    }
+};
 
     // 5. Busca de Dados (USANDO A VARIÁVEL CORRETA 'db')
     try {
