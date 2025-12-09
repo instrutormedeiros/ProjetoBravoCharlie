@@ -337,17 +337,26 @@ setTimeout(() => {
 
         checkTrialStatus(userData.acesso_ate);
 
-        // --- PROGRESSO SINCRONIZADO (BIDIRECIONAL) ---
-        if (userData.completedModules && Array.isArray(userData.completedModules) && userData.completedModules.length > 0) {
-            // Se o banco tem dados, usa o banco (prioridade nuvem)
+       // ============================================================
+        // CORREÇÃO DE PROGRESSO POR LOGIN (ANTI-CONTAMINAÇÃO)
+        // Substitua o trecho de Sync Progresso por este bloco:
+        // ============================================================
+
+        // Verifica se o usuário tem progresso salvo no Banco de Dados (Nuvem)
+        if (userData.completedModules && Array.isArray(userData.completedModules)) {
+            // CASO 1: A esposa tem 15% na nuvem.
+            // AÇÃO: Forçamos o computador a esquecer os 42% do Admin e usar os 15% dela.
             completedModules = userData.completedModules;
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
-            console.log("Progresso recuperado da nuvem.");
-        } else if (completedModules.length > 0) {
-            // Se o banco está vazio, mas o aluno tem progresso local, ENVIA para o banco
-            console.log("Sincronizando progresso local para a nuvem...");
-            saveProgressToCloud();
+            console.log("⬇️ Progresso sincronizado pela conta (Nuvem):", completedModules.length);
+        } else {
+            // CASO 2: É um usuário novo ou sem progresso na nuvem.
+            // AÇÃO: Zeramos a memória do computador para não herdar o progresso do Admin.
+            completedModules = [];
+            localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify([]));
+            console.log("✨ Nenhum progresso na nuvem. Iniciando limpo.");
         }
+        // ============================================================
 
         // Inicializa contadores
         totalModules = Object.keys(window.moduleContent || {}).length;
