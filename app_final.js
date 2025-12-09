@@ -317,23 +317,18 @@ setTimeout(() => {
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
         // ========================================
-// MOSTRA BOTÃO DO PAINEL PARA TODOS
-// (Depois vamos restringir apenas para gestores)
 // ========================================
-const managerPanelBtn = document.getElementById("open-manager-panel-btn");
-if (managerPanelBtn) {
-    managerPanelBtn.style.display = "inline-block";
-    console.log("✅ Botão do Painel de Gestor ATIVADO!");
-}
-
-// Libera Botão de Gestor se for manager
-const managerBtn = document.getElementById("manager-panel-btn");
-if (userData.isManager === true) {
-    if (managerBtn) {
-        managerBtn.classList.remove("hidden");
-        console.log("✅ Botão de gestor liberado!");
-    }
-}
+        // LÓGICA DO BOTÃO GESTOR (CORRIGIDO)
+        // ========================================
+        const painelBtn = document.getElementById("open-manager-panel-btn");
+        
+        // Se for gestor OU admin, libera o botão
+        if (userData.isManager === true || userData.isAdmin === true) {
+            if (painelBtn) {
+                painelBtn.classList.remove("hidden"); // Usa classe do Tailwind, não style inline
+                console.log("✅ Botão de Painel Gestor liberado para:", userData.name);
+            }
+        }
 
         checkTrialStatus(userData.acesso_ate);
 
@@ -2350,7 +2345,7 @@ window.openManagerPanel = async function() {
         
         console.log("✅ Total de usuários encontrados:", snapshot.size);
 
-        let users = [];
+       let users = [];
         snapshot.forEach(doc => {
             const u = doc.data();
             u.uid = doc.id;
@@ -2360,12 +2355,17 @@ window.openManagerPanel = async function() {
                 u.completedModules = [];
             }
             
-            console.log("👤", u.name, "| Progresso:", u.completedModules.length, "módulos");
+            // console.log("👤", u.name, "| Progresso:", u.completedModules.length, "módulos"); // Opcional: comentar para limpar o console
             users.push(u);
         });
 
+        // --- CORREÇÃO IMPORTANTE AQUI ---
+        window.managerCachedUsers = users; // <--- ADICIONE ESTA LINHA. Isso permite que o filtro funcione.
+        // --------------------------------
+
         if (typeof renderManagerTable === 'function') {
             renderManagerTable(users);
+        }
         } else {
             tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: Função renderManagerTable não encontrada</td></tr>`;
         }
