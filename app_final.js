@@ -2312,62 +2312,107 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// FUNÇÃO CORRIGIDA: ABRE O PAINEL E CARREGA DADOS SEM TRAVAR
-    window.openManagerPanel = async function() {
-        console.log("🔓 Abrindo Painel do Gestor...");
+// CORREÇÃO: Substitua a função window.openManagerPanel inteira por esta:
+window.openManagerPanel = async function() {
+    console.log("🔓 Abrindo Painel do Gestor...");
 
-        // 1. Verificações de Segurança Básica
-        if (!window.fbDB) {
-            alert("⏳ O sistema ainda está carregando. Aguarde 5 segundos.");
-            return;
-        }
-        if (!currentUserData) {
-            alert("❌ Erro: Usuário não identificado. Faça login novamente.");
-            return;
-        }
+    // 1. Verificações de Segurança (CORRIGIDO PARA __fbDB)
+    // O firebase-init.js define __fbDB, então usamos ele aqui
+    const db = window.__fbDB || window.fbDB; 
+    
+    if (!db) {
+        alert("⏳ O sistema ainda está conectando ao banco de dados. Aguarde um momento e tente novamente.");
+        return;
+    }
+    if (!currentUserData) {
+        alert("❌ Erro: Usuário não identificado. Faça login novamente.");
+        return;
+    }
 
-        // 2. Selecionar Elementos do Painel
-        const modal = document.getElementById("manager-modal");
-        const overlay = document.getElementById("admin-modal-overlay");
-        const tbody = document.getElementById("manager-table-body");
-        const titleEl = document.getElementById("manager-company-name");
+    // 2. Selecionar Elementos do Painel
+    const modal = document.getElementById("manager-modal");
+    const overlay = document.getElementById("admin-modal-overlay");
+    const tbody = document.getElementById("manager-table-body");
+    const titleEl = document.getElementById("manager-company-name");
 
-        if (!modal || !overlay) {
-            alert("Erro Crítico: O modal do painel não foi encontrado no HTML.");
-            return;
-        }
+    if (!modal || !overlay) {
+        console.error("Modal ou Overlay não encontrados no DOM.");
+        alert("Erro visual: O painel não pôde ser aberto (elementos HTML ausentes).");
+        return;
+    }
 
-        // 3. Abrir o Modal (Feedback Visual)
-        modal.classList.add("show");
-        overlay.classList.add("show");
+    // 3. Abrir o Modal
+    modal.classList.add("show");
+    overlay.classList.add("show");
 
-        // Configurar Título e Botão Fechar
-        if (titleEl) titleEl.textContent = currentUserData.company || "Visão Geral da Equipe";
+    if (titleEl) titleEl.textContent = currentUserData.company || "Visão Geral da Equipe";
+    
+    const closeBtn = document.getElementById("close-manager-modal");
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.classList.remove("show");
+            // Só fecha o overlay se o admin modal não estiver aberto também
+            if (!document.getElementById("admin-modal")?.classList.contains("show")) {
+                overlay.classList.remove("show");
+            }
+        };
+    }
+
+    // 4. Mostrar Loading
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="p-8 text-center text-gray-500">
+                    <div class="flex flex-col items-center justify-center">
+                        <i class="fas fa-spinner fa-spin text-3xl mb-3 text-purple-600"></i>
+                        <span class="font-bold">Buscando dados da equipe...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    // 5. Busca de Dados (USANDO A VARIÁVEL CORRETA 'db')
+    try {
+        const snapshot = await db.collection("users").get();
         
-        const closeBtn = document.getElementById("close-manager-modal");
-        if (closeBtn) {
-            closeBtn.onclick = () => {
-                modal.classList.remove("show");
-                // Só fecha o overlay se o admin modal não estiver aberto também
-                if (!document.getElementById("admin-modal")?.classList.contains("show")) {
-                    overlay.classList.remove("show");
-                }
-            };
+        let users = [];
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            u.uid = doc.id;
+            u.company = u.company || "Particular";
+            if (!u.completedModules) u.completedModules = [];
+            users.push(u);
+        });
+
+        // Ordenação
+        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+        // Cache global para filtros
+        window.managerCachedUsers = users;
+
+        console.log(`✅ ${users.length} alunos carregados.`);
+
+        // 6. Renderizar
+        if (typeof renderManagerTable === 'function') {
+            renderManagerTable(users);
+        } else {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable ausente.</td></tr>`;
         }
 
-        // 4. Mostrar "Carregando" na Tabela
+    } catch (err) {
+        console.error("❌ Erro fatal ao buscar dados:", err);
         if (tbody) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="p-8 text-center text-gray-500">
-                        <div class="flex flex-col items-center justify-center">
-                            <i class="fas fa-spinner fa-spin text-3xl mb-3 text-purple-600"></i>
-                            <span class="font-bold">Buscando dados da equipe...</span>
-                        </div>
+                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
+                        Erro de Conexão.<br><span class="text-xs">${err.message}</span>
                     </td>
                 </tr>
             `;
         }
+    }
+};
 
         // 5. Busca de Dados (CORREÇÃO CRÍTICA: Sem orderBy no Banco)
         try {
