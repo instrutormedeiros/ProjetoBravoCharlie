@@ -2312,110 +2312,100 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// CORREÇÃO: Adicionado 'async' para corrigir o erro de sintaxe
+// CORREÇÃO: Função completa com Filtro Dinâmico e Correção de Erros
 window.openManagerPanel = async function() {
     console.log("🔓 Abrindo Painel do Gestor...");
 
-    // 1. Correção do Banco de Dados (Pega o __fbDB definido no firebase-init.js)
-    // O erro anterior acontecia porque 'fbDB' não existia, o correto é '__fbDB'
+    // 1. Definição do Banco de Dados
     const db = window.__fbDB || window.fbDB; 
     
-    // Verificação de segurança
     if (!db) {
-        alert("⏳ O banco de dados ainda está conectando. Aguarde 5 segundos e tente novamente.");
+        alert("⏳ O sistema ainda está carregando. Tente novamente em alguns segundos.");
         return;
     }
-    
     if (!currentUserData) {
-        alert("❌ Erro: Usuário não identificado. Faça login novamente.");
+        alert("❌ Erro: Usuário não identificado.");
         return;
     }
 
-    // 2. Selecionar Elementos do HTML
+    // 2. Selecionar Elementos Visuais
     const modal = document.getElementById("manager-modal");
     const overlay = document.getElementById("admin-modal-overlay");
     const tbody = document.getElementById("manager-table-body");
     const titleEl = document.getElementById("manager-company-name");
+    const filterSelect = document.getElementById('mgr-filter-turma'); // O seletor de filtro
 
-    if (!modal || !overlay) {
-        console.error("Modal do gestor não encontrado no HTML.");
-        return;
-    }
+    if (!modal || !overlay) return;
 
-    // 3. Abrir o Modal Visualmente
+    // 3. Abrir o Modal
     modal.classList.add("show");
     overlay.classList.add("show");
 
-    if (titleEl) titleEl.textContent = currentUserData.company || "Visão Geral da Equipe";
+    // 4. Mudar o Subtítulo (Pedido do Usuário)
+    if (titleEl) titleEl.textContent = "Gestão de equipe";
     
-    // Configura botão de fechar
+    // Configura botão fechar
     const closeBtn = document.getElementById("close-manager-modal");
     if (closeBtn) {
         closeBtn.onclick = () => {
             modal.classList.remove("show");
-            // Só fecha o fundo escuro se o admin não estiver aberto
             if (!document.getElementById("admin-modal")?.classList.contains("show")) {
                 overlay.classList.remove("show");
             }
         };
     }
 
-    // 4. Mostrar "Carregando..."
+    // Mostrar Loading
     if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="p-8 text-center text-gray-500">
-                    <div class="flex flex-col items-center justify-center">
-                        <i class="fas fa-spinner fa-spin text-3xl mb-3 text-purple-600"></i>
-                        <span class="font-bold">Buscando dados da equipe...</span>
-                    </div>
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Buscando dados...</td></tr>`;
     }
 
-    // 5. Busca de Dados (Aqui o 'await' funcionará porque a função agora é 'async')
+    // 5. Busca de Dados
     try {
         const snapshot = await db.collection("users").get();
         
         let users = [];
+        // Set para guardar nomes únicos de turmas (evita duplicados)
+        let turmasEncontradas = new Set();
+
         snapshot.forEach(doc => {
             const u = doc.data();
             u.uid = doc.id;
-            u.company = u.company || "Particular";
+            // Padroniza a turma (Maiúsculo e sem espaços extras)
+            u.company = (u.company || "Particular").trim().toUpperCase();
             if (!u.completedModules) u.completedModules = [];
+            
             users.push(u);
+            turmasEncontradas.add(u.company); // Adiciona à lista de filtros
         });
 
-        // Ordenar por nome via Javascript (evita erro de índice no Firebase)
+        // Ordenar alunos por nome
         users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-        // Salvar na memória para filtros
+        // Cache global para o filtro funcionar
         window.managerCachedUsers = users;
 
-        console.log(`✅ ${users.length} alunos carregados.`);
+        // --- 6. PREENCHER O FILTRO AUTOMATICAMENTE ---
+        if (filterSelect) {
+            // Limpa opções antigas e mantém a padrão
+            filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+            
+            // Converte o Set para Array, ordena e cria as opções
+            Array.from(turmasEncontradas).sort().forEach(turma => {
+                filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+            });
+        }
 
-        // 6. Renderizar a Tabela
+        // 7. Renderizar a Tabela Inicial (Todos)
         if (typeof renderManagerTable === 'function') {
             renderManagerTable(users);
-        } else {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable não encontrada.</td></tr>`;
         }
 
     } catch (err) {
-        console.error("❌ Erro ao buscar dados:", err);
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
-                        Erro de Conexão: ${err.message}
-                    </td>
-                </tr>
-            `;
-        }
+        console.error("❌ Erro:", err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro de Conexão: ${err.message}</td></tr>`;
     }
 };
-
 
 // FUNÇÃO AUXILIAR: RENDERIZA A TABELA (VERSÃO FINAL BLINDADA)
 window.renderManagerTable = function(usersList) {
