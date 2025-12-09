@@ -2414,6 +2414,48 @@ window.openManagerPanel = async function() {
     }
 };
 
+    // 5. Busca de Dados (USANDO A VARIÁVEL CORRETA 'db')
+    try {
+        const snapshot = await db.collection("users").get();
+        
+        let users = [];
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            u.uid = doc.id;
+            u.company = u.company || "Particular";
+            if (!u.completedModules) u.completedModules = [];
+            users.push(u);
+        });
+
+        // Ordenação
+        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+        // Cache global para filtros
+        window.managerCachedUsers = users;
+
+        console.log(`✅ ${users.length} alunos carregados.`);
+
+        // 6. Renderizar
+        if (typeof renderManagerTable === 'function') {
+            renderManagerTable(users);
+        } else {
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable ausente.</td></tr>`;
+        }
+
+    } catch (err) {
+        console.error("❌ Erro fatal ao buscar dados:", err);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
+                        Erro de Conexão.<br><span class="text-xs">${err.message}</span>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+};
+
         // 5. Busca de Dados (CORREÇÃO CRÍTICA: Sem orderBy no Banco)
         try {
             // Buscamos TUDO sem ordenar no Firebase para evitar erro de índice
