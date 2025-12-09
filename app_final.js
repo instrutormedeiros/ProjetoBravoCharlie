@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentModuleId = null;
     let cachedQuestionBanks = {}; 
     let currentUserData = null; 
+    let managerPanelUnsubscribe = null; // Controla o listener em tempo real
 
     // --- VARIÁVEIS PARA O SIMULADO ---
     let simuladoTimerInterval = null;
@@ -393,74 +394,193 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
 
     }
     
-    // --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
-    window.openAdminPanel = async function() {
-        if (!currentUserData || !currentUserData.isAdmin) return;
-        adminModal.classList.add('show');
-        adminOverlay.classList.add('show');
-        const tbody = document.getElementById('admin-table-body');
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando usuários...</td></tr>';
-        
-        try {
-            const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
-            tbody.innerHTML = '';
-            
-            snapshot.forEach(doc => {
-                const u = doc.data();
-                const uid = doc.id;
-                
-                // Verifica status e expiração
-                let statusDisplay = u.status || 'trial';
-                let statusColor = 'bg-gray-100 text-gray-800';
-                
-                const validade = u.acesso_ate ? new Date(u.acesso_ate) : null;
-                const isExpired = validade && new Date() > validade;
-                const validadeStr = validade ? validade.toLocaleDateString('pt-BR') : '-';
+    // ========================================
+// PAINEL DO GESTOR - TEMPO REAL
+// ========================================
+window.openManagerPanel = function() {
+  console.log("🟢 Abrindo painel do gestor...");
+  
+  if (!currentUserData || (!currentUserData.isManager && !currentUserData.isAdmin)) {
+    alert("⛔ Acesso negado. Apenas gestores podem acessar este painel.");
+    return;
+  }
 
-                if (u.status === 'premium') {
-                    if (isExpired) {
-                        statusDisplay = 'EXPIRADO';
-                        statusColor = 'bg-red-100 text-red-800';
-                    } else {
-                        statusColor = 'bg-green-100 text-green-800';
-                    }
-                } else {
-                    statusColor = 'bg-yellow-100 text-yellow-800';
-                }
+  const modal = document.getElementById("manager-modal");
+  const overlay = document.getElementById("manager-modal-overlay");
+  const tbody = document.getElementById("manager-table-body");
+  const companyNameEl = document.getElementById("manager-company-name");
 
-                const cpf = u.cpf || 'Sem CPF';
-                const planoTipo = u.planType || (u.status === 'premium' ? 'Indefinido' : 'Trial');
-                const deviceInfo = u.last_device || 'Desconhecido';
-                const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
+  if (!modal || !overlay || !tbody) {
+    console.error("❌ Elementos do modal não encontrados!");
+    alert("Erro: Painel não encontrado no HTML.");
+    return;
+  }
 
-                const row = `
-                    <tr class="border-b hover:bg-gray-50 transition-colors">
-                        <td class="p-3 font-bold text-gray-800">${u.name}</td>
-                        <td class="p-3 text-gray-600 text-sm">${u.email}<br><span class="text-xs text-gray-500">CPF: ${cpf}</span></td>
-                        <td class="p-3 text-xs text-gray-500 max-w-[150px] truncate" title="${deviceInfo}">${deviceInfo}</td>
-                        <td class="p-3">
-                            <div class="flex flex-col items-start">
-                                <span class="px-2 py-1 rounded text-xs font-bold uppercase ${statusColor}">${statusDisplay}</span>
-                                <span class="text-xs text-gray-500 mt-1">${planoTipo}</span>
-                            </div>
-                        </td>
-                        <td class="p-3 text-sm font-medium">${validadeStr}</td>
-                        <td class="p-3 flex flex-wrap gap-2">
-                            <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
-                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Nota Admin"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
-                            <button onclick="manageUserAccess('${uid}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Plano"><i class="fas fa-calendar-alt"></i></button>
-                            <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
-                            <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
-                            <button onclick="toggleManagerRole('${uid}', ${u.isManager})" class="${u.isManager ? 'bg-purple-600' : 'bg-gray-400'} hover:bg-purple-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alternar Gestor"><i class="fas fa-briefcase"></i></button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
-        }
-    };
+  // Exibe o modal
+  modal.classList.add("show");
+  overlay.classList.add("show");
+
+  // Nome da empresa/turma
+  if (companyNameEl) {
+    companyNameEl.textContent = currentUserData.company || "Gestão de Equipe";
+  }
+
+  // Loading
+  tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando dados em tempo real...</td></tr>`;
+
+  // Cancela listener anterior (evita duplicação)
+  if (managerPanelUnsubscribe) {
+    console.log("🔵 Cancelando listener anterior...");
+    managerPanelUnsubscribe();
+  }
+
+  // Monta a query
+  let query = window.fbDB.collection("users");
+  
+  // Filtra pela empresa (se não for "Particular", mostra só da turma)
+  if (currentUserData.company && currentUserData.company !== "Particular") {
+    console.log("🔵 Filtrando por empresa:", currentUserData.company);
+    query = query.where("company", "==", currentUserData.company);
+  } else {
+    console.log("🔵 Mostrando todos os usuários");
+  }
+
+  // 🔥 ATIVA LISTENER EM TEMPO REAL
+  managerPanelUnsubscribe = query.onSnapshot(
+    (snapshot) => {
+      console.log("🟢 Dados recebidos em tempo real:", snapshot.size, "usuários");
+      renderManagerTable(snapshot);
+    },
+    (error) => {
+      console.error("❌ Erro no listener do painel gestor:", error);
+      tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">❌ Erro: ${error.message}</td></tr>`;
+    }
+  );
+};
+
+// 🔄 BOTÃO DE ATUALIZAÇÃO MANUAL
+window.refreshManagerPanel = function() {
+  console.log("🔄 Refresh manual acionado pelo gestor");
+  const tbody = document.getElementById("manager-table-body");
+  
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><i class="fas fa-sync-alt fa-spin mr-2"></i>Atualizando...</td></tr>`;
+  }
+  
+  let query = window.fbDB.collection("users");
+  if (currentUserData.company && currentUserData.company !== "Particular") {
+    query = query.where("company", "==", currentUserData.company);
+  }
+  
+  query.get()
+    .then((snapshot) => {
+      console.log("🟢 Refresh concluído:", snapshot.size, "usuários");
+      renderManagerTable(snapshot);
+    })
+    .catch((error) => {
+      console.error("❌ Erro no refresh manual:", error);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">❌ Erro: ${error.message}</td></tr>`;
+      }
+    });
+};
+
+// 📊 RENDERIZA A TABELA DO GESTOR
+function renderManagerTable(snapshot) {
+  const tbody = document.getElementById("manager-table-body");
+  if (!tbody) return;
+
+  // Calcula total de módulos do curso
+  const total = totalModules || 0;
+  console.log("📊 Total de módulos do curso:", total);
+
+  // Contadores
+  let totalUsers = 0;
+  let completed = 0;
+  let inProgress = 0;
+  let pending = 0;
+
+  tbody.innerHTML = "";
+
+  if (snapshot.empty) {
+    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado nesta turma.</td></tr>`;
+    updateManagerStats(0, 0, 0, 0);
+    return;
+  }
+
+  snapshot.forEach((doc) => {
+    const u = doc.data();
+    totalUsers++;
+
+    // Progresso do aluno
+    const userProgress = Array.isArray(u.completedModules) ? u.completedModules : [];
+    const progressPercent = total > 0 ? Math.round((userProgress.length / total) * 100) : 0;
+
+    // Classifica status
+    if (progressPercent === 100) {
+      completed++;
+    } else if (progressPercent > 0) {
+      inProgress++;
+    } else {
+      pending++;
+    }
+
+    // Cor da barra
+    let barColor = "bg-red-500";
+    if (progressPercent === 100) barColor = "bg-green-500";
+    else if (progressPercent >= 50) barColor = "bg-yellow-500";
+
+    // Validade
+    const validade = u.acessoate ? new Date(u.acessoate).toLocaleDateString("pt-BR") : "—";
+    const isExpired = u.acessoate && new Date(u.acessoate) < new Date();
+    const statusBadge = u.status === "premium" && !isExpired
+      ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold uppercase">✓ Ativo</span>'
+      : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial</span>';
+
+    // Linha da tabela
+    const row = `
+      <tr class="border-b hover:bg-gray-50 transition-colors">
+        <td class="px-4 py-3 font-semibold text-gray-800">${u.name || "Sem nome"}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">
+          ${u.email || "—"}<br>
+          <span class="text-xs text-gray-400">CPF: ${u.cpf || "—"}</span>
+        </td>
+        <td class="px-4 py-3 text-sm text-gray-500">${u.company || "Particular"}</td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div class="${barColor} h-2 transition-all duration-500" style="width: ${progressPercent}%"></div>
+            </div>
+            <span class="text-xs font-bold text-gray-700">${progressPercent}%</span>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">${userProgress.length}/${total} módulos</p>
+        </td>
+        <td class="px-4 py-3">${statusBadge}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">${validade}</td>
+      </tr>
+    `;
+
+    tbody.innerHTML += row;
+  });
+
+  // Atualiza cards de estatísticas
+  updateManagerStats(totalUsers, completed, inProgress, pending);
+}
+
+// 📈 ATUALIZA OS CARDS DE ESTATÍSTICAS
+function updateManagerStats(total, completed, progress, pending) {
+  const els = {
+    total: document.getElementById("mgr-total-users"),
+    completed: document.getElementById("mgr-completed"),
+    progress: document.getElementById("mgr-progress"),
+    pending: document.getElementById("mgr-pending")
+  };
+
+  if (els.total) els.total.textContent = total;
+  if (els.completed) els.completed.textContent = completed;
+  if (els.progress) els.progress.textContent = progress;
+  if (els.pending) els.pending.textContent = pending;
+}
 
     window.manageUserAccess = async function(uid) {
         const op = prompt(
@@ -1946,10 +2066,35 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
         adminBtn?.addEventListener('click', window.openAdminPanel);
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
 
-        closeAdminBtn?.addEventListener('click', () => {
-            adminModal.classList.remove('show');
-            adminOverlay.classList.remove('show');
-        });
+        // Fechar modal do gestor
+const closeManagerBtn = document.getElementById("close-manager-modal");
+const managerOverlay = document.getElementById("manager-modal-overlay");
+
+closeManagerBtn?.addEventListener("click", () => {
+  const managerModal = document.getElementById("manager-modal");
+  managerModal?.classList.remove("show");
+  managerOverlay?.classList.remove("show");
+  
+  // 🔴 CANCELA O LISTENER EM TEMPO REAL
+  if (managerPanelUnsubscribe) {
+    console.log("🔴 Cancelando listener do painel gestor");
+    managerPanelUnsubscribe();
+    managerPanelUnsubscribe = null;
+  }
+});
+
+managerOverlay?.addEventListener("click", () => {
+  const managerModal = document.getElementById("manager-modal");
+  managerModal?.classList.remove("show");
+  managerOverlay?.classList.remove("show");
+  
+  // 🔴 CANCELA O LISTENER EM TEMPO REAL
+  if (managerPanelUnsubscribe) {
+    console.log("🔴 Cancelando listener do painel gestor");
+    managerPanelUnsubscribe();
+    managerPanelUnsubscribe = null;
+  }
+});
         adminOverlay?.addEventListener('click', () => {
             adminModal.classList.remove('show');
             adminOverlay.classList.remove('show');
