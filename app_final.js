@@ -2374,28 +2374,7 @@ window.openManagerPanel = async function() {
         `;
     }
 
-          // 6. Renderizar a Tabela
-        if (typeof renderManagerTable === 'function') {
-            renderManagerTable(users);
-        } else {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable não encontrada.</td></tr>`;
-        }
-
-    } catch (err) {
-        console.error("❌ Erro ao buscar dados:", err);
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
-                        Erro de Conexão: ${err.message}
-                    </td>
-                </tr>
-            `;
-        }
-    }
-};
-
-    // 5. Busca de Dados (Aqui usamos o 'db' correto e o 'await' funciona porque a função é async)
+    // 5. Busca de Dados (Aqui o 'await' funcionará porque a função agora é 'async')
     try {
         const snapshot = await db.collection("users").get();
         
@@ -2408,7 +2387,7 @@ window.openManagerPanel = async function() {
             users.push(u);
         });
 
-        // Ordenar por nome
+        // Ordenar por nome via Javascript (evita erro de índice no Firebase)
         users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
         // Salvar na memória para filtros
@@ -2436,135 +2415,6 @@ window.openManagerPanel = async function() {
         }
     }
 };
-
-    // 5. Busca de Dados (USANDO A VARIÁVEL CORRETA 'db')
-    try {
-        const snapshot = await db.collection("users").get();
-        
-        let users = [];
-        snapshot.forEach(doc => {
-            const u = doc.data();
-            u.uid = doc.id;
-            u.company = u.company || "Particular";
-            if (!u.completedModules) u.completedModules = [];
-            users.push(u);
-        });
-
-        // Ordenação
-        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-        // Cache global para filtros
-        window.managerCachedUsers = users;
-
-        console.log(`✅ ${users.length} alunos carregados.`);
-
-        // 6. Renderizar
-        if (typeof renderManagerTable === 'function') {
-            renderManagerTable(users);
-        } else {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable ausente.</td></tr>`;
-        }
-
-    } catch (err) {
-        console.error("❌ Erro fatal ao buscar dados:", err);
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
-                        Erro de Conexão.<br><span class="text-xs">${err.message}</span>
-                    </td>
-                </tr>
-            `;
-        }
-    }
-};
-
-    // 5. Busca de Dados (USANDO A VARIÁVEL CORRETA 'db')
-    try {
-        const snapshot = await db.collection("users").get();
-        
-        let users = [];
-        snapshot.forEach(doc => {
-            const u = doc.data();
-            u.uid = doc.id;
-            u.company = u.company || "Particular";
-            if (!u.completedModules) u.completedModules = [];
-            users.push(u);
-        });
-
-        // Ordenação
-        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-        // Cache global para filtros
-        window.managerCachedUsers = users;
-
-        console.log(`✅ ${users.length} alunos carregados.`);
-
-        // 6. Renderizar
-        if (typeof renderManagerTable === 'function') {
-            renderManagerTable(users);
-        } else {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500">Erro: Função renderManagerTable ausente.</td></tr>`;
-        }
-
-    } catch (err) {
-        console.error("❌ Erro fatal ao buscar dados:", err);
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="p-4 text-center text-red-500 bg-red-50">
-                        Erro de Conexão.<br><span class="text-xs">${err.message}</span>
-                    </td>
-                </tr>
-            `;
-        }
-    }
-};
-
-        // 5. Busca de Dados (CORREÇÃO CRÍTICA: Sem orderBy no Banco)
-        try {
-            // Buscamos TUDO sem ordenar no Firebase para evitar erro de índice
-            const snapshot = await window.fbDB.collection("users").get();
-            
-            let users = [];
-            snapshot.forEach(doc => {
-                const u = doc.data();
-                u.uid = doc.id;
-                // Garante valores padrão para não quebrar a tabela
-                u.company = u.company || "Particular";
-                if (!u.completedModules) u.completedModules = [];
-                users.push(u);
-            });
-
-            // Ordenação via JavaScript (Mais rápido e seguro aqui)
-            users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-            // SALVA NA MEMÓRIA GLOBAL (Para o filtro de turmas funcionar)
-            window.managerCachedUsers = users;
-
-            console.log(`✅ ${users.length} alunos carregados com sucesso.`);
-
-            // 6. Renderizar a Tabela
-            if (typeof renderManagerTable === 'function') {
-                renderManagerTable(users);
-            } else {
-                if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: Função renderManagerTable não encontrada.</td></tr>`;
-            }
-
-        } catch (err) {
-            console.error("❌ Erro fatal ao buscar dados:", err);
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="p-4 text-center text-red-500 font-bold bg-red-50">
-                            Erro de Conexão com o Banco de Dados.<br>
-                            <span class="text-xs text-gray-600 font-normal">Detalhe: ${err.message}</span>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-    };
 
 
 // FUNÇÃO AUXILIAR: RENDERIZA A TABELA (VERSÃO FINAL BLINDADA)
