@@ -316,15 +316,14 @@ setTimeout(() => {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
-        // ========================================
-// ========================================
+       
         // LÓGICA DO BOTÃO GESTOR (CORRIGIDO)
         // ========================================
         const painelBtn = document.getElementById("open-manager-panel-btn");
         
-        // ========================================
+       
         // LÓGICA DO BOTÃO FLUTUANTE DE GESTOR
-        // ========================================
+   
         const managerFab = document.getElementById("manager-fab");
         
         // Se for gestor OU admin, mostra o botão flutuante
@@ -337,12 +336,7 @@ setTimeout(() => {
 
         checkTrialStatus(userData.acesso_ate);
 
-       // ============================================================
-        // CORREÇÃO DE PROGRESSO POR LOGIN (ANTI-CONTAMINAÇÃO)
-        // Substitua o trecho de Sync Progresso por este bloco:
-        // ============================================================
-
-        // Verifica se o usuário tem progresso salvo no Banco de Dados (Nuvem)
+              // Verifica se o usuário tem progresso salvo no Banco de Dados (Nuvem)
         if (userData.completedModules && Array.isArray(userData.completedModules)) {
             // CASO 1: A esposa tem 15% na nuvem.
             // AÇÃO: Forçamos o computador a esquecer os 42% do Admin e usar os 15% dela.
