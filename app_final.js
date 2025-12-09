@@ -2024,10 +2024,26 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
     }
 // ... (restante do código anterior) ...
 
-    // --- 6. LIMITE IA (BRAVOGPT) - COLE AQUI ---
+   // --- 6. LIMITE IA (CORREÇÃO DE SEGURANÇA) ---
     function initVoiceflowLimit() {
-        if (!window.voiceflow || !window.voiceflow.chat) return;
+        // Verifica se o chat existe antes de tentar monitorar
+        if (!window.voiceflow || !window.voiceflow.chat || typeof window.voiceflow.chat.on !== 'function') {
+            // Se não carregou ainda, tenta de novo em 3 segundos (até 5 vezes)
+            let attempts = 0;
+            const retry = setInterval(() => {
+                attempts++;
+                if (window.voiceflow && window.voiceflow.chat && typeof window.voiceflow.chat.on === 'function') {
+                    setupVoiceflowListener();
+                    clearInterval(retry);
+                }
+                if (attempts > 5) clearInterval(retry); // Desiste sem quebrar o site
+            }, 3000);
+            return;
+        }
+        setupVoiceflowListener();
+    }
 
+    function setupVoiceflowListener() {
         window.voiceflow.chat.on('user:message', () => {
             const today = new Date().toLocaleDateString();
             const key = `ai_usage_${today}`;
@@ -2035,17 +2051,16 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
             localStorage.setItem(key, count);
 
             const isPremium = currentUserData && currentUserData.status === 'premium';
-            const limit = isPremium ? 50 : 5; // 50 Premium, 5 Free
+            const limit = isPremium ? 50 : 5; 
 
             if (count > limit) {
-                alert(`⚠️ Limite diário de IA atingido (${count-1}/${limit}).\nVolte amanhã ou assine o Premium para mais interações.`);
-                // Oculta o chat forçadamente
+                alert(`⚠️ Limite diário de IA atingido (${limit} perguntas).\nAssine o Premium para continuar.`);
                 const chatDiv = document.getElementById('voiceflow-chat');
                 if(chatDiv) chatDiv.style.display = 'none';
             }
         });
     }
-    // Tenta iniciar o monitoramento após 5 segundos
+    // Inicia monitoramento
     setTimeout(initVoiceflowLimit, 5000);
 
    // --- 7. TOUR GUIADO (ONBOARDING - AJUSTE FINAL MOBILE/DESKTOP) ---
@@ -2300,70 +2315,57 @@ let managerCachedUsers = [];
 window.openManagerPanel = async function() {
         console.log("🔓 Abrindo Painel do Gestor...");
         
-        // 1. Verifica se o Firebase está pronto
-        if (!window.fbDB) {
-            alert("⏳ O sistema ainda está carregando. Aguarde alguns segundos.");
-            return;
-        }
+        if (!window.fbDB) { alert("⏳ Sistema carregando. Tente em 5 segundos."); return; }
+        if (!currentUserData) { alert("❌ Faça login primeiro."); return; }
 
-        // 2. Verifica Login
-        if (!currentUserData) {
-            alert("❌ Erro de segurança: Usuário não identificado.");
-            return;
-        }
-
-        // 3. Abre o Modal
+        // Abre o Modal
         const modal = document.getElementById("manager-modal");
-        const overlay = document.getElementById("admin-modal-overlay"); // Reutilizando overlay existente ou crie um específico
+        const overlay = document.getElementById("admin-modal-overlay");
         
         if (modal) modal.classList.add("show");
         if (overlay) overlay.classList.add("show");
 
-        // Nome da Empresa no Título
-        const titleEl = document.getElementById("manager-company-name");
-        if(titleEl) titleEl.textContent = currentUserData.company || "Visão Geral";
+        // Configura Botão Fechar
+        document.getElementById("close-manager-modal").onclick = () => {
+            modal.classList.remove("show");
+            if (overlay) overlay.classList.remove("show");
+        };
 
-        // Botão Fechar
-        const closeBtn = document.getElementById("close-manager-modal");
-        if(closeBtn) {
-            closeBtn.onclick = () => {
-                modal.classList.remove("show");
-                if (overlay) overlay.classList.remove("show");
-            };
-        }
-
-        // 4. Carrega os Dados
+        // Mostra Loading
         const tbody = document.getElementById("manager-table-body");
-        if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Buscando dados em tempo real...</td></tr>`;
+        if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-3 text-purple-500"></i><br>Carregando dados da equipe...</td></tr>`;
 
         try {
-            // Busca todos os usuários ordenados por nome
-            const snapshot = await window.fbDB.collection("users").orderBy("name").get();
+            // CORREÇÃO: Removemos .orderBy('name') para evitar travamento por falta de índice
+            const snapshot = await window.fbDB.collection("users").get();
             
             let users = [];
             snapshot.forEach(doc => {
                 const u = doc.data();
                 u.uid = doc.id;
-                // Garante que o array de módulos existe para não quebrar a conta
+                u.company = u.company || "Particular";
                 if (!u.completedModules) u.completedModules = [];
                 users.push(u);
             });
 
-            // SALVA NA VARIÁVEL GLOBAL (CRUCIAL PARA OS FILTROS FUNCIONAREM)
+            // Ordena via JavaScript (Mais seguro e rápido para listas médias)
+            users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+            // Salva na memória para os filtros
             window.managerCachedUsers = users;
 
-            console.log(`✅ ${users.length} alunos carregados.`);
+            console.log(`✅ ${users.length} alunos carregados com sucesso.`);
 
-            // Chama a função que desenha a tabela (se ela existir)
+            // Renderiza
             if (typeof renderManagerTable === 'function') {
                 renderManagerTable(users);
             } else {
-                console.error("Função renderManagerTable não encontrada.");
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 p-4">Erro: renderManagerTable não encontrada.</td></tr>`;
             }
 
         } catch (err) {
-            console.error("❌ Erro ao buscar dados:", err);
-            if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
+            console.error("❌ Erro fatal ao buscar dados:", err);
+            if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 font-bold">Erro ao conectar com o banco de dados.<br><span class="text-xs font-normal text-gray-600">${err.message}</span></td></tr>`;
         }
     };
 
