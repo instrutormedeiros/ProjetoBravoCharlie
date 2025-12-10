@@ -1,4 +1,4 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL V10.5 - RESTAURAÇÃO TOTAL + CORREÇÃO GESTOR) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL V10.1 - CORREÇÃO TOTAL MODULES) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -13,10 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentModuleId = null;
     let cachedQuestionBanks = {}; 
     let currentUserData = null; 
-    
-    // --- VARIÁVEIS GLOBAIS GESTOR (ADICIONADO PARA CORREÇÃO) ---
-    window.managerCachedUsers = []; 
-    window.managerListenerUnsubscribe = null; 
 
     // --- VARIÁVEIS PARA O SIMULADO ---
     let simuladoTimerInterval = null;
@@ -83,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cenario 1: Está falando -> PAUSAR
         if (synth.speaking && !synth.paused) {
             synth.pause();
-            if(btnIcon) { btnIcon.className = 'fas fa-play'; } 
+            if(btnIcon) { btnIcon.className = 'fas fa-play'; } // Ícone muda para Play
             if(btnText) btnText.textContent = 'Continuar';
             return;
         }
@@ -91,12 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cenario 2: Está pausado -> RETOMAR
         if (synth.paused) {
             synth.resume();
-            if(btnIcon) { btnIcon.className = 'fas fa-pause'; } 
+            if(btnIcon) { btnIcon.className = 'fas fa-pause'; } // Ícone muda para Pause
             if(btnText) btnText.textContent = 'Pausar';
             return;
         }
 
-        // Cenario 3: Não está falando -> INICIAR 
+        // Cenario 3: Não está falando -> INICIAR (Ou reiniciar se houver lixo na memória)
         if(synth.speaking) synth.cancel(); 
 
         const div = document.createElement('div');
@@ -112,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(btnText) btnText.textContent = 'Pausar';
             if(mainBtn) mainBtn.classList.add('playing');
             
-            // Cria o botão de STOP dinamicamente
+            // Cria o botão de STOP (Quadrado Vermelho) dinamicamente se não existir
             if (!document.getElementById('audio-stop-btn')) {
                 const stopBtn = document.createElement('button');
                 stopBtn.id = 'audio-stop-btn';
@@ -120,13 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 stopBtn.innerHTML = '<i class="fas fa-stop"></i>';
                 stopBtn.title = "Parar e Resetar";
                 stopBtn.onclick = (e) => {
-                    e.stopPropagation(); 
+                    e.stopPropagation(); // Evita clicar no container
                     synth.cancel();
                     stopBtn.remove();
+                    // Reseta o botão principal
                     if(btnIcon) btnIcon.className = 'fas fa-headphones';
                     if(btnText) btnText.textContent = 'Ouvir Aula';
                     if(mainBtn) mainBtn.classList.remove('playing');
                 };
+                // Insere o botão de stop ao lado do select de velocidade
                 const playerContainer = document.querySelector('.modern-audio-player');
                 if(playerContainer) playerContainer.appendChild(stopBtn);
             }
@@ -208,21 +206,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return; 
     }
 
-    function init() {
-        // ========================================
-        // AGUARDA O FIREBASE CARREGAR
-        // ========================================
-        if (typeof firebase === 'undefined') {
-            console.warn("⚠️ Firebase não carregado ainda. Aguardando...");
-            setTimeout(init, 500); 
-            return;
-        }
-        
-        console.log("✅ Firebase carregado! Iniciando sistema...");
-        document.body.classList.add('landing-active');
-        
-        setTimeout(initScrollReveal, 100); 
-        
+function init() {
+    document.body.classList.add('landing-active');
+    
+    // ---> ADICIONE ISSO AQUI:
+    setTimeout(initScrollReveal, 100); // Inicia os observadores de animação
+    
         setupProtection();
         setupTheme();
         
@@ -238,20 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (typeof FirebaseCourse !== 'undefined') {
             FirebaseCourse.init(firebaseConfig);
-            // Aguarda o Firebase estar pronto
-            setTimeout(() => {
-                if (window.fbDB) {
-                    console.log("✅ Firebase inicializado com sucesso!");
-                } else {
-                    console.warn("⚠️ Firebase ainda não inicializou. Aguardando...");
-                    setTimeout(() => {
-                        if (window.fbDB) {
-                            console.log("✅ Firebase inicializado (2ª tentativa)!");
-                        }
-                    }, 3000);
-                }
-            }, 2000);
-
             setupAuthEventListeners(); 
             
             document.getElementById('logout-button')?.addEventListener('click', FirebaseCourse.signOutUser);
@@ -260,18 +235,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // === CORREÇÃO CRÍTICA: LÓGICA DE LOGIN VS CAPA ===
             
+            // 1. Garante que o modal de login comece FECHADO para exibir a capa
             const loginModal = document.getElementById('name-prompt-modal');
             const loginOverlay = document.getElementById('name-modal-overlay');
             if(loginModal) loginModal.classList.remove('show');
             if(loginOverlay) loginOverlay.classList.remove('show');
 
+            // 2. Verifica se o usuário JÁ estava logado antes (Sessão salva)
             const isLogged = localStorage.getItem('my_session_id');
 
             if (isLogged) {
+                // Se já tem sessão, faz a verificação silenciosa no fundo
+                // O usuário vê a Capa, mas o sistema já vai logando por trás
                 FirebaseCourse.checkAuth((user, userData) => {
                     onLoginSuccess(user, userData);
                 });
             } 
+            // SE NÃO TIVER SESSÃO, NÃO FAZ NADA! 
+            // O modal só abrirá quando o usuário clicar em "ACESSAR PLATAFORMA" na capa.
         }
         
         setupHeaderScroll();
@@ -311,33 +292,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
-        
-        // LÓGICA DO BOTÃO FLUTUANTE DE GESTOR
-        const managerFab = document.getElementById("manager-fab");
-        
-        // Se for gestor OU admin, mostra o botão flutuante
-        if (userData.isManager === true || userData.isAdmin === true) {
-            if (managerFab) {
-                managerFab.classList.remove("hidden"); // Remove a classe que esconde
-                console.log("✅ Botão Flutuante de Gestor ATIVADO para:", userData.name);
-            }
-        }
 
         checkTrialStatus(userData.acesso_ate);
 
-        // Verifica se o usuário tem progresso salvo no Banco de Dados (Nuvem)
-        if (userData.completedModules && Array.isArray(userData.completedModules)) {
+        // --- PROGRESSO SINCRONIZADO (BIDIRECIONAL) ---
+        if (userData.completedModules && Array.isArray(userData.completedModules) && userData.completedModules.length > 0) {
+            // Se o banco tem dados, usa o banco (prioridade nuvem)
             completedModules = userData.completedModules;
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
-            console.log("⬇️ Progresso sincronizado pela conta (Nuvem):", completedModules.length);
-        } else {
-            // Se não tem na nuvem, mas tem local, vamos salvar? Não, começamos limpo ou mantém local se já existir lógica
-            // Aqui mantemos a lógica original do seu arquivo:
-            // Se for novo sem dados, zera.
-            if (!completedModules || completedModules.length === 0) {
-                 completedModules = [];
-                 localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify([]));
-            }
+            console.log("Progresso recuperado da nuvem.");
+        } else if (completedModules.length > 0) {
+            // Se o banco está vazio, mas o aluno tem progresso local, ENVIA para o banco
+            console.log("Sincronizando progresso local para a nuvem...");
+            saveProgressToCloud();
         }
 
         // Inicializa contadores
@@ -351,225 +318,102 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners(); 
         handleInitialLoad();
 
-        // Inicia Tour Automático (se nunca viu)
+       // Inicia Tour Automático (se nunca viu)
         startOnboardingTour(false); 
 
         // --- CORREÇÃO BLINDADA B2B ---
         // Verifica se a intenção de abrir o painel existe
-        if (localStorage.getItem("openmanagerafterlogin") === "true") {
-            localStorage.removeItem("openmanagerafterlogin");
+        if (localStorage.getItem('open_manager_after_login') === 'true') {
+            localStorage.removeItem('open_manager_after_login'); // Limpa a memória
             
-            // Aguarda o Firebase estar pronto antes de abrir o painel
+            // Tenta abrir o painel após 1.5 segundos
             setTimeout(() => {
-                if (window.fbDB && typeof openManagerPanel === "function") {
-                    console.log("🔓 Abrindo painel do gestor automaticamente...");
+                const modal = document.getElementById('manager-modal');
+                if (modal && typeof openManagerPanel === 'function') {
                     openManagerPanel();
                 } else {
-                    console.warn("⚠️ Firebase ainda não está pronto. Tentando novamente em 3 segundos...");
+                    // Se falhar (elemento não existe ainda), tenta de novo em 3 segundos
+                    console.log("Tentativa 1 falhou, tentando novamente...");
                     setTimeout(() => {
-                        if (window.fbDB && typeof openManagerPanel === "function") {
-                            openManagerPanel();
-                        }
+                        if(typeof openManagerPanel === 'function') openManagerPanel();
                     }, 3000);
                 }
-            }, 2000);  // Aumentei de 1500ms para 2000ms
+            }, 1500); 
         }
-
-        // --- TRAVA DE SEGURANÇA ---
+    // --- TRAVA DE SEGURANÇA (ADICIONE ISTO AQUI) ---
+        // Isso impede que os botões sejam duplicados quando o banco atualiza
         document.body.setAttribute('data-app-ready', 'true');
+
     }
     
-    // =================================================================================
-    // CORREÇÃO DEFINITIVA - PAINEL DO GESTOR (V10.5 BLINDADA)
-    // Substitui a lógica antiga que causava erro 'doc.data is not a function'
-    // =================================================================================
-
-    // 1. Renderização da Tabela (Recebe Array Limpo)
-    window.renderManagerTable = function(userList) {
-        const tbody = document.getElementById("manager-table-body");
-        if (!tbody) return;
-
-        // Limpa a tabela
-        tbody.innerHTML = "";
-
-        if (!userList || userList.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado com este filtro.</td></tr>`;
-            updateManagerStats(0, 0, 0, 0);
-            return;
-        }
-
-        const totalCurso = totalModules || 62;
-        let stats = { total: 0, completed: 0, inProgress: 0, pending: 0 };
-
-        userList.forEach(u => {
-            stats.total++;
-
-            // Progresso do aluno
-            const done = Array.isArray(u.completedModules) ? u.completedModules : [];
-            const pct = totalCurso > 0 ? Math.round((done.length / totalCurso) * 100) : 0;
-
-            // Classifica status
-            if (pct >= 100) stats.completed++;
-            else if (pct > 0) stats.inProgress++;
-            else stats.pending++;
-
-            // Cor da barra
-            let barColor = pct >= 100 ? "bg-green-500" : (pct >= 50 ? "bg-yellow-500" : "bg-red-500");
-
-            // Validade
-            const validadeDate = u.acesso_ate ? new Date(u.acesso_ate) : null;
-            const isExpired = validadeDate && validadeDate < new Date();
-            const validadeStr = validadeDate ? validadeDate.toLocaleDateString('pt-BR') : "—";
+    // --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
+    window.openAdminPanel = async function() {
+        if (!currentUserData || !currentUserData.isAdmin) return;
+        adminModal.classList.add('show');
+        adminOverlay.classList.add('show');
+        const tbody = document.getElementById('admin-table-body');
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando usuários...</td></tr>';
+        
+        try {
+            const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
+            tbody.innerHTML = '';
             
-            const statusHtml = (u.status === 'premium' && !isExpired)
-                ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold uppercase">✓ Ativo</span>'
-                : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial/Exp</span>';
-
-            // HTML da Linha
-            tbody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 font-semibold text-gray-800 cursor-pointer" onclick="window.editUserData('${u.uid}', '${u.name || ''}')" title="Editar Nome">
-                        ${u.name || "Sem Nome"} <i class="fas fa-pen text-[10px] text-gray-300 ml-1"></i>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
-                        ${u.email || "—"}<br>
-                        <span class="text-xs text-blue-500 cursor-pointer hover:underline" onclick="window.editUserPhone('${u.uid}', '${u.phone || ''}')">
-                            <i class="fab fa-whatsapp"></i> ${u.phone || "Add Tel"}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-500 cursor-pointer hover:text-blue-600" onclick="window.editUserClass('${u.uid}', '${u.company || ''}')" title="Mudar Turma">
-                        ${u.company || "PARTICULAR"} <i class="fas fa-pen text-[10px] ml-1"></i>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                                <div class="${barColor} h-2 transition-all duration-500" style="width: ${pct}%"></div>
-                            </div>
-                            <span class="text-xs font-bold text-gray-700">${pct}%</span>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1">${done.length}/${totalCurso} módulos</p>
-                    </td>
-                    <td class="px-4 py-3 cursor-pointer" onclick="window.manageUserAccess('${u.uid}')">
-                        ${statusHtml}
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
-                        ${validadeStr}
-                        <button onclick="window.deleteUser('${u.uid}', '${u.name}', '${u.cpf}')" class="ml-2 text-red-400 hover:text-red-600" title="Excluir"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        // Atualiza cards de estatísticas
-        updateManagerStats(stats.total, stats.completed, stats.inProgress, stats.pending);
-    }
-
-    // 2. Abertura do Painel (Lógica de Conexão + Cache)
-    window.openManagerPanel = function() {
-        console.log("🔓 Abrindo painel do gestor (V10.5)...");
-        
-        const db = window.fbDB || window.__fbDB;
-        if (!db) { alert("Sistema carregando. Tente novamente."); return; }
-        if (!currentUserData) { alert("Erro de autenticação."); return; }
-
-        const modal = document.getElementById("manager-modal");
-        const overlay = document.getElementById("manager-modal-overlay") || document.getElementById("admin-modal-overlay");
-        const tbody = document.getElementById("manager-table-body");
-        const titleEl = document.getElementById("manager-company-name");
-        const filterSelect = document.getElementById('mgr-filter-turma');
-
-        if (!modal) return;
-
-        modal.classList.add("show");
-        if(overlay) overlay.classList.add("show");
-
-        if (titleEl) titleEl.textContent = `Gestão: ${currentUserData.company || 'Geral'}`;
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Conectando tempo real...</td></tr>`;
-
-        // Cancela listener anterior
-        if (window.managerListenerUnsubscribe) {
-            window.managerListenerUnsubscribe();
-        }
-
-        // --- CONEXÃO TEMPO REAL ---
-        let query = db.collection("users");
-        
-        window.managerListenerUnsubscribe = query.onSnapshot((snapshot) => {
-            let rawUsers = [];
-            let turmasSet = new Set();
-
-            // CONVERTE SNAPSHOT PARA ARRAY (Resolve o erro doc.data)
             snapshot.forEach(doc => {
-                const data = doc.data();
-                data.uid = doc.id;
-                data.company = (data.company || "PARTICULAR").trim().toUpperCase();
-                rawUsers.push(data);
-                turmasSet.add(data.company);
+                const u = doc.data();
+                const uid = doc.id;
+                
+                // Verifica status e expiração
+                let statusDisplay = u.status || 'trial';
+                let statusColor = 'bg-gray-100 text-gray-800';
+                
+                const validade = u.acesso_ate ? new Date(u.acesso_ate) : null;
+                const isExpired = validade && new Date() > validade;
+                const validadeStr = validade ? validade.toLocaleDateString('pt-BR') : '-';
+
+                if (u.status === 'premium') {
+                    if (isExpired) {
+                        statusDisplay = 'EXPIRADO';
+                        statusColor = 'bg-red-100 text-red-800';
+                    } else {
+                        statusColor = 'bg-green-100 text-green-800';
+                    }
+                } else {
+                    statusColor = 'bg-yellow-100 text-yellow-800';
+                }
+
+                const cpf = u.cpf || 'Sem CPF';
+                const planoTipo = u.planType || (u.status === 'premium' ? 'Indefinido' : 'Trial');
+                const deviceInfo = u.last_device || 'Desconhecido';
+                const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
+
+                const row = `
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3 font-bold text-gray-800">${u.name}</td>
+                        <td class="p-3 text-gray-600 text-sm">${u.email}<br><span class="text-xs text-gray-500">CPF: ${cpf}</span></td>
+                        <td class="p-3 text-xs text-gray-500 max-w-[150px] truncate" title="${deviceInfo}">${deviceInfo}</td>
+                        <td class="p-3">
+                            <div class="flex flex-col items-start">
+                                <span class="px-2 py-1 rounded text-xs font-bold uppercase ${statusColor}">${statusDisplay}</span>
+                                <span class="text-xs text-gray-500 mt-1">${planoTipo}</span>
+                            </div>
+                        </td>
+                        <td class="p-3 text-sm font-medium">${validadeStr}</td>
+                        <td class="p-3 flex flex-wrap gap-2">
+                            <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
+                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Nota Admin"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
+                            <button onclick="manageUserAccess('${uid}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Plano"><i class="fas fa-calendar-alt"></i></button>
+                            <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
+                            <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
+                            <button onclick="toggleManagerRole('${uid}', ${u.isManager})" class="${u.isManager ? 'bg-purple-600' : 'bg-gray-400'} hover:bg-purple-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alternar Gestor"><i class="fas fa-briefcase"></i></button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
             });
-
-            // Ordena
-            rawUsers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-            // Salva no Cache
-            window.managerCachedUsers = rawUsers;
-
-            // Preenche Filtro
-            if (filterSelect && filterSelect.children.length <= 1) {
-                let optionsHtml = '<option value="TODOS">Todas as Turmas</option>';
-                Array.from(turmasSet).sort().forEach(t => {
-                    optionsHtml += `<option value="${t}">${t}</option>`;
-                });
-                filterSelect.innerHTML = optionsHtml;
-            }
-
-            // Aplica filtro atual
-            if (typeof window.filterManagerTable === 'function') {
-                window.filterManagerTable();
-            } else {
-                renderManagerTable(rawUsers);
-            }
-
-        }, (error) => {
-            console.error("Erro painel:", error);
-            if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-red-500 text-center">Erro: ${error.message}</td></tr>`;
-        });
-    };
-
-    // 3. Filtro (Usa o Cache)
-    window.filterManagerTable = function() {
-        const select = document.getElementById('mgr-filter-turma');
-        const selectedTurma = select ? select.value : 'TODOS';
-        
-        if (!window.managerCachedUsers) return;
-
-        if (selectedTurma === 'TODOS') {
-            renderManagerTable(window.managerCachedUsers);
-        } else {
-            const filtered = window.managerCachedUsers.filter(u => u.company === selectedTurma);
-            renderManagerTable(filtered);
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
         }
     };
-
-    // 4. Utilitários
-    function updateManagerStats(total, completed, inProgress, pending) {
-        const els = {
-            total: document.getElementById("mgr-total-users"),
-            completed: document.getElementById("mgr-completed"),
-            progress: document.getElementById("mgr-progress"),
-            pending: document.getElementById("mgr-pending")
-        };
-        if (els.total) els.total.textContent = total;
-        if (els.completed) els.completed.textContent = completed;
-        if (els.progress) els.progress.textContent = inProgress;
-        if (els.pending) els.pending.textContent = pending;
-    }
-
-    // LISTENER FECHAR MODAL
-    document.getElementById("close-manager-modal")?.addEventListener("click", () => {
-        document.getElementById("manager-modal")?.classList.remove("show");
-        document.getElementById("manager-modal-overlay")?.classList.remove("show");
-        document.getElementById("admin-modal-overlay")?.classList.remove("show");
-    });
 
     window.manageUserAccess = async function(uid) {
         const op = prompt(
@@ -595,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (op === '5') {
             // Remover Premium
             try {
+                // Define data no passado para expirar
                 const ontem = new Date();
                 ontem.setDate(ontem.getDate() - 1);
                 await window.__fbDB.collection('users').doc(uid).update({
@@ -616,6 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Calcula nova data a partir de AGORA
         const agora = new Date();
         const novaData = new Date(agora);
         novaData.setDate(novaData.getDate() + diasParaAdicionar);
@@ -632,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Erro ao atualizar: " + e.message);
         }
     };
-    
+   
     // 4. Excluir Usuário (Do Banco de Dados)
     window.deleteUser = async function(uid, name, cpf) {
         const confirm1 = confirm(`TEM CERTEZA que deseja excluir os dados de ${name}?`);
@@ -651,9 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             alert("Usuário removido do banco de dados.");
-            // Atualiza a tabela que estiver aberta
-            if(document.getElementById('manager-modal').classList.contains('show')) openManagerPanel();
-            else openAdminPanel(); 
+            openAdminPanel(); // Atualiza a tabela
         } catch (e) {
             alert("Erro ao excluir: " + e.message);
         }
@@ -685,10 +529,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupAuthEventListeners() {
         const nameField = document.getElementById('name-field-container');
         const cpfField = document.getElementById('cpf-field-container'); 
-        const phoneField = document.getElementById('phone-field-container'); 
-        const phoneInput = document.getElementById('phone-input'); 
-        const companyField = document.getElementById('company-field-container'); 
-        const companyInput = document.getElementById('company-input'); 
+        const phoneField = document.getElementById('phone-field-container'); // NOVO
+        const phoneInput = document.getElementById('phone-input'); // NOVO
+        const companyField = document.getElementById('company-field-container'); // NOVO
+        const companyInput = document.getElementById('company-input'); // NOVO
         const nameInput = document.getElementById('name-input');
         const cpfInput = document.getElementById('cpf-input'); 
         const emailInput = document.getElementById('email-input');
@@ -709,13 +553,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const closePayModal = document.getElementById('close-payment-modal-btn');
         const loginModalOverlay = document.getElementById('name-modal-overlay');
         const loginModal = document.getElementById('name-prompt-modal');
-        
+        // ... (Logo após as definições das variáveis dentro de setupAuthEventListeners)
+
+        // --- LÓGICA DO ENTER PARA LOGIN ---
+        // Se apertar Enter no campo de senha, clica no botão de entrar
         passwordInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 btnLogin.click();
             }
         });
 
+        // (Opcional) Se apertar Enter no email, pula para a senha
         emailInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 passwordInput.focus();
@@ -751,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             signupGroup.classList.remove('hidden');
             nameField.classList.remove('hidden');
             cpfField.classList.remove('hidden'); 
-            phoneField.classList.remove('hidden'); 
+            phoneField.classList.remove('hidden'); // MOSTRAR TELEFONE
             companyField.classList.remove('hidden');
             authTitle.textContent = "Criar Nova Conta";
             authMsg.textContent = "Cadastre-se para o Período de Experiência.";
@@ -762,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
             signupGroup.classList.add('hidden');
             nameField.classList.add('hidden');
             cpfField.classList.add('hidden'); 
-            phoneField.classList.add('hidden'); 
+            phoneField.classList.add('hidden'); // ESCONDER TELEFONE
             companyField.classList.add('hidden');
             authTitle.textContent = "Acesso ao Sistema";
             authMsg.textContent = "Acesso Restrito";
@@ -788,8 +636,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         btnSignup?.addEventListener('click', async () => {
-            const phone = phoneInput.value; 
-            const company = companyInput.value; 
+            const phone = phoneInput.value; // NOVO
+            const company = companyInput.value; // NOVO
             const name = nameInput.value;
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -829,7 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function generateSimuladoQuestions(config) {
         console.log("Iniciando geração de simulado...");
         const finalExamQuestions = [];
-        const globalSeenSignatures = new Set(); 
+        const globalSeenSignatures = new Set(); // Rastreia Texto + Opções para unicidade absoluta
 
         const map = {
             'rh': [1, 2, 3, 4, 5],
@@ -854,14 +702,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Categoria ${catKey}: ${pool.length} questões encontradas no total.`);
 
             // 2. Embaralha MUITO BEM
-            pool = shuffleArray(pool); 
-            pool = shuffleArray(pool); 
+            pool = shuffleArray(pool); // Mistura 1
+            pool = shuffleArray(pool); // Mistura 2 (Garantia)
 
             // 3. Seleciona ÚNICAS
             let addedCount = 0;
             for (const q of pool) {
                 if (addedCount >= qtyNeeded) break;
 
+                // Assinatura única: Texto da pergunta + Texto da primeira opção (para diferenciar perguntas parecidas)
                 const signature = (q.question + (q.options['a'] || '')).replace(/\s+/g, '').toLowerCase();
 
                 if (!globalSeenSignatures.has(signature)) {
@@ -873,6 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Categoria ${catKey}: ${addedCount} questões únicas adicionadas.`);
         }
         
+        // Embaralha o resultado final
         return shuffleArray(finalExamQuestions);
     }
       
@@ -889,6 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPremiumContent = moduleCategory && moduleCategory.isPremium;
         const userIsNotPremium = !currentUserData || currentUserData.status !== 'premium';
 
+        // Verifica bloqueio premium
         if (isPremiumContent && userIsNotPremium) { renderPremiumLockScreen(moduleContent[id].title); return; }
 
         currentModuleId = id;
@@ -1012,16 +863,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isSpecialModule = ['module53', 'module54', 'module55', 'module56', 'module57', 'module58', 'module59', 'module60', 'module61', 'module62'].includes(id);
 
                 // --- INICIO BLOCO DRIVE LINK (ATUALIZADO) ---
-                if (d.driveLink && d.driveLink !== "" && d.driveLink !== "EM_BREVE" && d.driveLink !== "SEU_LINK_DO_DRIVE_AQUI") {
-                    if (userIsNotPremium) {
-                        html += `<div class="mt-10 mb-8"><button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden"><div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10"><i class="fas fa-lock text-2xl mr-2"></i></div><span class="blur-[2px] flex items-center"><i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)</span></button><p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p></div>`;
-                    } else {
-                        html += `<div class="mt-10 mb-8"><a href="${d.driveLink}" target="_blank" class="drive-button"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS DESTA MATÉRIA</a></div>`;
-                    }
-                } else {
-                    html += `<div class="mt-10 mb-8"><button onclick="alert('🚧 Conteúdo em produção! As fotos e vídeos desta matéria estarão disponíveis em breve.')" class="drive-button opacity-70 cursor-wait"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS (EM BREVE)</button></div>`;
-                }
-                // --- FIM BLOCO DRIVE LINK ---
+        // Verifica se o link existe, não é vazio, e não é o placeholder "EM_BREVE"
+        if (d.driveLink && d.driveLink !== "" && d.driveLink !== "EM_BREVE" && d.driveLink !== "SEU_LINK_DO_DRIVE_AQUI") {
+            if (userIsNotPremium) {
+                html += `<div class="mt-10 mb-8"><button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden"><div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10"><i class="fas fa-lock text-2xl mr-2"></i></div><span class="blur-[2px] flex items-center"><i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)</span></button><p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p></div>`;
+            } else {
+                html += `<div class="mt-10 mb-8"><a href="${d.driveLink}" target="_blank" class="drive-button"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS DESTA MATÉRIA</a></div>`;
+            }
+        } else {
+            // Se não tiver link ou for "EM_BREVE", mostra botão que avisa sem abrir aba
+            html += `<div class="mt-10 mb-8"><button onclick="alert('🚧 Conteúdo em produção! As fotos e vídeos desta matéria estarão disponíveis em breve.')" class="drive-button opacity-70 cursor-wait"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS (EM BREVE)</button></div>`;
+        }
+        // --- FIM BLOCO DRIVE LINK ---
 
                 const savedNote = localStorage.getItem('note-' + id) || '';
 
@@ -1033,6 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const shuffledQuestions = shuffleArray([...allQuestions]); 
                     const selectedQuestions = shuffledQuestions.slice(0, count);
                     
+                    // Injeção da frase "Pratique aqui..." (Pedido 6)
                     let quizHtml = `
                         <div class="mt-12 text-center">
                             <span class="bg-gray-100 dark:bg-gray-800 text-gray-500 text-sm py-1 px-3 rounded-full border border-gray-300 dark:border-gray-700">
@@ -1306,8 +1160,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    //=== FUNÇÕES SIMULADO (NORMAL - SEM MODO FOCO) ===
+   // === FUNÇÕES SIMULADO (NORMAL - SEM MODO FOCO) ===
     async function startSimuladoMode(moduleData) {
+        // Pausar áudio se estiver tocando (Pedido 2 - parte A)
         if (window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
         }
@@ -1315,26 +1170,32 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingSpinner.classList.remove('hidden');
         contentArea.classList.add('hidden');
 
+        // Gera questões sem repetição
         activeSimuladoQuestions = await generateSimuladoQuestions(moduleData.simuladoConfig);
         userAnswers = {};
         simuladoTimeLeft = moduleData.simuladoConfig.timeLimit * 60; 
         currentSimuladoQuestionIndex = 0;
 
+        // --- 4. TIMER STICKY (HTML ATUALIZADO) ---
         contentArea.innerHTML = `
             <div class="pt-4 pb-12 relative">
+                
                 <div id="simulado-timer-bar" class="simulado-floating-timer">
                     <i class="fas fa-clock text-orange-500"></i>
                     <span id="timer-display" class="timer-text mx-2">--:--</span>
                     <div class="h-4 w-px bg-gray-600 mx-2"></div>
                     <span class="text-xs text-gray-300">Questão <span id="q-current">1</span>/${activeSimuladoQuestions.length}</span>
                 </div>
+                
                 <div class="mt-4 mb-8 text-center px-4">
-                      <h3 class="text-2xl md:text-3xl font-bold text-blue-900 dark:text-white border-b-2 border-orange-500 inline-block pb-2">
+                     <h3 class="text-2xl md:text-3xl font-bold text-blue-900 dark:text-white border-b-2 border-orange-500 inline-block pb-2">
                         ${moduleData.title}
-                      </h3>
-                      <p class="text-sm text-gray-500 mt-3"><i class="fas fa-info-circle"></i> Modo Prova: O resultado sai ao final.</p>
+                     </h3>
+                     <p class="text-sm text-gray-500 mt-3"><i class="fas fa-info-circle"></i> Modo Prova: O resultado sai ao final.</p>
                 </div>
+
                 <div id="question-display-area" class="simulado-question-container"></div>
+                
                 <div class="mt-8 flex justify-between items-center px-2">
                     <button id="sim-prev-btn" class="action-button bg-gray-600" style="visibility: hidden;">
                         <i class="fas fa-arrow-left mr-2"></i> Anterior
@@ -1345,6 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
+        // --- FIM HTML SIMULADO ---
         
         contentArea.classList.remove('hidden');
         loadingSpinner.classList.add('hidden');
@@ -1357,9 +1219,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sim-prev-btn').addEventListener('click', () => navigateSimulado(-1, moduleData.id));
     }
     
+    // --- FUNÇÃO AUXILIAR: EXIBIR QUESTÃO (CORRIGIDA - USO DE INDEX) ---
     function showSimuladoQuestion(index) {
         const q = activeSimuladoQuestions[index];
         const container = document.getElementById('question-display-area');
+        
+        // CORREÇÃO: Usa o INDEX para recuperar a resposta, não o ID
+        // Isso impede que a resposta da Q1 apareça na Q3 se elas tiverem o mesmo ID
         const savedAnswer = userAnswers[index] || null; 
         
         let html = `
@@ -1375,6 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         for (const key in q.options) {
             const isSelected = savedAnswer === key ? 'selected' : '';
+            // CORREÇÃO: Passamos o INDEX na função onclick
             html += `
                 <div class="quiz-card-option ${isSelected}" onclick="selectSimuladoOption(${index}, '${key}', this)">
                     <div class="quiz-letter-box">${key.toUpperCase()}</div>
@@ -1402,14 +1269,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função auxiliar para selecionar a opção visualmente
     window.selectSimuladoOption = function(index, key, element) {
+        // Remove seleção anterior
         const parent = element.parentElement;
         parent.querySelectorAll('.quiz-card-option').forEach(el => el.classList.remove('selected'));
+        // Adiciona à atual
         element.classList.add('selected');
+        // Salva resposta usando o ÍNDICE
         registerSimuladoAnswer(index, key);
     };
 
     window.registerSimuladoAnswer = function(index, answer) {
-        userAnswers[index] = answer; 
+        userAnswers[index] = answer; // Salva na posição 0, 1, 2...
     };
 
     function navigateSimulado(direction, moduleId) {
@@ -1445,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // === FINALIZAÇÃO DO SIMULADO ===
+   // === FINALIZAÇÃO DO SIMULADO ===
     function finishSimulado(moduleId) {
         clearInterval(simuladoTimerInterval);
         
@@ -1454,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let feedbackHtml = '<div class="space-y-6 mt-8">';
 
         activeSimuladoQuestions.forEach((q, i) => {
-            const selected = userAnswers[i]; 
+            const selected = userAnswers[i]; // 'i' é o índice do loop (0, 1, 2...)
             const isCorrect = selected === q.answer;
             if(isCorrect) correctCount++;
             
@@ -1536,8 +1406,9 @@ document.addEventListener('DOMContentLoaded', () => {
             completedModules.push(moduleId);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
             
-            saveProgressToCloud(); // Salva na nuvem
-
+            // ADICIONADO: Salva no banco de dados
+            saveProgressToCloud();
+            
             updateProgress();
         }
     }
@@ -1694,7 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'salvamento': return 'text-blue-500'; 
                     case 'pci': return 'text-red-500'; 
                     case 'aph_novo': return 'text-green-500'; 
-                    case 'nr33': return 'text-teal-500';        
+                    case 'nr33': return 'text-teal-500';       
                     case 'nr35': return 'text-indigo-500'; 
                     default: return 'text-gray-500';
                 }
@@ -1722,6 +1593,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mobile-module-container').innerHTML = getModuleListHTML();
     }
 
+    // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM CONTADORES ---
     function getModuleListHTML() {
         let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2><div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo..."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div><div class="module-accordion-container space-y-2">`;
         
@@ -1730,6 +1602,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isLocked = cat.isPremium && (!currentUserData || currentUserData.status !== 'premium');
             const lockIcon = isLocked ? '<i class="fas fa-lock text-xs ml-2 text-yellow-500"></i>' : '';
             
+            // CÁLCULO DE CONTADORES
             let catTotal = 0;
             let catCompleted = 0;
             for(let i = cat.range[0]; i <= cat.range[1]; i++) {
@@ -1763,6 +1636,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateProgress() {
+        // CORREÇÃO: Check para evitar divisão por zero
         if (totalModules === 0) return;
         
         const p = (completedModules.length / totalModules) * 100;
@@ -1773,6 +1647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateModuleListStyles();
         checkAchievements();
+        // Atualiza contadores do sidebar
         populateModuleLists(); 
         
         if (totalModules > 0 && completedModules.length === totalModules) showCongratulations();
@@ -1856,6 +1731,7 @@ document.addEventListener('DOMContentLoaded', () => {
             completedModules.push(id);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
             
+            // ADICIONADO: Salva no banco de dados agora
             saveProgressToCloud();
 
             updateProgress();
@@ -1927,6 +1803,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function addEventListeners() {
+        // 1. Botões de Navegação
         const nextButton = document.getElementById('next-module');
         const prevButton = document.getElementById('prev-module');
 
@@ -1942,36 +1819,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if(n < totalModules) loadModuleContent(`module${n+1}`);
             nextButton?.classList.remove('blinking-button');
             });
+
+            // --- ADICIONE ISTO NO FINAL DA FUNÇÃO addEventListeners ---
         
-        // Listener do botão do painel de gestor
-        const managerPanelBtn = document.getElementById("manager-panel-btn");
-        if (managerPanelBtn) {
-            managerPanelBtn.addEventListener("click", () => {
-                console.log("🔓 Botão de gestor clicado!");
-                openManagerPanel();
-            });
-        }
-
-        document.getElementById('manual-sync-btn')?.addEventListener('click', async () => {
-            const btn = document.getElementById('manual-sync-btn');
-            const originalText = btn.innerHTML;
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
-            btn.disabled = true;
-
-            try {
-                await window.saveProgressToCloud(); 
-                alert("✅ Sucesso!\nSeu progresso foi salvo na nuvem.");
-            } catch (error) {
-                alert("❌ Erro ao salvar: " + error.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        });
-            
+        // Botão manual do Tour (Garante que funcione mesmo clicando várias vezes)
         const tourBtn = document.getElementById('restart-tour-btn');
         if (tourBtn) {
+            // Removemos clone para limpar ouvintes antigos e adicionamos o novo
             const newTourBtn = tourBtn.cloneNode(true);
             tourBtn.parentNode.replaceChild(newTourBtn, tourBtn);
             
@@ -1982,6 +1836,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+
+        // 2. Busca
         document.body.addEventListener('input', e => {
             if(e.target.matches('.module-search')) {
                 const s = e.target.value.toLowerCase();
@@ -2013,6 +1869,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 3. Admin Panel (Correção Mobile)
         adminBtn?.addEventListener('click', window.openAdminPanel);
         mobileAdminBtn?.addEventListener('click', window.openAdminPanel);
 
@@ -2025,6 +1882,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminOverlay.classList.remove('show');
         });
 
+        // 4. Reset
         document.getElementById('reset-progress')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.add('show'); document.getElementById('reset-modal-overlay')?.classList.add('show'); });
         document.getElementById('cancel-reset-button')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.remove('show'); document.getElementById('reset-modal-overlay')?.classList.remove('show'); });
         document.getElementById('confirm-reset-button')?.addEventListener('click', () => {
@@ -2035,6 +1893,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         });
         
+        // 5. Back to Top
         document.getElementById('back-to-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('back-to-top');
@@ -2044,6 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 6. Cliques
         document.body.addEventListener('click', e => {
             const moduleItem = e.target.closest('.module-list-item');
             if (moduleItem) {
@@ -2092,24 +1952,12 @@ document.addEventListener('DOMContentLoaded', () => {
         closeAchButton?.addEventListener('click', hideAchievementModal);
         achievementOverlay?.addEventListener('click', hideAchievementModal);
     }
+// ... (restante do código anterior) ...
 
+    // --- 6. LIMITE IA (BRAVOGPT) - COLE AQUI ---
     function initVoiceflowLimit() {
-        if (!window.voiceflow || !window.voiceflow.chat || typeof window.voiceflow.chat.on !== 'function') {
-            let attempts = 0;
-            const retry = setInterval(() => {
-                attempts++;
-                if (window.voiceflow && window.voiceflow.chat && typeof window.voiceflow.chat.on === 'function') {
-                    setupVoiceflowListener();
-                    clearInterval(retry);
-                }
-                if (attempts > 5) clearInterval(retry); 
-            }, 3000);
-            return;
-        }
-        setupVoiceflowListener();
-    }
+        if (!window.voiceflow || !window.voiceflow.chat) return;
 
-    function setupVoiceflowListener() {
         window.voiceflow.chat.on('user:message', () => {
             const today = new Date().toLocaleDateString();
             const key = `ai_usage_${today}`;
@@ -2117,26 +1965,29 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem(key, count);
 
             const isPremium = currentUserData && currentUserData.status === 'premium';
-            const limit = isPremium ? 50 : 5; 
+            const limit = isPremium ? 50 : 5; // 50 Premium, 5 Free
 
             if (count > limit) {
-                alert(`⚠️ Limite diário de IA atingido (${limit} perguntas).\nAssine o Premium para continuar.`);
+                alert(`⚠️ Limite diário de IA atingido (${count-1}/${limit}).\nVolte amanhã ou assine o Premium para mais interações.`);
+                // Oculta o chat forçadamente
                 const chatDiv = document.getElementById('voiceflow-chat');
                 if(chatDiv) chatDiv.style.display = 'none';
             }
         });
     }
-    // Inicia monitoramento
+    // Tenta iniciar o monitoramento após 5 segundos
     setTimeout(initVoiceflowLimit, 5000);
 
+   // --- 7. TOUR GUIADO (ONBOARDING - AJUSTE FINAL MOBILE/DESKTOP) ---
     function startOnboardingTour(isManual = false) {
+        // Se for automático e já tiver visto, cancela
         if (!isManual && localStorage.getItem('bravo_tour_completed') === 'true') return;
 
         setTimeout(() => {
             if (!window.driver || !window.driver.js || !window.driver.js.driver) return;
 
             const driver = window.driver.js.driver;
-            const isMobile = window.innerWidth < 768; 
+            const isMobile = window.innerWidth < 768; // Detecta se é celular
             
             const installBtnDesktop = document.getElementById('install-app-btn');
             const installBtnMobile = document.getElementById('install-app-btn-mobile');
@@ -2156,13 +2007,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     popover: { 
                         title: '2. BravoGPT (IA)', 
                         description: 'Tire dúvidas com nossa Inteligência Artificial, dedicada a você.', 
+                        // AJUSTE 1: No celular, o balão fica EM CIMA (top) para não cobrir o rodapé
+                        // No desktop, fica à DIREITA (right)
                         side: isMobile ? "top" : "right", 
                         align: isMobile ? "center" : "end" 
                     } 
                 }
             ];
 
+            // Passo da Instalação (Condicional)
             if (installBtnDesktop && !installBtnDesktop.classList.contains('hidden')) {
+                // VERSÃO DESKTOP
                 steps.push({ 
                     element: '#install-app-btn', 
                     popover: { 
@@ -2173,6 +2028,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } 
                 });
             } else if (installBtnMobile && !installBtnMobile.classList.contains('hidden')) {
+                // AJUSTE 2: VERSÃO MOBILE (Texto corrigido)
                 steps.push({ 
                     element: '#mobile-menu-button', 
                     popover: { 
@@ -2201,191 +2057,441 @@ document.addEventListener('DOMContentLoaded', () => {
             driverObj.drive();
         }, 1500);
     }
+ // --- FUNÇÕES QUE FALTAVAM NO ADMIN (EDITAR, NOTA, RESET, EXCLUIR) ---
 
-    // =================================================================================
-    // CORREÇÃO DEFINITIVA - PAINEL DO GESTOR (V10.5 BLINDADA)
-    // =================================================================================
-
-    // 1. Renderização Blindada
-    window.renderManagerTable = function(userList) {
-        const tbody = document.getElementById("manager-table-body");
-        if (!tbody) return; 
-
-        // Limpa a tabela
-        tbody.innerHTML = "";
-
-        if (!userList || userList.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado com este filtro.</td></tr>`;
-            updateManagerStats(0, 0, 0, 0);
-            return;
+    // 1. Editar Dados (Nome)
+    window.editUserData = async function(uid, oldName, oldCpf) {
+        const newName = prompt("Editar Nome do Aluno:", oldName);
+        if (newName === null || newName === oldName) return;
+        
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ name: newName });
+            alert("Nome atualizado com sucesso!");
+            openAdminPanel(); // Atualiza a tabela
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
         }
-
-        const totalCurso = (typeof totalModules !== 'undefined' && totalModules > 0) ? totalModules : 62;
-        let stats = { total: 0, completed: 0, inProgress: 0, pending: 0 };
-
-        userList.forEach(u => {
-            stats.total++;
-
-            // Cálculo de Progresso Seguro
-            const done = Array.isArray(u.completedModules) ? u.completedModules : [];
-            const pct = totalCurso > 0 ? Math.round((done.length / totalCurso) * 100) : 0;
-
-            if (pct >= 100) stats.completed++;
-            else if (pct > 0) stats.inProgress++;
-            else stats.pending++;
-
-            let barColor = pct >= 100 ? "bg-green-500" : (pct >= 50 ? "bg-yellow-500" : "bg-red-500");
-            
-            const validadeDate = u.acesso_ate ? new Date(u.acesso_ate) : null;
-            const isExpired = validadeDate && validadeDate < new Date();
-            const validadeStr = validadeDate ? validadeDate.toLocaleDateString('pt-BR') : "—";
-            
-            const statusHtml = (u.status === 'premium' && !isExpired)
-                ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold uppercase">✓ Ativo</span>'
-                : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial/Exp</span>';
-
-            tbody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 font-semibold text-gray-800 cursor-pointer" onclick="window.editUserData('${u.uid}', '${u.name || ''}')" title="Editar Nome">
-                        ${u.name || "Sem Nome"} <i class="fas fa-pen text-[10px] text-gray-300 ml-1"></i>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
-                        ${u.email || "—"}<br>
-                        <span class="text-xs text-blue-500 cursor-pointer hover:underline" onclick="window.editUserPhone('${u.uid}', '${u.phone || ''}')">
-                            <i class="fab fa-whatsapp"></i> ${u.phone || "Add Tel"}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-500 cursor-pointer hover:text-blue-600" onclick="window.editUserClass('${u.uid}', '${u.company || ''}')" title="Mudar Turma">
-                        ${u.company || "PARTICULAR"} <i class="fas fa-pen text-[10px] ml-1"></i>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                                <div class="${barColor} h-2 transition-all duration-500" style="width: ${pct}%"></div>
-                            </div>
-                            <span class="text-xs font-bold text-gray-700">${pct}%</span>
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1">${done.length}/${totalCurso} módulos</p>
-                    </td>
-                    <td class="px-4 py-3 cursor-pointer" onclick="window.manageUserAccess('${u.uid}')">
-                        ${statusHtml}
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-600">
-                        ${validadeStr}
-                        <button onclick="window.deleteUser('${u.uid}', '${u.name}', '${u.cpf}')" class="ml-2 text-red-400 hover:text-red-600" title="Excluir"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        // Atualiza os cards de números no topo do modal
-        updateManagerStats(stats.total, stats.completed, stats.inProgress, stats.pending);
     };
 
-    // 2. Abertura do Painel com Cache e Tempo Real
-    window.openManagerPanel = function() {
-        console.log("🔓 Iniciando Painel do Gestor (V10.5)...");
+    // 2. Nota do Admin (Obs)
+    window.editUserNote = async function(uid, currentNote) {
+        // Remove escape chars se houver
+        const cleanNote = currentNote === 'undefined' ? '' : currentNote;
+        const note = prompt("Nota do Admin (Ex: 'Pagamento pendente', 'VIP'):", cleanNote);
+        if (note === null) return;
 
-        // Garante pegar a referência correta do banco de dados
-        const db = window.fbDB || window.__fbDB;
-        if (!db) { alert("O sistema ainda está carregando. Aguarde 5 segundos."); return; }
-        if (!currentUserData) { alert("Sessão expirada. Faça login novamente."); return; }
-
-        const modal = document.getElementById("manager-modal");
-        const overlay = document.getElementById("manager-modal-overlay") || document.getElementById("admin-modal-overlay");
-        const tbody = document.getElementById("manager-table-body");
-        const titleEl = document.getElementById("manager-company-name");
-        const filterSelect = document.getElementById('mgr-filter-turma');
-
-        if (modal) modal.classList.add("show");
-        if (overlay) overlay.classList.add("show");
-        if (titleEl) titleEl.textContent = `Gestão: ${currentUserData.company || 'Geral'}`;
-
-        // Mostra loading enquanto conecta
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Conectando tempo real...</td></tr>`;
-
-        // Remove listener anterior para não consumir memória
-        if (window.managerListenerUnsubscribe) {
-            window.managerListenerUnsubscribe();
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ adminNote: note });
+            openAdminPanel(); // Atualiza a tabela
+        } catch (e) {
+            alert("Erro ao salvar nota: " + e.message);
         }
+    };
 
-        // Conecta ao Firebase em Tempo Real (onSnapshot)
-        let query = db.collection("users");
+    // 3. Resetar Senha (Envia E-mail)
+    window.sendResetEmail = async function(email) {
+        if (!confirm(`Deseja enviar um e-mail de redefinição de senha para ${email}?`)) return;
         
-        window.managerListenerUnsubscribe = query.onSnapshot((snapshot) => {
-            console.log("📡 Dados recebidos. Processando...");
-            
-            let rawUsers = [];
-            let turmasSet = new Set();
-
-            // CORREÇÃO CRÍTICA DO ERRO 'doc.data':
-            snapshot.forEach(doc => {
-                const data = doc.data(); 
-                data.uid = doc.id; 
-                data.company = (data.company || "PARTICULAR").trim().toUpperCase(); 
-                rawUsers.push(data);
-                turmasSet.add(data.company);
-            });
-
-            // Ordena por nome
-            rawUsers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-
-            // Salva na memória global
-            window.managerCachedUsers = rawUsers;
-
-            // Atualiza o Filtro
-            if (filterSelect && filterSelect.children.length <= 1) {
-                const currentVal = filterSelect.value;
-                let optionsHtml = '<option value="TODOS">Todas as Turmas</option>';
-                Array.from(turmasSet).sort().forEach(t => {
-                    optionsHtml += `<option value="${t}">${t}</option>`;
-                });
-                filterSelect.innerHTML = optionsHtml;
-                if (currentVal && currentVal !== 'TODOS') filterSelect.value = currentVal;
-            }
-
-            // Renderiza
-            if (typeof window.filterManagerTable === 'function') {
-                window.filterManagerTable();
-            } else {
-                renderManagerTable(rawUsers);
-            }
-
-        }, (error) => {
-            console.error("Erro no painel:", error);
-            if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-red-500 p-4">Erro de conexão: ${error.message}</td></tr>`;
+        try {
+            await window.__fbAuth.sendPasswordResetEmail(email);
+            alert(`E-mail de redefinição enviado para ${email}. Peça para o aluno verificar a caixa de entrada/spam.`);
+        } catch (e) {
+            alert("Erro ao enviar e-mail: " + e.message);
+        }
+    };
+    // --- FUNÇÃO PIX ---
+    window.copyPixKey = function(key) {
+        navigator.clipboard.writeText(key).then(() => {
+            alert("Chave PIX copiada: " + key);
+        }).catch(err => {
+            prompt("Copie a chave manualmente:", key);
         });
     };
 
-    // 3. Filtro via Cache
-    window.filterManagerTable = function() {
-        const select = document.getElementById('mgr-filter-turma');
-        const turmaSelecionada = select ? select.value : "TODOS";
+    // --- LÓGICA DA LANDING PAGE PROFISSIONAL ---
+
+// Rola suavemente até a história
+window.scrollToStory = function() {
+    const section = document.getElementById('story-section');
+    if (section) section.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Entra no sistema e verifica login (VERSÃO OTIMIZADA PARA MOBILE)
+window.enterSystem = function() {
+    const landing = document.getElementById('landing-hero');
+    
+    if (landing) {
+        // 1. Prepara a animação (Hardware Acceleration)
+        landing.style.willChange = 'transform, opacity';
+        landing.style.transition = 'transform 0.8s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.8s ease';
         
-        if (!window.managerCachedUsers || window.managerCachedUsers.length === 0) return;
-
-        if (turmaSelecionada === "TODOS") {
-            renderManagerTable(window.managerCachedUsers);
-        } else {
-            const filtrados = window.managerCachedUsers.filter(u => u.company === turmaSelecionada);
-            renderManagerTable(filtrados);
-        }
-    };
-
-    // 4. Utilitários
-    function updateManagerStats(total, completed, inProgress, pending) {
-        if(document.getElementById('mgr-total-users')) document.getElementById('mgr-total-users').innerText = total;
-        if(document.getElementById('mgr-completed')) document.getElementById('mgr-completed').innerText = completed;
-        if(document.getElementById('mgr-progress')) document.getElementById('mgr-progress').innerText = inProgress;
-        if(document.getElementById('mgr-pending')) document.getElementById('mgr-pending').innerText = pending;
+        // 2. Força o navegador a reconhecer o estado atual antes de mudar
+        requestAnimationFrame(() => {
+            // Aplica o movimento
+            landing.style.transform = 'translate3d(0, -100%, 0)'; // translate3d ativa a GPU do celular
+            landing.style.opacity = '0';
+        });
     }
 
-    // LISTENER FECHAR MODAL
-    document.getElementById("close-manager-modal")?.addEventListener("click", () => {
-        document.getElementById("manager-modal")?.classList.remove("show");
-        document.getElementById("manager-modal-overlay")?.classList.remove("show");
-        document.getElementById("admin-modal-overlay")?.classList.remove("show");
+    // 3. Aguarda a animação terminar para destravar o scroll e remover a capa
+    setTimeout(() => {
+        if (landing) landing.classList.add('hidden'); // Remove do DOM
+        document.body.classList.remove('landing-active'); // Destrava a rolagem do corpo principal SÓ AGORA
+        
+        // Verifica autenticação
+        if (!currentUserData) {
+            console.log("Ativando verificação de autenticação...");
+            if (typeof FirebaseCourse !== 'undefined') {
+                FirebaseCourse.checkAuth((user, userData) => {
+                    onLoginSuccess(user, userData);
+                });
+            }
+        }
+    }, 800); // Tempo sincronizado com a transição (0.8s)
+}
+// --- SISTEMA DE ANIMAÇÃO E NOTEBOOK (COM DICA MOBILE) ---
+function initScrollReveal() {
+    const laptop = document.getElementById('laptop-lid');
+    const heroContainer = document.getElementById('landing-hero');
+    const tapHint = document.getElementById('notebook-tap-hint');
+
+    // Função Unificada: Abre o notebook e esconde a dica
+    const openLaptop = () => {
+        if (laptop && !laptop.classList.contains('open')) {
+            // 1. Abre a tampa
+            laptop.classList.add('open');
+            
+            // 2. Some com a dica visualmente
+            if (tapHint) {
+                tapHint.style.opacity = '0'; // Fica transparente
+                // Remove do layout após o efeito visual (0.5s)
+                setTimeout(() => {
+                    tapHint.style.display = 'none'; 
+                }, 500);
+            }
+        }
+    };
+
+    // --- A. GATILHO POR ROLAGEM (Desktop/Geral) ---
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Anima textos
+                if (entry.target.classList.contains('reveal-on-scroll')) {
+                    entry.target.classList.remove('opacity-0', 'translate-y-10', 'translate-x-10', '-translate-x-10', 'scale-95');
+                    observer.unobserve(entry.target);
+                }
+                
+                // Anima Notebook (Se o navegador detectar a rolagem)
+                if (entry.target.id === 'laptop-lid') {
+                    openLaptop(); 
+                    observer.unobserve(entry.target);
+                }
+            }
+        });
+    }, {
+        threshold: 0.1, // Sensibilidade alta (10%)
+        root: heroContainer // Importante para detectar dentro da capa
     });
 
+    // Registra elementos
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+    if (laptop) observer.observe(laptop);
+
+    // --- B. GATILHO POR TOQUE (Mobile/Interação) ---
+    if (laptop) {
+        // Se clicar no próprio notebook
+        laptop.addEventListener('click', openLaptop);
+        
+        // Se clicar na área envolta (wrapper) - ajuda em telas pequenas
+        const wrapper = document.querySelector('.laptop-wrapper');
+        if(wrapper) {
+            wrapper.addEventListener('click', openLaptop);
+            wrapper.addEventListener('touchstart', openLaptop, {passive: true});
+        }
+    }
+}
+// Rolar para a próxima seção
+window.scrollToNextSection = function() {
+    const section = document.getElementById('features-section');
+    if(section) section.scrollIntoView({ behavior: 'smooth' });
+}
+    // --- FUNÇÃO PARA INICIAR LOGIN COMO GESTOR ---
+window.startManagerLogin = function() {
+    // 1. Salva na memória que o usuário quer ir para o painel
+    localStorage.setItem('open_manager_after_login', 'true');
+    
+    // 2. Chama a função que abre o modal de login
+    enterSystem();
+};
+  // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
+let managerCachedUsers = [];
+
+// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 2.0 (COM FILTRO E EDIÇÃO) ---
+// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 3.0 (COM BOTÃO SYNC) ---
+window.openManagerPanel = async function() {
+    // 1. Verificações de Segurança
+    if (!currentUserData) { enterSystem(); return; }
+    if (currentUserData.isAdmin !== true && currentUserData.isManager !== true) {
+        alert("⛔ ACESSO NEGADO\n\nSua conta não possui permissão de Gestor.");
+        return;
+    }
+
+    const modal = document.getElementById('manager-modal');
+    const overlay = document.getElementById('admin-modal-overlay');
+    
+    modal.classList.add('show');
+    overlay.classList.add('show');
+    
+    // --- NOVO: Botão de Sincronizar Manual ---
+    const headerTitleDiv = modal.querySelector('.bg-blue-900 > div');
+    if (headerTitleDiv && !document.getElementById('mgr-force-sync-btn')) {
+        const btn = document.createElement('button');
+        btn.id = 'mgr-force-sync-btn';
+        btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
+        btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
+        btn.onclick = async function() {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            btn.disabled = true;
+            await window.saveProgressToCloud();
+            
+            // Recarrega a tabela após 1 segundo
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Atualizado!';
+                btn.className = 'mt-2 bg-blue-600 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1';
+                // Recarrega os dados da tabela
+                window.openManagerPanel();
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
+                    btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
+                }, 2000);
+            }, 1000);
+        };
+        headerTitleDiv.appendChild(btn);
+    }
+    // ------------------------------------------
+
+    document.getElementById('close-manager-modal').onclick = () => {
+        modal.classList.remove('show');
+        overlay.classList.remove('show');
+    };
+
+    const tbody = document.getElementById('manager-table-body');
+    const filterSelect = document.getElementById('mgr-filter-turma');
+    
+    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>';
+
+    try {
+        const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
+        
+        managerCachedUsers = []; 
+        let uniqueTurmas = new Set(); 
+
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            u.uid = doc.id; 
+            u.company = u.company || 'Particular'; 
+            managerCachedUsers.push(u);
+            uniqueTurmas.add(u.company);
+        });
+
+        filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+        uniqueTurmas.forEach(turma => {
+            filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+        });
+
+        renderManagerTable(managerCachedUsers);
+
+    } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+    }
+};
+
+// FUNÇÃO AUXILIAR: RENDERIZA A TABELA (USADA NO INÍCIO E NO FILTRO)
+window.renderManagerTable = function(usersList) {
+    const tbody = document.getElementById('manager-table-body');
+    const totalCourseModules = Object.keys(window.moduleContent || {}).length || 62;
+    let html = '';
+    let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
+
+    if (usersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado neste filtro.</td></tr>';
+        return;
+    }
+
+    usersList.forEach(u => {
+        // Dados
+        const phone = u.phone || 'Não informado';
+        const modulesDone = u.completedModules ? u.completedModules.length : 0;
+        
+        // Status e Validade
+        let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded-full font-bold uppercase">TRIAL</span>';
+        if (u.status === 'premium') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded-full font-bold uppercase">PREMIUM</span>';
+        
+        let validadeStr = '-';
+        if (u.acesso_ate) {
+            const dataValidade = new Date(u.acesso_ate);
+            validadeStr = dataValidade.toLocaleDateString('pt-BR');
+            if (new Date() > dataValidade) validadeStr = `<span class="text-red-500 font-bold">${validadeStr} (Exp)</span>`;
+        }
+
+        // Progresso
+        const percent = Math.min(100, Math.round((modulesDone / totalCourseModules) * 100));
+        let progressColor = 'bg-red-500';
+        if (percent > 30) progressColor = 'bg-yellow-500';
+        if (percent > 80) progressColor = 'bg-green-500';
+
+        // Estatísticas
+        stats.total++;
+        if (percent >= 100) stats.completed++;
+        else if (percent > 0) stats.progress++;
+        else stats.pending++;
+
+        html += `
+            <tr class="hover:bg-gray-50 border-b border-gray-100 group">
+                <td class="px-4 py-3">
+                    <div class="font-bold text-gray-800">${u.name}</div>
+                    <div class="text-xs text-gray-500">${u.email}</div>
+                </td>
+                <td class="px-4 py-3 text-gray-600 text-xs">
+    <div class="flex items-center gap-2">
+        <span><i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}</span>
+        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Editar WhatsApp">
+            <i class="fas fa-pencil-alt"></i>
+        </button>
+    </div>
+</td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100">${u.company}</span>
+                        <button onclick="editUserClass('${u.uid}', '${u.company}')" class="text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100" title="Mudar Turma">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center">
+                        <div class="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
+                            <div class="${progressColor} h-1.5 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                        <span class="text-xs font-bold text-gray-600">${percent}%</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3">${statusBadge}</td>
+                <td class="px-4 py-3 text-xs font-mono text-gray-600">${validadeStr}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+
+    // Atualiza Cards de Estatística
+    document.getElementById('mgr-total-users').innerText = stats.total;
+    document.getElementById('mgr-completed').innerText = stats.completed;
+    document.getElementById('mgr-progress').innerText = stats.progress;
+    document.getElementById('mgr-pending').innerText = stats.pending;
+};
+
+// FUNÇÃO DE FILTRO (ACIONADA PELO SELECT)
+window.filterManagerTable = function() {
+    const selectedTurma = document.getElementById('mgr-filter-turma').value;
+    
+    if (selectedTurma === 'TODOS') {
+        renderManagerTable(managerCachedUsers);
+    } else {
+        const filtered = managerCachedUsers.filter(u => u.company === selectedTurma);
+        renderManagerTable(filtered);
+    }
+};
+
+// FUNÇÃO DE EDITAR TURMA
+window.editUserClass = async function(uid, oldClass) {
+    const newClass = prompt("Digite o novo nome da Turma/Empresa:", oldClass);
+    
+    if (newClass && newClass !== oldClass) {
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ 
+                company: newClass.toUpperCase() 
+            });
+            alert("Turma atualizada com sucesso!");
+            openManagerPanel(); // Recarrega para atualizar dados e filtros
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
+        }
+    }
+};
+    // FUNÇÃO DE EDITAR TELEFONE (NOVO)
+window.editUserPhone = async function(uid, oldPhone) {
+    // Se for "Não informado", limpa o campo para digitar do zero
+    const cleanPhone = oldPhone === 'Não informado' ? '' : oldPhone;
+    
+    const newPhone = prompt("Digite o novo WhatsApp/Telefone:", cleanPhone);
+    
+    // Verifica se digitou algo e se é diferente do anterior
+    if (newPhone !== null && newPhone !== cleanPhone) {
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ 
+                phone: newPhone 
+            });
+            alert("Telefone atualizado com sucesso!");
+            // Recarrega o painel para mostrar a mudança
+            if(typeof openManagerPanel === 'function') {
+                openManagerPanel(); 
+            } else {
+                // Fallback caso esteja no painel admin geral
+                openAdminPanel(); 
+            }
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
+        }
+    }
+};
+    // Função para dar/tirar poder de Gestor
+window.toggleManagerRole = async function(uid, currentStatus) {
+    const novoStatus = !currentStatus; // Inverte (se era true vira false, e vice-versa)
+    const acao = novoStatus ? "PROMOVER" : "REMOVER";
+    
+    if(confirm(`Deseja ${acao} este usuário como Gestor de Empresa?`)) {
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({ 
+                isManager: novoStatus 
+            });
+            alert(`Sucesso! Permissão de Gestor ${novoStatus ? 'CONCEDIDA' : 'REMOVIDA'}.`);
+            openAdminPanel(); // Atualiza a lista
+        } catch(e) {
+            alert("Erro: " + e.message);
+        }
+    }
+};
+ // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
+window.saveProgressToCloud = function() {
+    if (currentUserData && currentUserData.uid) {
+        // 1. Tenta pegar da variável global
+        let modulesToSave = completedModules;
+        
+        // 2. BLINDAGEM: Se estiver vazia, pega direto da memória física do navegador
+        if (!modulesToSave || modulesToSave.length === 0) {
+            const localData = localStorage.getItem('gateBombeiroCompletedModules_v3');
+            if (localData) {
+                modulesToSave = JSON.parse(localData);
+                completedModules = modulesToSave; // Atualiza a global também
+            }
+        }
+
+        console.log("Enviando para nuvem:", modulesToSave); // <--- SE NÃO APARECER ISSO NO CONSOLE, O CÓDIGO TÁ VELHO
+
+        return window.__fbDB.collection('users').doc(currentUserData.uid).update({
+            completedModules: modulesToSave
+        }).then(() => {
+            console.log("Progresso salvo com sucesso!");
+            // Atualiza o objeto local para o painel ler na hora
+            currentUserData.completedModules = modulesToSave;
+        }).catch(err => console.error("Erro ao salvar progresso:", err));
+    }
+    return Promise.resolve();
+}
     init();
 });
