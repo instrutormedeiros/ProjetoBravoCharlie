@@ -1,19 +1,20 @@
-/* === ARQUIVO app_final.js (VERSÃO FINAL V10.4 - RESTAURADO & CORRIGIDO) === */
+/* === ARQUIVO app_final.js (VERSÃO FINAL V10.5 - RESTAURAÇÃO TOTAL + CORREÇÃO GESTOR) === */
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS DO APP ---
     const contentArea = document.getElementById('content-area');
-    let totalModules = 0;
+    
+    // CORREÇÃO AQUI: Definindo a variável globalmente
+    let totalModules = 0; 
     
     let completedModules = JSON.parse(localStorage.getItem('gateBombeiroCompletedModules_v3')) || [];
     let notifiedAchievements = JSON.parse(localStorage.getItem('gateBombeiroNotifiedAchievements_v3')) || [];
     let currentModuleId = null;
     let cachedQuestionBanks = {}; 
     let currentUserData = null; 
-
-    // --- VARIÁVEIS GLOBAIS GESTOR (CACHE) ---
-    // Adicionado para suportar o novo painel
+    
+    // --- VARIÁVEIS GLOBAIS GESTOR (ADICIONADO PARA CORREÇÃO) ---
     window.managerCachedUsers = []; 
     window.managerListenerUnsubscribe = null; 
 
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContainer = document.getElementById('toast-container');
     const sidebar = document.getElementById('off-canvas-sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const printWatermark = document.getElementById('print-watermark');
     const achievementModal = document.getElementById('achievement-modal');
     const achievementOverlay = document.getElementById('achievement-modal-overlay');
     const closeAchButton = document.getElementById('close-ach-modal');
@@ -67,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.toggle('high-spacing');
     });
 
-    // --- AUDIOBOOK ---
+    // --- AUDIOBOOK (COM PAUSE, RESUME E STOP) ---
     window.speakContent = function() {
         if (!currentModuleId || !moduleContent[currentModuleId]) return;
         
@@ -78,20 +80,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainBtn = document.getElementById('audio-main-btn');
         const synth = window.speechSynthesis;
 
+        // Cenario 1: Está falando -> PAUSAR
         if (synth.speaking && !synth.paused) {
             synth.pause();
-            if(btnIcon) btnIcon.className = 'fas fa-play';
+            if(btnIcon) { btnIcon.className = 'fas fa-play'; } 
             if(btnText) btnText.textContent = 'Continuar';
             return;
         }
 
+        // Cenario 2: Está pausado -> RETOMAR
         if (synth.paused) {
             synth.resume();
-            if(btnIcon) btnIcon.className = 'fas fa-pause';
+            if(btnIcon) { btnIcon.className = 'fas fa-pause'; } 
             if(btnText) btnText.textContent = 'Pausar';
             return;
         }
 
+        // Cenario 3: Não está falando -> INICIAR 
         if(synth.speaking) synth.cancel(); 
 
         const div = document.createElement('div');
@@ -107,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(btnText) btnText.textContent = 'Pausar';
             if(mainBtn) mainBtn.classList.add('playing');
             
+            // Cria o botão de STOP dinamicamente
             if (!document.getElementById('audio-stop-btn')) {
                 const stopBtn = document.createElement('button');
                 stopBtn.id = 'audio-stop-btn';
@@ -114,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 stopBtn.innerHTML = '<i class="fas fa-stop"></i>';
                 stopBtn.title = "Parar e Resetar";
                 stopBtn.onclick = (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); 
                     synth.cancel();
                     stopBtn.remove();
                     if(btnIcon) btnIcon.className = 'fas fa-headphones';
@@ -168,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (iosModal && iosOverlay) {
                 iosModal.classList.add('show');
                 iosOverlay.classList.add('show');
+                
                 document.getElementById('close-ios-modal')?.addEventListener('click', () => {
                     iosModal.classList.remove('show');
                     iosOverlay.classList.remove('show');
@@ -202,16 +209,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function init() {
+        // ========================================
+        // AGUARDA O FIREBASE CARREGAR
+        // ========================================
         if (typeof firebase === 'undefined') {
             console.warn("⚠️ Firebase não carregado ainda. Aguardando...");
-            setTimeout(init, 500);
+            setTimeout(init, 500); 
             return;
         }
         
         console.log("✅ Firebase carregado! Iniciando sistema...");
         document.body.classList.add('landing-active');
         
-        setTimeout(initScrollReveal, 100);
+        setTimeout(initScrollReveal, 100); 
         
         setupProtection();
         setupTheme();
@@ -228,10 +238,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (typeof FirebaseCourse !== 'undefined') {
             FirebaseCourse.init(firebaseConfig);
-            
+            // Aguarda o Firebase estar pronto
             setTimeout(() => {
-                if (window.fbDB) console.log("✅ Firebase inicializado com sucesso!");
-                else console.warn("⚠️ Firebase ainda não inicializou.");
+                if (window.fbDB) {
+                    console.log("✅ Firebase inicializado com sucesso!");
+                } else {
+                    console.warn("⚠️ Firebase ainda não inicializou. Aguardando...");
+                    setTimeout(() => {
+                        if (window.fbDB) {
+                            console.log("✅ Firebase inicializado (2ª tentativa)!");
+                        }
+                    }, 3000);
+                }
             }, 2000);
 
             setupAuthEventListeners(); 
@@ -240,12 +258,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('logout-expired-button')?.addEventListener('click', FirebaseCourse.signOutUser);
             document.getElementById('logout-button-header')?.addEventListener('click', FirebaseCourse.signOutUser);
 
+            // === CORREÇÃO CRÍTICA: LÓGICA DE LOGIN VS CAPA ===
+            
             const loginModal = document.getElementById('name-prompt-modal');
             const loginOverlay = document.getElementById('name-modal-overlay');
             if(loginModal) loginModal.classList.remove('show');
             if(loginOverlay) loginOverlay.classList.remove('show');
 
             const isLogged = localStorage.getItem('my_session_id');
+
             if (isLogged) {
                 FirebaseCourse.checkAuth((user, userData) => {
                     onLoginSuccess(user, userData);
@@ -258,26 +279,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function onLoginSuccess(user, userData) {
+        // --- NOVO: GARANTE QUE A CAPA SUMA NO REFRESH ---
         const landing = document.getElementById('landing-hero');
-        if (landing) landing.classList.add('hidden');
-        document.body.classList.remove('landing-active');
+        if (landing) landing.classList.add('hidden'); // Esconde a capa
+        document.body.classList.remove('landing-active'); // Destrava rolagem
+        // ------------------------------------------------
 
         currentUserData = userData; 
 
         if (document.body.getAttribute('data-app-ready') === 'true') return;
         
+        // Fecha modais e overlays para liberar a tela
         document.getElementById('name-prompt-modal')?.classList.remove('show');
         document.getElementById('name-modal-overlay')?.classList.remove('show');
         document.getElementById('expired-modal')?.classList.remove('show');
         
+        // Saudação personalizada
         const greetingEl = document.getElementById('welcome-greeting');
         if(greetingEl) greetingEl.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
         
+        // Marca d'água de segurança
         const printWatermark = document.getElementById('print-watermark');
         if (printWatermark) {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
+        // Libera Botões Admin (se for admin)
         const adminBtn = document.getElementById('admin-panel-btn');
         const mobileAdminBtn = document.getElementById('mobile-admin-btn');
         if (userData.isAdmin === true) {
@@ -285,51 +312,353 @@ document.addEventListener('DOMContentLoaded', () => {
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
         
+        // LÓGICA DO BOTÃO FLUTUANTE DE GESTOR
         const managerFab = document.getElementById("manager-fab");
+        
+        // Se for gestor OU admin, mostra o botão flutuante
         if (userData.isManager === true || userData.isAdmin === true) {
             if (managerFab) {
-                managerFab.classList.remove("hidden");
+                managerFab.classList.remove("hidden"); // Remove a classe que esconde
+                console.log("✅ Botão Flutuante de Gestor ATIVADO para:", userData.name);
             }
         }
 
         checkTrialStatus(userData.acesso_ate);
 
-        if (userData.completedModules && Array.isArray(userData.completedModules) && userData.completedModules.length > 0) {
+        // Verifica se o usuário tem progresso salvo no Banco de Dados (Nuvem)
+        if (userData.completedModules && Array.isArray(userData.completedModules)) {
             completedModules = userData.completedModules;
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
-        } else if (completedModules.length > 0) {
-            saveProgressToCloud();
+            console.log("⬇️ Progresso sincronizado pela conta (Nuvem):", completedModules.length);
+        } else {
+            // Se não tem na nuvem, mas tem local, vamos salvar? Não, começamos limpo ou mantém local se já existir lógica
+            // Aqui mantemos a lógica original do seu arquivo:
+            // Se for novo sem dados, zera.
+            if (!completedModules || completedModules.length === 0) {
+                 completedModules = [];
+                 localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify([]));
+            }
         }
 
+        // Inicializa contadores
         totalModules = Object.keys(window.moduleContent || {}).length;
         document.getElementById('total-modules').textContent = totalModules;
         document.getElementById('course-modules-count').textContent = totalModules;
         
+        // Carrega listas e eventos
         populateModuleLists();
         updateProgress();
         addEventListeners(); 
         handleInitialLoad();
+
+        // Inicia Tour Automático (se nunca viu)
         startOnboardingTour(false); 
 
-        // Auto-Open Manager Panel Check
+        // --- CORREÇÃO BLINDADA B2B ---
+        // Verifica se a intenção de abrir o painel existe
         if (localStorage.getItem("openmanagerafterlogin") === "true") {
             localStorage.removeItem("openmanagerafterlogin");
+            
+            // Aguarda o Firebase estar pronto antes de abrir o painel
             setTimeout(() => {
                 if (window.fbDB && typeof openManagerPanel === "function") {
+                    console.log("🔓 Abrindo painel do gestor automaticamente...");
                     openManagerPanel();
                 } else {
+                    console.warn("⚠️ Firebase ainda não está pronto. Tentando novamente em 3 segundos...");
                     setTimeout(() => {
                         if (window.fbDB && typeof openManagerPanel === "function") {
                             openManagerPanel();
                         }
                     }, 3000);
                 }
-            }, 2000);
+            }, 2000);  // Aumentei de 1500ms para 2000ms
         }
 
+        // --- TRAVA DE SEGURANÇA ---
         document.body.setAttribute('data-app-ready', 'true');
     }
+    
+    // =================================================================================
+    // CORREÇÃO DEFINITIVA - PAINEL DO GESTOR (V10.5 BLINDADA)
+    // Substitui a lógica antiga que causava erro 'doc.data is not a function'
+    // =================================================================================
 
+    // 1. Renderização da Tabela (Recebe Array Limpo)
+    window.renderManagerTable = function(userList) {
+        const tbody = document.getElementById("manager-table-body");
+        if (!tbody) return;
+
+        // Limpa a tabela
+        tbody.innerHTML = "";
+
+        if (!userList || userList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado com este filtro.</td></tr>`;
+            updateManagerStats(0, 0, 0, 0);
+            return;
+        }
+
+        const totalCurso = totalModules || 62;
+        let stats = { total: 0, completed: 0, inProgress: 0, pending: 0 };
+
+        userList.forEach(u => {
+            stats.total++;
+
+            // Progresso do aluno
+            const done = Array.isArray(u.completedModules) ? u.completedModules : [];
+            const pct = totalCurso > 0 ? Math.round((done.length / totalCurso) * 100) : 0;
+
+            // Classifica status
+            if (pct >= 100) stats.completed++;
+            else if (pct > 0) stats.inProgress++;
+            else stats.pending++;
+
+            // Cor da barra
+            let barColor = pct >= 100 ? "bg-green-500" : (pct >= 50 ? "bg-yellow-500" : "bg-red-500");
+
+            // Validade
+            const validadeDate = u.acesso_ate ? new Date(u.acesso_ate) : null;
+            const isExpired = validadeDate && validadeDate < new Date();
+            const validadeStr = validadeDate ? validadeDate.toLocaleDateString('pt-BR') : "—";
+            
+            const statusHtml = (u.status === 'premium' && !isExpired)
+                ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold uppercase">✓ Ativo</span>'
+                : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial/Exp</span>';
+
+            // HTML da Linha
+            tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 font-semibold text-gray-800 cursor-pointer" onclick="window.editUserData('${u.uid}', '${u.name || ''}')" title="Editar Nome">
+                        ${u.name || "Sem Nome"} <i class="fas fa-pen text-[10px] text-gray-300 ml-1"></i>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${u.email || "—"}<br>
+                        <span class="text-xs text-blue-500 cursor-pointer hover:underline" onclick="window.editUserPhone('${u.uid}', '${u.phone || ''}')">
+                            <i class="fab fa-whatsapp"></i> ${u.phone || "Add Tel"}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-500 cursor-pointer hover:text-blue-600" onclick="window.editUserClass('${u.uid}', '${u.company || ''}')" title="Mudar Turma">
+                        ${u.company || "PARTICULAR"} <i class="fas fa-pen text-[10px] ml-1"></i>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                <div class="${barColor} h-2 transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-gray-700">${pct}%</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">${done.length}/${totalCurso} módulos</p>
+                    </td>
+                    <td class="px-4 py-3 cursor-pointer" onclick="window.manageUserAccess('${u.uid}')">
+                        ${statusHtml}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600">
+                        ${validadeStr}
+                        <button onclick="window.deleteUser('${u.uid}', '${u.name}', '${u.cpf}')" class="ml-2 text-red-400 hover:text-red-600" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Atualiza cards de estatísticas
+        updateManagerStats(stats.total, stats.completed, stats.inProgress, stats.pending);
+    }
+
+    // 2. Abertura do Painel (Lógica de Conexão + Cache)
+    window.openManagerPanel = function() {
+        console.log("🔓 Abrindo painel do gestor (V10.5)...");
+        
+        const db = window.fbDB || window.__fbDB;
+        if (!db) { alert("Sistema carregando. Tente novamente."); return; }
+        if (!currentUserData) { alert("Erro de autenticação."); return; }
+
+        const modal = document.getElementById("manager-modal");
+        const overlay = document.getElementById("manager-modal-overlay") || document.getElementById("admin-modal-overlay");
+        const tbody = document.getElementById("manager-table-body");
+        const titleEl = document.getElementById("manager-company-name");
+        const filterSelect = document.getElementById('mgr-filter-turma');
+
+        if (!modal) return;
+
+        modal.classList.add("show");
+        if(overlay) overlay.classList.add("show");
+
+        if (titleEl) titleEl.textContent = `Gestão: ${currentUserData.company || 'Geral'}`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Conectando tempo real...</td></tr>`;
+
+        // Cancela listener anterior
+        if (window.managerListenerUnsubscribe) {
+            window.managerListenerUnsubscribe();
+        }
+
+        // --- CONEXÃO TEMPO REAL ---
+        let query = db.collection("users");
+        
+        window.managerListenerUnsubscribe = query.onSnapshot((snapshot) => {
+            let rawUsers = [];
+            let turmasSet = new Set();
+
+            // CONVERTE SNAPSHOT PARA ARRAY (Resolve o erro doc.data)
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                data.uid = doc.id;
+                data.company = (data.company || "PARTICULAR").trim().toUpperCase();
+                rawUsers.push(data);
+                turmasSet.add(data.company);
+            });
+
+            // Ordena
+            rawUsers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+            // Salva no Cache
+            window.managerCachedUsers = rawUsers;
+
+            // Preenche Filtro
+            if (filterSelect && filterSelect.children.length <= 1) {
+                let optionsHtml = '<option value="TODOS">Todas as Turmas</option>';
+                Array.from(turmasSet).sort().forEach(t => {
+                    optionsHtml += `<option value="${t}">${t}</option>`;
+                });
+                filterSelect.innerHTML = optionsHtml;
+            }
+
+            // Aplica filtro atual
+            if (typeof window.filterManagerTable === 'function') {
+                window.filterManagerTable();
+            } else {
+                renderManagerTable(rawUsers);
+            }
+
+        }, (error) => {
+            console.error("Erro painel:", error);
+            if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-red-500 text-center">Erro: ${error.message}</td></tr>`;
+        });
+    };
+
+    // 3. Filtro (Usa o Cache)
+    window.filterManagerTable = function() {
+        const select = document.getElementById('mgr-filter-turma');
+        const selectedTurma = select ? select.value : 'TODOS';
+        
+        if (!window.managerCachedUsers) return;
+
+        if (selectedTurma === 'TODOS') {
+            renderManagerTable(window.managerCachedUsers);
+        } else {
+            const filtered = window.managerCachedUsers.filter(u => u.company === selectedTurma);
+            renderManagerTable(filtered);
+        }
+    };
+
+    // 4. Utilitários
+    function updateManagerStats(total, completed, inProgress, pending) {
+        const els = {
+            total: document.getElementById("mgr-total-users"),
+            completed: document.getElementById("mgr-completed"),
+            progress: document.getElementById("mgr-progress"),
+            pending: document.getElementById("mgr-pending")
+        };
+        if (els.total) els.total.textContent = total;
+        if (els.completed) els.completed.textContent = completed;
+        if (els.progress) els.progress.textContent = inProgress;
+        if (els.pending) els.pending.textContent = pending;
+    }
+
+    // LISTENER FECHAR MODAL
+    document.getElementById("close-manager-modal")?.addEventListener("click", () => {
+        document.getElementById("manager-modal")?.classList.remove("show");
+        document.getElementById("manager-modal-overlay")?.classList.remove("show");
+        document.getElementById("admin-modal-overlay")?.classList.remove("show");
+    });
+
+    window.manageUserAccess = async function(uid) {
+        const op = prompt(
+            "Selecione o Plano:\n" +
+            "1 - MENSAL (30 dias)\n" +
+            "2 - SEMESTRAL (180 dias)\n" +
+            "3 - ANUAL (365 dias)\n" +
+            "4 - VITALÍCIO (10 anos)\n" +
+            "5 - REMOVER PREMIUM (Voltar para Trial)\n" +
+            "6 - PERSONALIZADO (Dias)"
+        );
+
+        if (!op) return;
+
+        let diasParaAdicionar = 0;
+        let nomePlano = '';
+        let novoStatus = 'premium';
+
+        if (op === '1') { diasParaAdicionar = 30; nomePlano = 'Mensal'; }
+        else if (op === '2') { diasParaAdicionar = 180; nomePlano = 'Semestral'; }
+        else if (op === '3') { diasParaAdicionar = 365; nomePlano = 'Anual'; }
+        else if (op === '4') { diasParaAdicionar = 3650; nomePlano = 'Vitalício'; }
+        else if (op === '5') {
+            // Remover Premium
+            try {
+                const ontem = new Date();
+                ontem.setDate(ontem.getDate() - 1);
+                await window.__fbDB.collection('users').doc(uid).update({
+                    status: 'trial',
+                    acesso_ate: ontem.toISOString(),
+                    planType: 'Cancelado'
+                });
+                alert("Acesso Premium removido.");
+                openAdminPanel();
+                return;
+            } catch (e) { alert(e.message); return; }
+        }
+        else if (op === '6') {
+            const i = prompt("Digite a quantidade de dias:");
+            if (!i) return;
+            diasParaAdicionar = parseInt(i);
+            nomePlano = 'Personalizado';
+        } else {
+            return;
+        }
+
+        const agora = new Date();
+        const novaData = new Date(agora);
+        novaData.setDate(novaData.getDate() + diasParaAdicionar);
+
+        try {
+            await window.__fbDB.collection('users').doc(uid).update({
+                status: novoStatus,
+                acesso_ate: novaData.toISOString(),
+                planType: nomePlano
+            });
+            alert(`Sucesso! Plano ${nomePlano} ativado até ${novaData.toLocaleDateString()}`);
+            openAdminPanel();
+        } catch (e) {
+            alert("Erro ao atualizar: " + e.message);
+        }
+    };
+    
+    // 4. Excluir Usuário (Do Banco de Dados)
+    window.deleteUser = async function(uid, name, cpf) {
+        const confirm1 = confirm(`TEM CERTEZA que deseja excluir os dados de ${name}?`);
+        if (!confirm1) return;
+        
+        const confirm2 = confirm("ATENÇÃO: Esta ação apagará o progresso e o cadastro do banco de dados.\n(Nota: Para segurança, o login da conta deve ser removido manualmente no Console do Firebase, mas o acesso será revogado aqui). Continuar?");
+        if (!confirm2) return;
+
+        try {
+            // Remove da coleção de usuários
+            await window.__fbDB.collection('users').doc(uid).delete();
+            
+            // Remove da coleção de CPFs (para liberar o CPF)
+            if (cpf && cpf !== 'undefined' && cpf !== 'Sem CPF') {
+                await window.__fbDB.collection('cpfs').doc(cpf).delete();
+            }
+
+            alert("Usuário removido do banco de dados.");
+            // Atualiza a tabela que estiver aberta
+            if(document.getElementById('manager-modal').classList.contains('show')) openManagerPanel();
+            else openAdminPanel(); 
+        } catch (e) {
+            alert("Erro ao excluir: " + e.message);
+        }
+    };
+    
     function checkTrialStatus(expiryDateString) {
         const expiryDate = new Date(expiryDateString);
         const today = new Date();
@@ -380,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const closePayModal = document.getElementById('close-payment-modal-btn');
         const loginModalOverlay = document.getElementById('name-modal-overlay');
         const loginModal = document.getElementById('name-prompt-modal');
-
+        
         passwordInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 btnLogin.click();
@@ -496,6 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return questions;
     }
 
+  // --- FUNÇÃO 5: BANCO DE QUESTÕES (VERSÃO DEBUG / BLINDADA) ---
     async function generateSimuladoQuestions(config) {
         console.log("Iniciando geração de simulado...");
         const finalExamQuestions = [];
@@ -513,6 +843,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let pool = [];
             const targetModules = map[catKey] || [];
 
+            // 1. Coleta TUDO
             targetModules.forEach(num => {
                 const modId = `module${num}`;
                 if (window.QUIZ_DATA && window.QUIZ_DATA[modId]) {
@@ -522,9 +853,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log(`Categoria ${catKey}: ${pool.length} questões encontradas no total.`);
 
+            // 2. Embaralha MUITO BEM
             pool = shuffleArray(pool); 
             pool = shuffleArray(pool); 
 
+            // 3. Seleciona ÚNICAS
             let addedCount = 0;
             for (const q of pool) {
                 if (addedCount >= qtyNeeded) break;
@@ -543,6 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return shuffleArray(finalExamQuestions);
     }
       
+    // --- CARREGAMENTO DE MÓDULOS (ROTEADOR PRINCIPAL) ---
     async function loadModuleContent(id) {
         if (!id || !moduleContent[id]) return;
         const d = moduleContent[id];
@@ -571,6 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingSpinner.classList.add('hidden');
             contentArea.classList.remove('hidden'); 
 
+            // 1. MODO SIMULADO
             if (d.isSimulado) {
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-orange-600 dark:text-orange-500 flex items-center">
@@ -585,6 +920,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 document.getElementById('start-simulado-btn').addEventListener('click', () => startSimuladoMode(d));
             } 
+            
+            // 2. FERRAMENTAS (Módulo 59)
             else if (id === 'module59') { 
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
@@ -604,6 +941,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     grid.innerHTML = '<p class="text-red-500">Erro: Script de Ferramentas não carregado.</p>';
                 }
             }
+
+            // 3. MODO SOBREVIVÊNCIA (Módulo 60)
             else if (d.isSurvival) {
                 contentArea.innerHTML = d.content;
                 const survivalScoreEl = document.getElementById('survival-last-score');
@@ -612,6 +951,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 document.getElementById('start-survival-btn').addEventListener('click', initSurvivalGame);
             }
+
+            // 4. RPG (Módulo 61)
             else if (d.isRPG) {
                 contentArea.innerHTML = `
                     <h3 class="text-2xl font-bold mb-6 flex items-center text-orange-500">
@@ -637,10 +978,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('rpg-opt-2').addEventListener('click', () => alert("Cenário de Acidente Veicular em desenvolvimento!"));
                 document.getElementById('rpg-opt-3').addEventListener('click', () => alert("Cenário de Espaço Confinado em desenvolvimento!"));
             }
+
+            // 5. CARTEIRINHA (Módulo 62)
             else if (d.isIDCard) {
                 contentArea.innerHTML = d.content;
                 renderDigitalID();
             }
+
+            // 6. MODO AULA NORMAL (TEXTO + AUDIO ATUALIZADO)
             else {
                 let audioHtml = `
                     <div class="modern-audio-player">
@@ -666,6 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const isSpecialModule = ['module53', 'module54', 'module55', 'module56', 'module57', 'module58', 'module59', 'module60', 'module61', 'module62'].includes(id);
 
+                // --- INICIO BLOCO DRIVE LINK (ATUALIZADO) ---
                 if (d.driveLink && d.driveLink !== "" && d.driveLink !== "EM_BREVE" && d.driveLink !== "SEU_LINK_DO_DRIVE_AQUI") {
                     if (userIsNotPremium) {
                         html += `<div class="mt-10 mb-8"><button onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="drive-button opacity-75 hover:opacity-100 relative overflow-hidden"><div class="absolute inset-0 bg-black/30 flex items-center justify-center z-10"><i class="fas fa-lock text-2xl mr-2"></i></div><span class="blur-[2px] flex items-center"><i class="fab fa-google-drive mr-3"></i> VER FOTOS E VÍDEOS (PREMIUM)</span></button><p class="text-xs text-center mt-2 text-gray-500"><i class="fas fa-lock text-yellow-500"></i> Recurso exclusivo para assinantes</p></div>`;
@@ -675,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     html += `<div class="mt-10 mb-8"><button onclick="alert('🚧 Conteúdo em produção! As fotos e vídeos desta matéria estarão disponíveis em breve.')" class="drive-button opacity-70 cursor-wait"><i class="fab fa-google-drive"></i> VER FOTOS E VÍDEOS (EM BREVE)</button></div>`;
                 }
+                // --- FIM BLOCO DRIVE LINK ---
 
                 const savedNote = localStorage.getItem('note-' + id) || '';
 
@@ -731,14 +1078,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
     
+    // === LÓGICA: MODO SOBREVIVÊNCIA ===
     async function initSurvivalGame() {
         survivalLives = 3;
         survivalScore = 0;
         currentSurvivalIndex = 0;
         survivalQuestions = [];
 
+        // Coleta todas as questões disponíveis no app
         const allQs = [];
-        for(let i=1; i<=52; i++) { 
+        for(let i=1; i<=52; i++) { // Módulos de conteúdo
             const modId = `module${i}`;
             if(QUIZ_DATA[modId]) allQs.push(...QUIZ_DATA[modId]);
         }
@@ -749,6 +1098,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderSurvivalScreen() {
         if(survivalLives <= 0) {
+            // Game Over
             localStorage.setItem('lastSurvivalScore', survivalScore);
             contentArea.innerHTML = `
                 <div class="text-center animate-slide-in p-8">
@@ -819,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500);
     }
 
+    // === LÓGICA: RPG (SIMULADOR) ===
     async function initRPGGame(rpgData) {
         renderRPGScene(rpgData.start, rpgData);
     }
@@ -863,6 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // === LÓGICA: CARTEIRINHA DIGITAL ===
     function renderDigitalID() {
         if (!currentUserData) return;
         
@@ -954,6 +1306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    //=== FUNÇÕES SIMULADO (NORMAL - SEM MODO FOCO) ===
     async function startSimuladoMode(moduleData) {
         if (window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
@@ -1047,6 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Função auxiliar para selecionar a opção visualmente
     window.selectSimuladoOption = function(index, key, element) {
         const parent = element.parentElement;
         parent.querySelectorAll('.quiz-card-option').forEach(el => el.classList.remove('selected'));
@@ -1071,6 +1425,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    window.registerSimuladoAnswer = function(qId, answer) {
+        userAnswers[qId] = answer;
+    };
+
     function startTimer(moduleId) {
         const display = document.getElementById('timer-display');
         simuladoTimerInterval = setInterval(() => {
@@ -1087,6 +1445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    // === FINALIZAÇÃO DO SIMULADO ===
     function finishSimulado(moduleId) {
         clearInterval(simuladoTimerInterval);
         
@@ -1176,7 +1535,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!completedModules.includes(moduleId)) {
             completedModules.push(moduleId);
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
-            saveProgressToCloud();
+            
+            saveProgressToCloud(); // Salva na nuvem
+
             updateProgress();
         }
     }
@@ -1582,9 +1943,11 @@ document.addEventListener('DOMContentLoaded', () => {
             nextButton?.classList.remove('blinking-button');
             });
         
+        // Listener do botão do painel de gestor
         const managerPanelBtn = document.getElementById("manager-panel-btn");
         if (managerPanelBtn) {
             managerPanelBtn.addEventListener("click", () => {
+                console.log("🔓 Botão de gestor clicado!");
                 openManagerPanel();
             });
         }
@@ -1592,8 +1955,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('manual-sync-btn')?.addEventListener('click', async () => {
             const btn = document.getElementById('manual-sync-btn');
             const originalText = btn.innerHTML;
+            
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
             btn.disabled = true;
+
             try {
                 await window.saveProgressToCloud(); 
                 alert("✅ Sucesso!\nSeu progresso foi salvo na nuvem.");
@@ -1609,8 +1974,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tourBtn) {
             const newTourBtn = tourBtn.cloneNode(true);
             tourBtn.parentNode.replaceChild(newTourBtn, tourBtn);
+            
             newTourBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                console.log("Iniciando tour manual..."); 
                 startOnboardingTour(true);
             });
         }
@@ -1759,6 +2126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // Inicia monitoramento
     setTimeout(initVoiceflowLimit, 5000);
 
     function startOnboardingTour(isManual = false) {
@@ -1835,7 +2203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================================================
-    // CORREÇÃO DEFINITIVA - PAINEL DO GESTOR (V10.4)
+    // CORREÇÃO DEFINITIVA - PAINEL DO GESTOR (V10.5 BLINDADA)
     // =================================================================================
 
     // 1. Renderização Blindada
@@ -1843,6 +2211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById("manager-table-body");
         if (!tbody) return; 
 
+        // Limpa a tabela
         tbody.innerHTML = "";
 
         if (!userList || userList.length === 0) {
@@ -1856,6 +2225,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         userList.forEach(u => {
             stats.total++;
+
+            // Cálculo de Progresso Seguro
             const done = Array.isArray(u.completedModules) ? u.completedModules : [];
             const pct = totalCurso > 0 ? Math.round((done.length / totalCurso) * 100) : 0;
 
@@ -1906,13 +2277,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             `;
         });
+
+        // Atualiza os cards de números no topo do modal
         updateManagerStats(stats.total, stats.completed, stats.inProgress, stats.pending);
     };
 
     // 2. Abertura do Painel com Cache e Tempo Real
     window.openManagerPanel = function() {
-        console.log("🔓 Iniciando Painel do Gestor (V10.4)...");
+        console.log("🔓 Iniciando Painel do Gestor (V10.5)...");
 
+        // Garante pegar a referência correta do banco de dados
         const db = window.fbDB || window.__fbDB;
         if (!db) { alert("O sistema ainda está carregando. Aguarde 5 segundos."); return; }
         if (!currentUserData) { alert("Sessão expirada. Faça login novamente."); return; }
@@ -1927,18 +2301,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (overlay) overlay.classList.add("show");
         if (titleEl) titleEl.textContent = `Gestão: ${currentUserData.company || 'Geral'}`;
 
+        // Mostra loading enquanto conecta
         if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Conectando tempo real...</td></tr>`;
 
+        // Remove listener anterior para não consumir memória
         if (window.managerListenerUnsubscribe) {
             window.managerListenerUnsubscribe();
         }
 
-        window.managerListenerUnsubscribe = db.collection("users").onSnapshot((snapshot) => {
+        // Conecta ao Firebase em Tempo Real (onSnapshot)
+        let query = db.collection("users");
+        
+        window.managerListenerUnsubscribe = query.onSnapshot((snapshot) => {
             console.log("📡 Dados recebidos. Processando...");
             
             let rawUsers = [];
             let turmasSet = new Set();
 
+            // CORREÇÃO CRÍTICA DO ERRO 'doc.data':
             snapshot.forEach(doc => {
                 const data = doc.data(); 
                 data.uid = doc.id; 
@@ -1947,9 +2327,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 turmasSet.add(data.company);
             });
 
+            // Ordena por nome
             rawUsers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+            // Salva na memória global
             window.managerCachedUsers = rawUsers;
 
+            // Atualiza o Filtro
             if (filterSelect && filterSelect.children.length <= 1) {
                 const currentVal = filterSelect.value;
                 let optionsHtml = '<option value="TODOS">Todas as Turmas</option>';
@@ -1960,6 +2344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentVal && currentVal !== 'TODOS') filterSelect.value = currentVal;
             }
 
+            // Renderiza
             if (typeof window.filterManagerTable === 'function') {
                 window.filterManagerTable();
             } else {
@@ -1995,6 +2380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.getElementById('mgr-pending')) document.getElementById('mgr-pending').innerText = pending;
     }
 
+    // LISTENER FECHAR MODAL
     document.getElementById("close-manager-modal")?.addEventListener("click", () => {
         document.getElementById("manager-modal")?.classList.remove("show");
         document.getElementById("manager-modal-overlay")?.classList.remove("show");
