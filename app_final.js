@@ -207,6 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 function init() {
+    // ========================================
+    // AGUARDA O FIREBASE CARREGAR
+    // ========================================
+    if (typeof firebase === 'undefined') {
+        console.warn("⚠️ Firebase não carregado ainda. Aguardando...");
+        setTimeout(init, 500); // Tenta novamente em 0.5 segundos
+        return;
+    }
+    
+    console.log("✅ Firebase carregado! Iniciando sistema...");
     document.body.classList.add('landing-active');
     
     // ---> ADICIONE ISSO AQUI:
@@ -227,6 +237,20 @@ function init() {
         
         if (typeof FirebaseCourse !== 'undefined') {
             FirebaseCourse.init(firebaseConfig);
+            // Aguarda o Firebase estar pronto
+setTimeout(() => {
+    if (window.fbDB) {
+        console.log("✅ Firebase inicializado com sucesso!");
+    } else {
+        console.warn("⚠️ Firebase ainda não inicializou. Aguardando...");
+        setTimeout(() => {
+            if (window.fbDB) {
+                console.log("✅ Firebase inicializado (2ª tentativa)!");
+            }
+        }, 3000);
+    }
+}, 2000);
+
             setupAuthEventListeners(); 
             
             document.getElementById('logout-button')?.addEventListener('click', FirebaseCourse.signOutUser);
@@ -292,6 +316,24 @@ function init() {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
+        // ========================================
+// ========================================
+        // LÓGICA DO BOTÃO GESTOR (CORRIGIDO)
+        // ========================================
+        const painelBtn = document.getElementById("open-manager-panel-btn");
+        
+        // ========================================
+        // LÓGICA DO BOTÃO FLUTUANTE DE GESTOR
+        // ========================================
+        const managerFab = document.getElementById("manager-fab");
+        
+        // Se for gestor OU admin, mostra o botão flutuante
+        if (userData.isManager === true || userData.isAdmin === true) {
+            if (managerFab) {
+                managerFab.classList.remove("hidden"); // Remove a classe que esconde
+                console.log("✅ Botão Flutuante de Gestor ATIVADO para:", userData.name);
+            }
+        }
 
         checkTrialStatus(userData.acesso_ate);
 
@@ -322,24 +364,26 @@ function init() {
         startOnboardingTour(false); 
 
         // --- CORREÇÃO BLINDADA B2B ---
-        // Verifica se a intenção de abrir o painel existe
-        if (localStorage.getItem('open_manager_after_login') === 'true') {
-            localStorage.removeItem('open_manager_after_login'); // Limpa a memória
-            
-            // Tenta abrir o painel após 1.5 segundos
+// Verifica se a intenção de abrir o painel existe
+if (localStorage.getItem("openmanagerafterlogin") === "true") {
+    localStorage.removeItem("openmanagerafterlogin");
+    
+    // Aguarda o Firebase estar pronto antes de abrir o painel
+    setTimeout(() => {
+        if (window.fbDB && typeof openManagerPanel === "function") {
+            console.log("🔓 Abrindo painel do gestor automaticamente...");
+            openManagerPanel();
+        } else {
+            console.warn("⚠️ Firebase ainda não está pronto. Tentando novamente em 3 segundos...");
             setTimeout(() => {
-                const modal = document.getElementById('manager-modal');
-                if (modal && typeof openManagerPanel === 'function') {
+                if (window.fbDB && typeof openManagerPanel === "function") {
                     openManagerPanel();
-                } else {
-                    // Se falhar (elemento não existe ainda), tenta de novo em 3 segundos
-                    console.log("Tentativa 1 falhou, tentando novamente...");
-                    setTimeout(() => {
-                        if(typeof openManagerPanel === 'function') openManagerPanel();
-                    }, 3000);
                 }
-            }, 1500); 
+            }, 3000);
         }
+    }, 2000);  // Aumentei de 1500ms para 2000ms
+}
+
     // --- TRAVA DE SEGURANÇA (ADICIONE ISTO AQUI) ---
         // Isso impede que os botões sejam duplicados quando o banco atualiza
         document.body.setAttribute('data-app-ready', 'true');
@@ -1819,7 +1863,33 @@ function init() {
             if(n < totalModules) loadModuleContent(`module${n+1}`);
             nextButton?.classList.remove('blinking-button');
             });
+        // Listener do botão do painel de gestor
+const managerPanelBtn = document.getElementById("manager-panel-btn");
+if (managerPanelBtn) {
+    managerPanelBtn.addEventListener("click", () => {
+        console.log("🔓 Botão de gestor clicado!");
+        openManagerPanel();
+    });
+}
 
+// --- NOVO: Botão Manual de Salvar Progresso (Rodapé) ---
+document.getElementById('manual-sync-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('manual-sync-btn');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
+    btn.disabled = true;
+
+    try {
+        await window.saveProgressToCloud(); // Chama a função blindada que já criamos
+        alert("✅ Sucesso!\nSeu progresso foi salvo na nuvem.");
+    } catch (error) {
+        alert("❌ Erro ao salvar: " + error.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
             // --- ADICIONE ISTO NO FINAL DA FUNÇÃO addEventListeners ---
         
         // Botão manual do Tour (Garante que funcione mesmo clicando várias vezes)
@@ -1954,10 +2024,26 @@ function init() {
     }
 // ... (restante do código anterior) ...
 
-    // --- 6. LIMITE IA (BRAVOGPT) - COLE AQUI ---
+   // --- 6. LIMITE IA (CORREÇÃO DE SEGURANÇA) ---
     function initVoiceflowLimit() {
-        if (!window.voiceflow || !window.voiceflow.chat) return;
+        // Verifica se o chat existe antes de tentar monitorar
+        if (!window.voiceflow || !window.voiceflow.chat || typeof window.voiceflow.chat.on !== 'function') {
+            // Se não carregou ainda, tenta de novo em 3 segundos (até 5 vezes)
+            let attempts = 0;
+            const retry = setInterval(() => {
+                attempts++;
+                if (window.voiceflow && window.voiceflow.chat && typeof window.voiceflow.chat.on === 'function') {
+                    setupVoiceflowListener();
+                    clearInterval(retry);
+                }
+                if (attempts > 5) clearInterval(retry); // Desiste sem quebrar o site
+            }, 3000);
+            return;
+        }
+        setupVoiceflowListener();
+    }
 
+    function setupVoiceflowListener() {
         window.voiceflow.chat.on('user:message', () => {
             const today = new Date().toLocaleDateString();
             const key = `ai_usage_${today}`;
@@ -1965,17 +2051,16 @@ function init() {
             localStorage.setItem(key, count);
 
             const isPremium = currentUserData && currentUserData.status === 'premium';
-            const limit = isPremium ? 50 : 5; // 50 Premium, 5 Free
+            const limit = isPremium ? 50 : 5; 
 
             if (count > limit) {
-                alert(`⚠️ Limite diário de IA atingido (${count-1}/${limit}).\nVolte amanhã ou assine o Premium para mais interações.`);
-                // Oculta o chat forçadamente
+                alert(`⚠️ Limite diário de IA atingido (${limit} perguntas).\nAssine o Premium para continuar.`);
                 const chatDiv = document.getElementById('voiceflow-chat');
                 if(chatDiv) chatDiv.style.display = 'none';
             }
         });
     }
-    // Tenta iniciar o monitoramento após 5 segundos
+    // Inicia monitoramento
     setTimeout(initVoiceflowLimit, 5000);
 
    // --- 7. TOUR GUIADO (ONBOARDING - AJUSTE FINAL MOBILE/DESKTOP) ---
@@ -2227,157 +2312,174 @@ window.startManagerLogin = function() {
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
 
-// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 2.0 (COM FILTRO E EDIÇÃO) ---
-// --- LÓGICA DO PAINEL DO GESTOR (B2B) - VERSÃO 3.0 (COM BOTÃO SYNC) ---
+// ============================================================
+// BLOCO CORRIGIDO: GESTÃO DE EQUIPE, FILTRO E PROGRESSO
+// ============================================================
+
+// 1. Função Principal: Abrir Painel
 window.openManagerPanel = async function() {
-    // 1. Verificações de Segurança
-    if (!currentUserData) { enterSystem(); return; }
-    if (currentUserData.isAdmin !== true && currentUserData.isManager !== true) {
-        alert("⛔ ACESSO NEGADO\n\nSua conta não possui permissão de Gestor.");
+    console.log("🔓 Abrindo Painel do Gestor...");
+
+    const db = window.__fbDB || window.fbDB; 
+    
+    if (!db) {
+        alert("⏳ Sistema carregando. Tente novamente.");
+        return;
+    }
+    if (!currentUserData) {
+        alert("❌ Erro: Usuário não identificado.");
         return;
     }
 
-    const modal = document.getElementById('manager-modal');
-    const overlay = document.getElementById('admin-modal-overlay');
-    
-    modal.classList.add('show');
-    overlay.classList.add('show');
-    
-    // --- NOVO: Botão de Sincronizar Manual ---
-    const headerTitleDiv = modal.querySelector('.bg-blue-900 > div');
-    if (headerTitleDiv && !document.getElementById('mgr-force-sync-btn')) {
-        const btn = document.createElement('button');
-        btn.id = 'mgr-force-sync-btn';
-        btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
-        btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
-        btn.onclick = async function() {
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-            btn.disabled = true;
-            await window.saveProgressToCloud();
-            
-            // Recarrega a tabela após 1 segundo
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-check"></i> Atualizado!';
-                btn.className = 'mt-2 bg-blue-600 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1';
-                // Recarrega os dados da tabela
-                window.openManagerPanel();
-                
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sync"></i> Forçar Sincronização';
-                    btn.className = 'mt-2 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold py-1 px-3 rounded shadow flex items-center gap-1 transition-colors';
-                }, 2000);
-            }, 1000);
-        };
-        headerTitleDiv.appendChild(btn);
-    }
-    // ------------------------------------------
-
-    document.getElementById('close-manager-modal').onclick = () => {
-        modal.classList.remove('show');
-        overlay.classList.remove('show');
-    };
-
-    const tbody = document.getElementById('manager-table-body');
+    const modal = document.getElementById("manager-modal");
+    const overlay = document.getElementById("admin-modal-overlay");
+    const tbody = document.getElementById("manager-table-body");
+    const titleEl = document.getElementById("manager-company-name");
     const filterSelect = document.getElementById('mgr-filter-turma');
+
+    if (!modal || !overlay) return;
+
+    modal.classList.add("show");
+    overlay.classList.add("show");
+
+    // Título atualizado
+    if (titleEl) titleEl.textContent = "Gestão de equipe";
     
-    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500"><div class="loader"></div> Carregando...</td></tr>';
+    const closeBtn = document.getElementById("close-manager-modal");
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            modal.classList.remove("show");
+            if (!document.getElementById("admin-modal")?.classList.contains("show")) {
+                overlay.classList.remove("show");
+            }
+        };
+    }
+
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Buscando dados...</td></tr>`;
 
     try {
-        const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
-        
-        managerCachedUsers = []; 
-        let uniqueTurmas = new Set(); 
+        const snapshot = await db.collection("users").get();
+        let users = [];
+        let turmasEncontradas = new Set();
 
         snapshot.forEach(doc => {
             const u = doc.data();
-            u.uid = doc.id; 
-            u.company = u.company || 'Particular'; 
-            managerCachedUsers.push(u);
-            uniqueTurmas.add(u.company);
+            u.uid = doc.id;
+            // Padroniza o nome da turma para o filtro funcionar (Maiúsculo e sem espaços)
+            u.company = (u.company || "Particular").trim().toUpperCase();
+            if (!u.completedModules) u.completedModules = [];
+            
+            users.push(u);
+            turmasEncontradas.add(u.company);
         });
 
-        filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
-        uniqueTurmas.forEach(turma => {
-            filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
-        });
+        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        window.managerCachedUsers = users;
 
-        renderManagerTable(managerCachedUsers);
+        // Preenche o filtro automaticamente com as turmas existentes
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+            Array.from(turmasEncontradas).sort().forEach(turma => {
+                filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+            });
+        }
 
-    } catch (error) {
-        console.error(error);
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+        renderManagerTable(users);
+
+    } catch (err) {
+        console.error("Erro:", err);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: ${err.message}</td></tr>`;
     }
 };
 
-// FUNÇÃO AUXILIAR: RENDERIZA A TABELA (USADA NO INÍCIO E NO FILTRO)
+// 2. Função de Filtro Inteligente
+window.filterManagerTable = function() {
+    const select = document.getElementById('mgr-filter-turma');
+    const selectedTurma = select ? select.value : 'TODOS';
+    
+    if (!window.managerCachedUsers) return;
+
+    let filteredList = window.managerCachedUsers;
+
+    if (selectedTurma !== 'TODOS') {
+        filteredList = window.managerCachedUsers.filter(u => u.company === selectedTurma);
+    }
+
+    renderManagerTable(filteredList);
+};
+
+// 3. Função de Tabela com Progresso Corrigido
 window.renderManagerTable = function(usersList) {
     const tbody = document.getElementById('manager-table-body');
-    const totalCourseModules = Object.keys(window.moduleContent || {}).length || 62;
+    if (!tbody) return;
+
+    const totalCourseModules = (window.moduleContent && Object.keys(window.moduleContent).length > 0) 
+        ? Object.keys(window.moduleContent).length 
+        : 62;
+
     let html = '';
     let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
 
-    if (usersList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado neste filtro.</td></tr>';
+    if (!usersList || usersList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Nenhum aluno encontrado nesta turma.</td></tr>';
+        updateManagerStats(stats);
         return;
     }
 
     usersList.forEach(u => {
-        // Dados
-        const phone = u.phone || 'Não informado';
-        const modulesDone = u.completedModules ? u.completedModules.length : 0;
+        const completedArr = (Array.isArray(u.completedModules)) ? u.completedModules : [];
+        const modulesDone = completedArr.length;
         
-        // Status e Validade
-        let statusBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded-full font-bold uppercase">TRIAL</span>';
-        if (u.status === 'premium') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded-full font-bold uppercase">PREMIUM</span>';
-        
-        let validadeStr = '-';
-        if (u.acesso_ate) {
-            const dataValidade = new Date(u.acesso_ate);
-            validadeStr = dataValidade.toLocaleDateString('pt-BR');
-            if (new Date() > dataValidade) validadeStr = `<span class="text-red-500 font-bold">${validadeStr} (Exp)</span>`;
+        let percent = 0;
+        if (totalCourseModules > 0) {
+            percent = Math.round((modulesDone / totalCourseModules) * 100);
         }
+        if (percent > 100) percent = 100;
 
-        // Progresso
-        const percent = Math.min(100, Math.round((modulesDone / totalCourseModules) * 100));
-        let progressColor = 'bg-red-500';
+        let progressColor = 'bg-gray-300';
+        if (percent > 0) progressColor = 'bg-red-500';
         if (percent > 30) progressColor = 'bg-yellow-500';
         if (percent > 80) progressColor = 'bg-green-500';
+        if (percent === 100) progressColor = 'bg-blue-600';
 
-        // Estatísticas
         stats.total++;
         if (percent >= 100) stats.completed++;
         else if (percent > 0) stats.progress++;
         else stats.pending++;
 
+        const phone = u.phone || 'Não informado';
+        const turma = u.company || 'Particular';
+        
+        let statusBadge = u.status === 'premium' 
+            ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded font-bold uppercase">PREMIUM</span>' 
+            : '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded font-bold uppercase">TRIAL</span>';
+
+        let validadeStr = u.acesso_ate ? new Date(u.acesso_ate).toLocaleDateString('pt-BR') : '-';
+
         html += `
-            <tr class="hover:bg-gray-50 border-b border-gray-100 group">
+            <tr class="hover:bg-gray-50 border-b border-gray-100 group transition-colors">
                 <td class="px-4 py-3">
-                    <div class="font-bold text-gray-800">${u.name}</div>
+                    <div class="font-bold text-gray-800 text-sm">${u.name || 'Sem Nome'}</div>
                     <div class="text-xs text-gray-500">${u.email}</div>
                 </td>
-                <td class="px-4 py-3 text-gray-600 text-xs">
-    <div class="flex items-center gap-2">
-        <span><i class="fab fa-whatsapp text-green-500 mr-1"></i> ${phone}</span>
-        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-400 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100" title="Editar WhatsApp">
-            <i class="fas fa-pencil-alt"></i>
-        </button>
-    </div>
-</td>
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 text-xs text-gray-600">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100">${u.company}</span>
-                        <button onclick="editUserClass('${u.uid}', '${u.company}')" class="text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100" title="Mudar Turma">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
+                        ${phone !== 'Não informado' ? '<i class="fab fa-whatsapp text-green-500"></i>' : ''} ${phone}
+                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
                     </div>
                 </td>
                 <td class="px-4 py-3">
-                    <div class="flex items-center">
-                        <div class="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
-                            <div class="${progressColor} h-1.5 rounded-full" style="width: ${percent}%"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100 uppercase">${turma}</span>
+                        <button onclick="editUserClass('${u.uid}', '${turma}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
+                    </div>
+                </td>
+                <td class="px-4 py-3" title="${modulesDone}/${totalCourseModules}">
+                    <div class="flex items-center w-full max-w-[140px]">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
+                            <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
-                        <span class="text-xs font-bold text-gray-600">${percent}%</span>
+                        <span class="text-xs font-bold text-gray-700 w-8 text-right">${percent}%</span>
                     </div>
                 </td>
                 <td class="px-4 py-3">${statusBadge}</td>
@@ -2387,26 +2489,15 @@ window.renderManagerTable = function(usersList) {
     });
 
     tbody.innerHTML = html;
-
-    // Atualiza Cards de Estatística
-    document.getElementById('mgr-total-users').innerText = stats.total;
-    document.getElementById('mgr-completed').innerText = stats.completed;
-    document.getElementById('mgr-progress').innerText = stats.progress;
-    document.getElementById('mgr-pending').innerText = stats.pending;
+    updateManagerStats(stats);
 };
 
-// FUNÇÃO DE FILTRO (ACIONADA PELO SELECT)
-window.filterManagerTable = function() {
-    const selectedTurma = document.getElementById('mgr-filter-turma').value;
-    
-    if (selectedTurma === 'TODOS') {
-        renderManagerTable(managerCachedUsers);
-    } else {
-        const filtered = managerCachedUsers.filter(u => u.company === selectedTurma);
-        renderManagerTable(filtered);
-    }
-};
-
+function updateManagerStats(stats) {
+    if(document.getElementById('mgr-total-users')) document.getElementById('mgr-total-users').innerText = stats.total;
+    if(document.getElementById('mgr-completed')) document.getElementById('mgr-completed').innerText = stats.completed;
+    if(document.getElementById('mgr-progress')) document.getElementById('mgr-progress').innerText = stats.progress;
+    if(document.getElementById('mgr-pending')) document.getElementById('mgr-pending').innerText = stats.pending;
+}
 // FUNÇÃO DE EDITAR TURMA
 window.editUserClass = async function(uid, oldClass) {
     const newClass = prompt("Digite o novo nome da Turma/Empresa:", oldClass);
@@ -2468,6 +2559,7 @@ window.toggleManagerRole = async function(uid, currentStatus) {
 };
  // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
 window.saveProgressToCloud = function() {
+    console.log("🔥 SALVANDO PROGRESSO - INICIADO");  // ← ADICIONE AQUI
     if (currentUserData && currentUserData.uid) {
         // 1. Tenta pegar da variável global
         let modulesToSave = completedModules;

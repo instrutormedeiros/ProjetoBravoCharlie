@@ -98,15 +98,9 @@
   };
   
   window.FirebaseCourse.signOutUser = async function() {
-    // Limpa os dados do navegador ao sair
-    localStorage.removeItem('gateBombeiroCompletedModules_v3');
-    localStorage.removeItem('gateBombeiroNotifiedAchievements_v3');
-    localStorage.removeItem('gateBombeiroLastModule');
-    localStorage.removeItem('my_session_id');
-    
     await __fbAuth.signOut();
     window.location.reload();
-};
+  };
 
   window.FirebaseCourse.checkAuth = function(onLoginSuccess) {
     const loginModal = document.getElementById('name-prompt-modal');
