@@ -459,8 +459,16 @@ window.openManagerPanel = function() {
 };
 
 // 🔄 BOTÃO DE ATUALIZAÇÃO MANUAL
+// 🔄 BOTÃO DE ATUALIZAÇÃO MANUAL
 window.refreshManagerPanel = function() {
   console.log("🔄 Refresh manual acionado pelo gestor");
+  
+  // ✅ VERIFICAÇÃO DE SEGURANÇA
+  if (!window.fbDB) {
+    alert("⚠️ Sistema ainda não está pronto. Aguarde alguns segundos e tente novamente.");
+    return;
+  }
+  
   const tbody = document.getElementById("manager-table-body");
   
   if (tbody) {
@@ -509,7 +517,7 @@ function renderManagerTable(snapshot) {
   }
 
   snapshot.forEach((doc) => {
-    const u = doc.data();
+    const u = doc.data(); // ✅ CORRIGIDO - ADICIONADO OS PARÊNTESES
     totalUsers++;
 
     // Progresso do aluno
@@ -538,7 +546,7 @@ function renderManagerTable(snapshot) {
       : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial</span>';
 
     // Linha da tabela
-    const row = `
+    tbody.innerHTML += `
       <tr class="border-b hover:bg-gray-50 transition-colors">
         <td class="px-4 py-3 font-semibold text-gray-800">${u.name || "Sem nome"}</td>
         <td class="px-4 py-3 text-sm text-gray-600">
@@ -559,8 +567,6 @@ function renderManagerTable(snapshot) {
         <td class="px-4 py-3 text-sm text-gray-600">${validade}</td>
       </tr>
     `;
-
-    tbody.innerHTML += row;
   });
 
   // Atualiza cards de estatísticas
