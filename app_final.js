@@ -516,7 +516,7 @@ function renderManagerTable(snapshot) {
     return;
   }
 
-  snapshot.forEach((doc) => {
+    snapshot.forEach((doc) => {
     const u = doc.data(); // ✅ CORRIGIDO - ADICIONADO OS PARÊNTESES
     totalUsers++;
 
@@ -2562,96 +2562,6 @@ window.filterManagerTable = function() {
     renderManagerTable(filteredList);
 };
 
-// 3. Função de Tabela com Progresso Corrigido
-window.renderManagerTable = function(usersList) {
-    const tbody = document.getElementById('manager-table-body');
-    if (!tbody) return;
-
-    const totalCourseModules = (window.moduleContent && Object.keys(window.moduleContent).length > 0) 
-        ? Object.keys(window.moduleContent).length 
-        : 62;
-
-    let html = '';
-    let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
-
-    if (!usersList || usersList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">Nenhum aluno encontrado nesta turma.</td></tr>';
-        updateManagerStats(stats);
-        return;
-    }
-
-    usersList.forEach(u => {
-        const completedArr = (Array.isArray(u.completedModules)) ? u.completedModules : [];
-        const modulesDone = completedArr.length;
-        
-        let percent = 0;
-        if (totalCourseModules > 0) {
-            percent = Math.round((modulesDone / totalCourseModules) * 100);
-        }
-        if (percent > 100) percent = 100;
-
-        let progressColor = 'bg-gray-300';
-        if (percent > 0) progressColor = 'bg-red-500';
-        if (percent > 30) progressColor = 'bg-yellow-500';
-        if (percent > 80) progressColor = 'bg-green-500';
-        if (percent === 100) progressColor = 'bg-blue-600';
-
-        stats.total++;
-        if (percent >= 100) stats.completed++;
-        else if (percent > 0) stats.progress++;
-        else stats.pending++;
-
-        const phone = u.phone || 'Não informado';
-        const turma = u.company || 'Particular';
-        
-        let statusBadge = u.status === 'premium' 
-            ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] rounded font-bold uppercase">PREMIUM</span>' 
-            : '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] rounded font-bold uppercase">TRIAL</span>';
-
-        let validadeStr = u.acesso_ate ? new Date(u.acesso_ate).toLocaleDateString('pt-BR') : '-';
-
-        html += `
-            <tr class="hover:bg-gray-50 border-b border-gray-100 group transition-colors">
-                <td class="px-4 py-3">
-                    <div class="font-bold text-gray-800 text-sm">${u.name || 'Sem Nome'}</div>
-                    <div class="text-xs text-gray-500">${u.email}</div>
-                </td>
-                <td class="px-4 py-3 text-xs text-gray-600">
-                    <div class="flex items-center gap-2">
-                        ${phone !== 'Não informado' ? '<i class="fab fa-whatsapp text-green-500"></i>' : ''} ${phone}
-                        <button onclick="editUserPhone('${u.uid}', '${phone}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
-                    </div>
-                </td>
-                <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] rounded font-bold border border-blue-100 uppercase">${turma}</span>
-                        <button onclick="editUserClass('${u.uid}', '${turma}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
-                    </div>
-                </td>
-                <td class="px-4 py-3" title="${modulesDone}/${totalCourseModules}">
-                    <div class="flex items-center w-full max-w-[140px]">
-                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
-                            <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
-                        </div>
-                        <span class="text-xs font-bold text-gray-700 w-8 text-right">${percent}%</span>
-                    </div>
-                </td>
-                <td class="px-4 py-3">${statusBadge}</td>
-                <td class="px-4 py-3 text-xs font-mono text-gray-600">${validadeStr}</td>
-            </tr>
-        `;
-    });
-
-    tbody.innerHTML = html;
-    updateManagerStats(stats);
-};
-
-function updateManagerStats(stats) {
-    if(document.getElementById('mgr-total-users')) document.getElementById('mgr-total-users').innerText = stats.total;
-    if(document.getElementById('mgr-completed')) document.getElementById('mgr-completed').innerText = stats.completed;
-    if(document.getElementById('mgr-progress')) document.getElementById('mgr-progress').innerText = stats.progress;
-    if(document.getElementById('mgr-pending')) document.getElementById('mgr-pending').innerText = stats.pending;
-}
 // FUNÇÃO DE EDITAR TURMA
 window.editUserClass = async function(uid, oldClass) {
     const newClass = prompt("Digite o novo nome da Turma/Empresa:", oldClass);
