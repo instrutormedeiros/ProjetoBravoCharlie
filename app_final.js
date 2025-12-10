@@ -493,67 +493,84 @@ window.refreshManagerPanel = function() {
     });
 };
 
-// 📊 RENDERIZA A TABELA DO GESTOR
-function renderManagerTable(snapshot) {
-  const tbody = document.getElementById("manager-table-body");
-  if (!tbody) return;
+// 📊 RENDERIZA A TABELA DO GESTOR (VERSÃO BLINDADA V10.2)
+function renderManagerTable(sourceData) {
+    const tbody = document.getElementById("manager-table-body");
+    if (!tbody) return;
 
-  // Calcula total de módulos do curso
-  const total = totalModules || 0;
-  console.log("📊 Total de módulos do curso:", total);
+    // Calcula total de módulos do curso
+    const total = totalModules || 0;
 
-  // Contadores
-  let totalUsers = 0;
-  let completed = 0;
-  let inProgress = 0;
-  let pending = 0;
+    // Contadores
+    let totalUsers = 0;
+    let completed = 0;
+    let inProgress = 0;
+    let pending = 0;
 
-  tbody.innerHTML = "";
+    tbody.innerHTML = "";
 
-  if (snapshot.empty) {
-    tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado nesta turma.</td></tr>`;
-    updateManagerStats(0, 0, 0, 0);
-    return;
-  }
+    // --- CORREÇÃO DO ERRO ---
+    // Verifica se 'sourceData' é um Array direto ou um Snapshot do Firebase
+    // Se for snapshot (.docs), usamos .docs. Se for array, usamos ele direto.
+    const dataList = sourceData.docs ? sourceData.docs : sourceData;
+    const isEmpty = sourceData.empty || (Array.isArray(sourceData) && sourceData.length === 0);
 
-    snapshot.forEach((doc) => {
-    const u = doc.data(); // ✅ CORRIGIDO - ADICIONADO OS PARÊNTESES
-    totalUsers++;
-
-    // Progresso do aluno
-    const userProgress = Array.isArray(u.completedModules) ? u.completedModules : [];
-    const progressPercent = total > 0 ? Math.round((userProgress.length / total) * 100) : 0;
-
-    // Classifica status
-    if (progressPercent === 100) {
-      completed++;
-    } else if (progressPercent > 0) {
-      inProgress++;
-    } else {
-      pending++;
+    if (isEmpty) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhum aluno encontrado nesta turma.</td></tr>`;
+        updateManagerStats(0, 0, 0, 0);
+        return;
     }
 
-    // Cor da barra
-    let barColor = "bg-red-500";
-    if (progressPercent === 100) barColor = "bg-green-500";
-    else if (progressPercent >= 50) barColor = "bg-yellow-500";
+    dataList.forEach((item) => {
+        // --- CORREÇÃO CRÍTICA (doc.data is not a function) ---
+        // Se o item tiver a função .data(), extraímos os dados. Se não, o item JÁ É o dado.
+        const u = typeof item.data === 'function' ? item.data() : item;
+        
+        totalUsers++;
 
-    // Validade
-    const validade = u.acessoate ? new Date(u.acessoate).toLocaleDateString("pt-BR") : "—";
-    const isExpired = u.acessoate && new Date(u.acessoate) < new Date();
-    const statusBadge = u.status === "premium" && !isExpired
-      ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold uppercase">✓ Ativo</span>'
-      : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial</span>';
+        // Progresso do aluno
+        const userProgress = Array.isArray(u.completedModules) ? u.completedModules : [];
+        const progressPercent = total > 0 ? Math.round((userProgress.length / total) * 100) : 0;
 
-    // Linha da tabela
-    tbody.innerHTML += `
+        // Classifica status
+        if (progressPercent === 100) {
+            completed++;
+        } else if (progressPercent > 0) {
+            inProgress++;
+        } else {
+            pending++;
+        }
+
+        // Cor da barra
+        let barColor = "bg-red-500";
+        if (progressPercent === 100) barColor = "bg-green-500";
+        else if (progressPercent >= 50) barColor = "bg-yellow-500";
+
+        // Validade e Status
+        const validade = u.acesso_ate ? new Date(u.acesso_ate).toLocaleDateString("pt-BR") : "—";
+        const isExpired = u.acesso_ate && new Date(u.acesso_ate) < new Date();
+        const statusBadge = u.status === "premium" && !isExpired
+            ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-bold uppercase">✓ Ativo</span>'
+            : '<span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded uppercase">Trial</span>';
+        
+        // Formata Nome da Empresa
+        const userCompany = u.company || "Particular";
+
+        // Linha da tabela com ações (Botão editar)
+        tbody.innerHTML += `
       <tr class="border-b hover:bg-gray-50 transition-colors">
-        <td class="px-4 py-3 font-semibold text-gray-800">${u.name || "Sem nome"}</td>
+        <td class="px-4 py-3 font-semibold text-gray-800" title="Clique para editar nome" onclick="window.editUserData('${u.uid}', '${u.name || ''}')" style="cursor:pointer">
+            ${u.name || "Sem nome"} <i class="fas fa-pen text-[10px] text-gray-300 ml-1"></i>
+        </td>
         <td class="px-4 py-3 text-sm text-gray-600">
           ${u.email || "—"}<br>
-          <span class="text-xs text-gray-400">CPF: ${u.cpf || "—"}</span>
+          <span class="text-xs text-gray-400 cursor-pointer" onclick="window.editUserPhone('${u.uid}', '${u.phone || 'Não informado'}')">
+             <i class="fab fa-whatsapp"></i> ${u.phone || "Add Tel"}
+          </span>
         </td>
-        <td class="px-4 py-3 text-sm text-gray-500">${u.company || "Particular"}</td>
+        <td class="px-4 py-3 text-sm text-gray-500 cursor-pointer" onclick="window.editUserClass('${u.uid}', '${userCompany}')" title="Editar Turma">
+            ${userCompany} <i class="fas fa-pen text-[10px] text-gray-300 ml-1"></i>
+        </td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-2">
             <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -563,14 +580,17 @@ function renderManagerTable(snapshot) {
           </div>
           <p class="text-xs text-gray-400 mt-1">${userProgress.length}/${total} módulos</p>
         </td>
-        <td class="px-4 py-3">${statusBadge}</td>
-        <td class="px-4 py-3 text-sm text-gray-600">${validade}</td>
+        <td class="px-4 py-3 cursor-pointer" onclick="window.manageUserAccess('${u.uid}')">${statusBadge}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">
+            ${validade}
+            <button onclick="window.deleteUser('${u.uid}', '${u.name}', '${u.cpf}')" class="ml-2 text-red-400 hover:text-red-600" title="Excluir"><i class="fas fa-trash"></i></button>
+        </td>
       </tr>
     `;
-  });
+    });
 
-  // Atualiza cards de estatísticas
-  updateManagerStats(totalUsers, completed, inProgress, pending);
+    // Atualiza cards de estatísticas
+    updateManagerStats(totalUsers, completed, inProgress, pending);
 }
 
 // 📈 ATUALIZA OS CARDS DE ESTATÍSTICAS
@@ -2470,14 +2490,16 @@ let managerCachedUsers = [];
 // BLOCO CORRIGIDO: GESTÃO DE EQUIPE, FILTRO E PROGRESSO
 // ============================================================
 
-// 1. Função Principal: Abrir Painel
-window.openManagerPanel = async function() {
-    console.log("🔓 Abrindo Painel do Gestor...");
+// ============================================================
+// PAINEL DO GESTOR - TEMPO REAL (CORRIGIDO V10.2)
+// ============================================================
+window.openManagerPanel = function() {
+    console.log("🔓 Abrindo Painel do Gestor (Tempo Real)...");
 
-    const db = window.__fbDB || window.fbDB; 
-    
+    const db = window.fbDB || window.__fbDB; // Garante pegar o banco correto
+
     if (!db) {
-        alert("⏳ Sistema carregando. Tente novamente.");
+        alert("⏳ Sistema carregando. Aguarde o Firebase conectar e tente novamente.");
         return;
     }
     if (!currentUserData) {
@@ -2486,64 +2508,81 @@ window.openManagerPanel = async function() {
     }
 
     const modal = document.getElementById("manager-modal");
-    const overlay = document.getElementById("admin-modal-overlay");
+    const overlay = document.getElementById("manager-modal-overlay") || document.getElementById("admin-modal-overlay"); // Fallback
     const tbody = document.getElementById("manager-table-body");
     const titleEl = document.getElementById("manager-company-name");
     const filterSelect = document.getElementById('mgr-filter-turma');
 
-    if (!modal || !overlay) return;
-
-    modal.classList.add("show");
-    overlay.classList.add("show");
-
-    // Título atualizado
-    if (titleEl) titleEl.textContent = "Gestão de equipe";
-    
-    const closeBtn = document.getElementById("close-manager-modal");
-    if (closeBtn) {
-        closeBtn.onclick = () => {
-            modal.classList.remove("show");
-            if (!document.getElementById("admin-modal")?.classList.contains("show")) {
-                overlay.classList.remove("show");
-            }
-        };
+    if (!modal) {
+        console.error("Modal do gestor não encontrado no HTML");
+        return;
     }
 
-    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Buscando dados...</td></tr>`;
+    modal.classList.add("show");
+    if(overlay) overlay.classList.add("show");
 
-    try {
-        const snapshot = await db.collection("users").get();
+    // Título atualizado
+    if (titleEl) titleEl.textContent = `Gestão: ${currentUserData.company || 'Geral'}`;
+
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Conectando ao Tempo Real...</td></tr>`;
+
+    // 1. Cancela listener anterior para não duplicar conexões e gastar memória
+    if (window.managerPanelUnsubscribe) {
+        window.managerPanelUnsubscribe();
+    }
+
+    // 2. Cria a Query Base
+    let query = db.collection("users");
+    
+    // ATENÇÃO: Se quiser filtrar apenas pela empresa do gestor (descomente abaixo se necessário)
+    // if (currentUserData.company && currentUserData.company !== "Particular") {
+    //    query = query.where("company", "==", currentUserData.company);
+    // }
+
+    // 3. Ativa o Listener (onSnapshot)
+    window.managerPanelUnsubscribe = query.onSnapshot((snapshot) => {
         let users = [];
         let turmasEncontradas = new Set();
 
         snapshot.forEach(doc => {
             const u = doc.data();
-            u.uid = doc.id;
-            // Padroniza o nome da turma para o filtro funcionar (Maiúsculo e sem espaços)
+            u.uid = doc.id; // Garante que o ID venha junto
+            
+            // Padroniza turma
             u.company = (u.company || "Particular").trim().toUpperCase();
             if (!u.completedModules) u.completedModules = [];
-            
+
             users.push(u);
             turmasEncontradas.add(u.company);
         });
 
+        // Ordena por nome
         users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        
+        // Salva no Cache Global para o filtro funcionar localmente
         window.managerCachedUsers = users;
 
-        // Preenche o filtro automaticamente com as turmas existentes
-        if (filterSelect) {
-            filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
-            Array.from(turmasEncontradas).sort().forEach(turma => {
-                filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
-            });
+        // Atualiza o Select de Filtro (se existir)
+        if (filterSelect && filterSelect.children.length <= 1) { // Só preenche se estiver vazio
+             filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+             Array.from(turmasEncontradas).sort().forEach(turma => {
+                 filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+             });
         }
 
-        renderManagerTable(users);
+        console.log("🟢 Atualização em tempo real recebida:", users.length, "alunos.");
+        
+        // Se houver filtro ativo, aplica ele, senão mostra tudo
+        if(typeof window.filterManagerTable === 'function' && filterSelect && filterSelect.value !== 'TODOS') {
+             window.filterManagerTable();
+        } else {
+             renderManagerTable(users);
+        }
 
-    } catch (err) {
-        console.error("Erro:", err);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: ${err.message}</td></tr>`;
-    }
+    }, (error) => {
+        console.error("❌ Erro no listener:", error);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro de conexão: ${error.message}</td></tr>`;
+    });
 };
 
 // 2. Função de Filtro Inteligente
