@@ -4,7 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- VARIÁVEIS GLOBAIS DO APP ---
     const contentArea = document.getElementById('content-area');
-    
+   
+    // Adicione isso junto com as variáveis globais no topo do app_final.js
+    let managerUnsubscribe = null; // Variável para guardar o listener do Firestore
     // CORREÇÃO AQUI: Definindo a variável globalmente
     let totalModules = 0; 
     
@@ -201,10 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if(installBtnMobile) installBtnMobile.addEventListener('click', triggerInstall);
 
     if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined') {
-        document.getElementById('main-header')?.classList.add('hidden');
-        document.querySelector('footer')?.classList.add('hidden');
-        return; 
-    }
+    console.warn("⚠️ Conteúdo do curso ainda não carregado. Mantendo apenas a capa.");
+    document.getElementById('main-header')?.classList.add('hidden');
+    document.querySelector('footer')?.classList.add('hidden');
+    // NÃO dá return aqui, deixa o restante do init continuar
+}
 
 function init() {
     // ========================================
@@ -236,7 +239,12 @@ function init() {
         };
         
         if (typeof FirebaseCourse !== 'undefined') {
-            FirebaseCourse.init(firebaseConfig);
+           FirebaseCourse.init(firebaseConfig);
+
+// garante alias global para não dar undefined
+window.fbDB = window.__fbDB || null;
+window.fbAuth = window.__fbAuth || null;
+
             // Aguarda o Firebase estar pronto
 setTimeout(() => {
     if (window.fbDB) {
@@ -253,9 +261,16 @@ setTimeout(() => {
 
             setupAuthEventListeners(); 
             
-            document.getElementById('logout-button')?.addEventListener('click', FirebaseCourse.signOutUser);
-            document.getElementById('logout-expired-button')?.addEventListener('click', FirebaseCourse.signOutUser);
-            document.getElementById('logout-button-header')?.addEventListener('click', FirebaseCourse.signOutUser);
+            // LÓGICA DE LOGOUT BLINDADA
+            const handleLogout = async () => {
+                window.clearLocalUserData(); // <--- A MÁGICA ACONTECE AQUI
+                await FirebaseCourse.signOutUser();
+                window.location.reload(); // Recarrega a página para garantir estado zero
+            };
+
+            document.getElementById('logout-button')?.addEventListener('click', handleLogout);
+            document.getElementById('logout-expired-button')?.addEventListener('click', handleLogout);
+            document.getElementById('logout-button-header')?.addEventListener('click', handleLogout);
 
             // === CORREÇÃO CRÍTICA: LÓGICA DE LOGIN VS CAPA ===
             
@@ -284,244 +299,320 @@ setTimeout(() => {
     }
 
     function onLoginSuccess(user, userData) {
-        // --- NOVO: GARANTE QUE A CAPA SUMA NO REFRESH ---
+        // Remove capa e libera scroll
         const landing = document.getElementById('landing-hero');
-        if (landing) landing.classList.add('hidden'); // Esconde a capa
-        document.body.classList.remove('landing-active'); // Destrava rolagem
-        // ------------------------------------------------
+        if (landing) landing.classList.add('hidden'); 
+        document.body.classList.remove('landing-active'); 
 
-        currentUserData = userData; 
+        if (userData && user) {
+            currentUserData = { ...userData, uid: user.uid };
+        } else {
+            currentUserData = userData;
+        }
 
         if (document.body.getAttribute('data-app-ready') === 'true') return;
         
-        // Fecha modais e overlays para liberar a tela
         document.getElementById('name-prompt-modal')?.classList.remove('show');
         document.getElementById('name-modal-overlay')?.classList.remove('show');
         document.getElementById('expired-modal')?.classList.remove('show');
         
-        // Saudação personalizada
         const greetingEl = document.getElementById('welcome-greeting');
         if(greetingEl) greetingEl.textContent = `Olá, ${userData.name.split(' ')[0]}!`;
         
-        // Marca d'água de segurança
         const printWatermark = document.getElementById('print-watermark');
         if (printWatermark) {
             printWatermark.textContent = `Licenciado para ${userData.name} (CPF: ${userData.cpf || '...'}) - Proibida a Cópia`;
         }
 
-        // Libera Botões Admin (se for admin)
+        // Admin e Gestor Buttons
         const adminBtn = document.getElementById('admin-panel-btn');
         const mobileAdminBtn = document.getElementById('mobile-admin-btn');
+        const managerFab = document.getElementById("manager-fab");
+
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
             if(mobileAdminBtn) mobileAdminBtn.classList.remove('hidden');
         }
-        // ========================================
-// ========================================
-        // LÓGICA DO BOTÃO GESTOR (CORRIGIDO)
-        // ========================================
-        const painelBtn = document.getElementById("open-manager-panel-btn");
-        
-        // ========================================
-        // LÓGICA DO BOTÃO FLUTUANTE DE GESTOR
-        // ========================================
-        const managerFab = document.getElementById("manager-fab");
-        
-        // Se for gestor OU admin, mostra o botão flutuante
         if (userData.isManager === true || userData.isAdmin === true) {
-            if (managerFab) {
-                managerFab.classList.remove("hidden"); // Remove a classe que esconde
-                console.log("✅ Botão Flutuante de Gestor ATIVADO para:", userData.name);
-            }
+            if (managerFab) managerFab.classList.remove("hidden");
         }
 
         checkTrialStatus(userData.acesso_ate);
 
-        // --- PROGRESSO SINCRONIZADO (BIDIRECIONAL) ---
-        if (userData.completedModules && Array.isArray(userData.completedModules) && userData.completedModules.length > 0) {
-            // Se o banco tem dados, usa o banco (prioridade nuvem)
+        // --- PROGRESSO SINCRONIZADO (CORRIGIDO) ---
+        // Se o usuário tem dados na nuvem, usa a nuvem (Prioridade Máxima)
+        if (userData.completedModules && Array.isArray(userData.completedModules)) {
             completedModules = userData.completedModules;
+            // Atualiza o localStorage para ficar igual à nuvem
             localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
-            console.log("Progresso recuperado da nuvem.");
-        } else if (completedModules.length > 0) {
-            // Se o banco está vazio, mas o aluno tem progresso local, ENVIA para o banco
+            console.log("Progresso sincronizado da nuvem:", completedModules.length);
+        } 
+        // Se a nuvem está vazia, mas temos dados locais E parece ser o mesmo usuário (sessão), envia.
+        // Se for um login fresco sem sessão anterior, ignoramos o local para evitar contaminação.
+        else if (completedModules.length > 0 && localStorage.getItem('my_session_id') === userData.current_session_id) {
             console.log("Sincronizando progresso local para a nuvem...");
             saveProgressToCloud();
+        } 
+        else {
+            // Se não tem na nuvem e não é sessão contínua, assume zero.
+            completedModules = [];
+            localStorage.removeItem('gateBombeiroCompletedModules_v3');
         }
 
-        // Inicializa contadores
-        totalModules = Object.keys(window.moduleContent || {}).length;
-        document.getElementById('total-modules').textContent = totalModules;
-        document.getElementById('course-modules-count').textContent = totalModules;
+        // --- CORREÇÃO DA CONTAGEM DE MÓDULOS (62 vs 4) ---
+        // Aqui recalculamos o totalModules baseado APENAS no que o aluno pode ver
+        let count = 0;
+        const userCourse = userData.courseType || 'BC';
+        const isAdm = userData.isAdmin || userData.courseType === 'GESTOR';
+
+        Object.keys(window.moduleContent || {}).forEach(modId => {
+            const isSp = modId.startsWith('sp_');
+            
+            if (isAdm) {
+                count++; // Admin vê tudo (66)
+            } else {
+                // Aluno BC: conta se NÃO for SP
+                if (userCourse === 'BC' && !isSp) count++;
+                // Aluno SP: conta se FOR SP
+                else if (userCourse === 'SP' && isSp) count++;
+            }
+        });
         
-        // Carrega listas e eventos
+        totalModules = count; // Atualiza a variável global
+        // --------------------------------------------------
+
+        // Atualiza a interface com o número correto
+        const totalEl = document.getElementById('total-modules');
+        const courseCountEl = document.getElementById('course-modules-count');
+        if(totalEl) totalEl.textContent = totalModules;
+        if(courseCountEl) courseCountEl.textContent = totalModules;
+        
         populateModuleLists();
         updateProgress();
         addEventListeners(); 
         handleInitialLoad();
-
-       // Inicia Tour Automático (se nunca viu)
         startOnboardingTour(false); 
 
-        // --- CORREÇÃO BLINDADA B2B ---
-// Verifica se a intenção de abrir o painel existe
-if (localStorage.getItem("openmanagerafterlogin") === "true") {
-    localStorage.removeItem("openmanagerafterlogin");
-    
-    // Aguarda o Firebase estar pronto antes de abrir o painel
-    setTimeout(() => {
-        if (window.fbDB && typeof openManagerPanel === "function") {
-            console.log("🔓 Abrindo painel do gestor automaticamente...");
-            openManagerPanel();
-        } else {
-            console.warn("⚠️ Firebase ainda não está pronto. Tentando novamente em 3 segundos...");
+        if (localStorage.getItem("open_manager_after_login") === "true") {
+            localStorage.removeItem("open_manager_after_login");
             setTimeout(() => {
-                if (window.fbDB && typeof openManagerPanel === "function") {
-                    openManagerPanel();
-                }
-            }, 3000);
+                if (window.fbDB && typeof openManagerPanel === "function") openManagerPanel();
+            }, 2000);
         }
-    }, 2000);  // Aumentei de 1500ms para 2000ms
-}
-
     // --- TRAVA DE SEGURANÇA (ADICIONE ISTO AQUI) ---
         // Isso impede que os botões sejam duplicados quando o banco atualiza
         document.body.setAttribute('data-app-ready', 'true');
 
     }
     
-    // --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
-    window.openAdminPanel = async function() {
-        if (!currentUserData || !currentUserData.isAdmin) return;
-        adminModal.classList.add('show');
-        adminOverlay.classList.add('show');
-        const tbody = document.getElementById('admin-table-body');
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando usuários...</td></tr>';
-        
-        try {
-            const snapshot = await window.__fbDB.collection('users').orderBy('name').get();
-            tbody.innerHTML = '';
-            
-            snapshot.forEach(doc => {
-                const u = doc.data();
-                const uid = doc.id;
-                
-                // Verifica status e expiração
-                let statusDisplay = u.status || 'trial';
-                let statusColor = 'bg-gray-100 text-gray-800';
-                
-                const validade = u.acesso_ate ? new Date(u.acesso_ate) : null;
-                const isExpired = validade && new Date() > validade;
-                const validadeStr = validade ? validade.toLocaleDateString('pt-BR') : '-';
+// --- FUNÇÕES ADMIN (ATUALIZADAS E LEGÍVEIS) ---
+window.openAdminPanel = async function() {
+    if (!currentUserData || !currentUserData.isAdmin) return;
 
-                if (u.status === 'premium') {
-                    if (isExpired) {
-                        statusDisplay = 'EXPIRADO';
-                        statusColor = 'bg-red-100 text-red-800';
-                    } else {
-                        statusColor = 'bg-green-100 text-green-800';
-                    }
+    const adminModal = document.getElementById('admin-modal');
+    const adminOverlay = document.getElementById('admin-modal-overlay');
+    
+    adminModal.classList.add('show');
+    adminOverlay.classList.add('show');
+
+    const tbody = document.getElementById('admin-table-body');
+    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center">Carregando usuários...</td></tr>';
+
+    const db = window.__fbDB || window.fbDB;
+    if (!db) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-500">Banco de dados não carregado.</td></tr>';
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection('users').get();
+        tbody.innerHTML = '';
+
+        let users = [];
+        snapshot.forEach(doc => {
+            const u = doc.data();
+            const uid = doc.id;
+            users.push({ uid, data: u });
+        });
+
+        // Ordena alfabeticamente
+        users.sort((a, b) => {
+            const na = (a.data.name || '').toLocaleLowerCase('pt-BR');
+            const nb = (b.data.name || '').toLocaleLowerCase('pt-BR');
+            return na.localeCompare(nb, 'pt-BR');
+        });
+
+        let stats = { total: 0, premium: 0, trial: 0 };
+
+        users.forEach(({ uid, data: u }) => {
+            stats.total++;
+            if (u.status === 'premium') stats.premium++;
+            else stats.trial++;
+
+            // --- LÓGICA DE STATUS ---
+            let statusDisplay = u.status || 'trial';
+            let statusColor = 'bg-gray-100 text-gray-800';
+            const validade = u.acesso_ate ? new Date(u.acesso_ate) : null;
+            const isExpired = validade && new Date() > validade;
+            const validadeStr = validade ? validade.toLocaleDateString('pt-BR') : '-';
+
+            if (u.status === 'premium') {
+                if (isExpired) {
+                    statusDisplay = 'EXPIRADO';
+                    statusColor = 'bg-red-100 text-red-800';
                 } else {
-                    statusColor = 'bg-yellow-100 text-yellow-800';
+                    statusColor = 'bg-green-100 text-green-800';
                 }
+            } else {
+                statusColor = 'bg-yellow-100 text-yellow-800';
+            }
 
-                const cpf = u.cpf || 'Sem CPF';
-                const planoTipo = u.planType || (u.status === 'premium' ? 'Indefinido' : 'Trial');
-                const deviceInfo = u.last_device || 'Desconhecido';
-                const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
+            const cpf = u.cpf || 'Sem CPF';
+            const planoTipo = u.planType || (u.status === 'premium' ? 'Indefinido' : 'Trial');
+            const deviceInfo = u.last_device || 'Desconhecido';
+            const noteIconColor = u.adminNote ? 'text-yellow-500' : 'text-gray-400';
 
-                const row = `
-                    <tr class="border-b hover:bg-gray-50 transition-colors">
-                        <td class="p-3 font-bold text-gray-800">${u.name}</td>
-                        <td class="p-3 text-gray-600 text-sm">${u.email}<br><span class="text-xs text-gray-500">CPF: ${cpf}</span></td>
-                        <td class="p-3 text-xs text-gray-500 max-w-[150px] truncate" title="${deviceInfo}">${deviceInfo}</td>
-                        <td class="p-3">
-                            <div class="flex flex-col items-start">
-                                <span class="px-2 py-1 rounded text-xs font-bold uppercase ${statusColor}">${statusDisplay}</span>
-                                <span class="text-xs text-gray-500 mt-1">${planoTipo}</span>
-                            </div>
-                        </td>
-                        <td class="p-3 text-sm font-medium">${validadeStr}</td>
-                        <td class="p-3 flex flex-wrap gap-2">
-                            <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
-                            <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Nota Admin"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
-                            <button onclick="manageUserAccess('${uid}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Plano"><i class="fas fa-calendar-alt"></i></button>
-                            <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
-                            <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
-                            <button onclick="toggleManagerRole('${uid}', ${u.isManager})" class="${u.isManager ? 'bg-purple-600' : 'bg-gray-400'} hover:bg-purple-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alternar Gestor"><i class="fas fa-briefcase"></i></button>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
-        }
-    };
+            // --- NOVO: LÓGICA DO CURSO (BC vs SP) ---
+            const cursoCodigo = u.courseType || 'BC'; // Padrão BC se não existir
+            const cursoLabel = cursoCodigo === 'SP' ? 'SEG. PATRIMONIAL' : 'BOMBEIRO CIVIL';
+            const cursoBadgeColor = cursoCodigo === 'SP' 
+                ? 'bg-blue-100 text-blue-800 border-blue-200' 
+                : 'bg-red-100 text-red-800 border-red-200';
 
-    window.manageUserAccess = async function(uid) {
-        const op = prompt(
-            "Selecione o Plano:\n" +
-            "1 - MENSAL (30 dias)\n" +
-            "2 - SEMESTRAL (180 dias)\n" +
-            "3 - ANUAL (365 dias)\n" +
-            "4 - VITALÍCIO (10 anos)\n" +
-            "5 - REMOVER PREMIUM (Voltar para Trial)\n" +
-            "6 - PERSONALIZADO (Dias)"
-        );
+            const row = `
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-3 font-bold text-gray-800">
+                        ${u.name}
+                        <div class="mt-1">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${cursoBadgeColor}">${cursoLabel}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 text-gray-600 text-sm">${u.email}<br><span class="text-xs text-gray-500">CPF: ${cpf}</span></td>
+                    <td class="p-3 text-xs text-gray-500 max-w-[150px] truncate" title="${deviceInfo}">${deviceInfo}</td>
+                    <td class="p-3">
+                        <div class="flex flex-col items-start">
+                            <span class="px-2 py-1 rounded text-xs font-bold uppercase ${statusColor}">${statusDisplay}</span>
+                            <span class="text-xs text-gray-500 mt-1">${planoTipo}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 text-sm font-medium">${validadeStr}</td>
+                    <td class="p-3 flex flex-wrap gap-2">
+                        <button onclick="editUserData('${uid}', '${u.name}', '${cpf}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
+                        
+                        <!-- BOTÃO NOVO: ALTERAR CURSO -->
+                        <button onclick="changeUserCourse('${uid}', '${cursoCodigo}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alterar Curso (BC/SP)"><i class="fas fa-graduation-cap"></i></button>
+                        
+                        <button onclick="editUserNote('${uid}', '${(u.adminNote || '').replace(/'/g, "\\'")}')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-2 py-1.5 rounded text-xs shadow" title="Nota Admin"><i class="fas fa-sticky-note ${noteIconColor}"></i></button>
+                        <button onclick="manageUserAccess('${uid}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Gerenciar Plano"><i class="fas fa-calendar-alt"></i></button>
+                        <button onclick="sendResetEmail('${u.email}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Resetar Senha"><i class="fas fa-key"></i></button>
+                        <button onclick="deleteUser('${uid}', '${u.name}', '${cpf}')" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Excluir"><i class="fas fa-trash"></i></button>
+                        <button onclick="toggleManagerRole('${uid}', ${u.isManager})" class="${u.isManager ? 'bg-purple-600' : 'bg-gray-400'} hover:bg-purple-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alternar Gestor"><i class="fas fa-briefcase"></i></button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
 
-        if (!op) return;
+        updateAdminStats(stats);
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar: ${err.message}</td></tr>`;
+    }
+};
+    
+function updateAdminStats(stats) {
+    const totalEl = document.getElementById('admin-total-users');
+    const premEl  = document.getElementById('admin-total-premium');
+    const trialEl = document.getElementById('admin-total-trial');
 
-        let diasParaAdicionar = 0;
-        let nomePlano = '';
-        let novoStatus = 'premium';
+    if (totalEl) totalEl.textContent = stats.total || 0;
+    if (premEl)  premEl.textContent  = stats.premium || 0;
+    if (trialEl) trialEl.textContent = stats.trial || 0;
+}
 
-        if (op === '1') { diasParaAdicionar = 30; nomePlano = 'Mensal'; }
-        else if (op === '2') { diasParaAdicionar = 180; nomePlano = 'Semestral'; }
-        else if (op === '3') { diasParaAdicionar = 365; nomePlano = 'Anual'; }
-        else if (op === '4') { diasParaAdicionar = 3650; nomePlano = 'Vitalício'; }
-        else if (op === '5') {
-            // Remover Premium
-            try {
-                // Define data no passado para expirar
-                const ontem = new Date();
-                ontem.setDate(ontem.getDate() - 1);
-                await window.__fbDB.collection('users').doc(uid).update({
-                    status: 'trial',
-                    acesso_ate: ontem.toISOString(),
-                    planType: 'Cancelado'
-                });
-                alert("Acesso Premium removido.");
-                openAdminPanel();
-                return;
-            } catch (e) { alert(e.message); return; }
-        }
-        else if (op === '6') {
-            const i = prompt("Digite a quantidade de dias:");
-            if (!i) return;
-            diasParaAdicionar = parseInt(i);
-            nomePlano = 'Personalizado';
-        } else {
-            return;
-        }
 
-        // Calcula nova data a partir de AGORA
-        const agora = new Date();
-        const novaData = new Date(agora);
-        novaData.setDate(novaData.getDate() + diasParaAdicionar);
+  /* === SUBSTITUIR NO ARQUIVO app_final.js === */
 
+window.manageUserAccess = async function(uid) {
+    const op = prompt(
+        "Selecione a Ação:\n" +
+        "1 - MENSAL (30 dias - Vira Premium)\n" +
+        "2 - SEMESTRAL (180 dias - Vira Premium)\n" +
+        "3 - ANUAL (365 dias - Vira Premium)\n" +
+        "4 - VITALÍCIO (10 anos - Vira Premium)\n" +
+        "5 - REMOVER PREMIUM (Voltar para Trial Vencido)\n" +
+        "6 - PERSONALIZADO (Dias - Vira Premium)\n" +
+        "7 - ESTENDER TRIAL (Dias - Mantém TRIAL)" // <--- NOVA OPÇÃO AQUI
+    );
+
+    if (!op) return;
+
+    let diasParaAdicionar = 0;
+    let nomePlano = '';
+    let novoStatus = 'premium'; // O padrão continua sendo premium para as opções 1 a 4
+
+    if (op === '1') { diasParaAdicionar = 30; nomePlano = 'Mensal'; }
+    else if (op === '2') { diasParaAdicionar = 180; nomePlano = 'Semestral'; }
+    else if (op === '3') { diasParaAdicionar = 365; nomePlano = 'Anual'; }
+    else if (op === '4') { diasParaAdicionar = 3650; nomePlano = 'Vitalício'; }
+    
+    else if (op === '5') {
+        // Remover Premium (Lógica Existente)
         try {
+            const ontem = new Date();
+            ontem.setDate(ontem.getDate() - 1);
             await window.__fbDB.collection('users').doc(uid).update({
-                status: novoStatus,
-                acesso_ate: novaData.toISOString(),
-                planType: nomePlano
+                status: 'trial',
+                acesso_ate: ontem.toISOString(),
+                planType: 'Cancelado'
             });
-            alert(`Sucesso! Plano ${nomePlano} ativado até ${novaData.toLocaleDateString()}`);
+            alert("Acesso Premium removido. O aluno voltou para Trial expirado.");
             openAdminPanel();
-        } catch (e) {
-            alert("Erro ao atualizar: " + e.message);
-        }
-    };
+            return;
+        } catch (e) { alert(e.message); return; }
+    }
+    
+    else if (op === '6') {
+        const i = prompt("Digite a quantidade de dias para o PREMIUM:");
+        if (!i) return;
+        diasParaAdicionar = parseInt(i);
+        nomePlano = 'Personalizado (Premium)';
+        novoStatus = 'premium'; // Força Premium
+    }
+    
+    // --- NOVA LÓGICA DO TRIAL ---
+    else if (op === '7') {
+        const i = prompt("Quantos dias de TRIAL você quer dar a mais?");
+        if (!i) return;
+        diasParaAdicionar = parseInt(i);
+        nomePlano = 'Trial Estendido';
+        novoStatus = 'trial'; // <--- AQUI ESTÁ O SEGREDO: Força Trial
+    } 
+    
+    else {
+        return;
+    }
+
+    // Calcula nova data a partir de AGORA
+    const agora = new Date();
+    const novaData = new Date(agora);
+    novaData.setDate(novaData.getDate() + diasParaAdicionar);
+
+    try {
+        await window.__fbDB.collection('users').doc(uid).update({
+            status: novoStatus, // Usa a variável que definimos corretamente acima
+            acesso_ate: novaData.toISOString(),
+            planType: nomePlano
+        });
+        
+        // Feedback visual mais claro
+        const tipoStatus = novoStatus === 'premium' ? 'PREMIUM ⭐' : 'TRIAL ⏳';
+        alert(`Sucesso! Status definido como ${tipoStatus}.\nVálido até ${novaData.toLocaleDateString()}`);
+        
+        openAdminPanel();
+    } catch (e) {
+        alert("Erro ao atualizar: " + e.message);
+    }
+};
    
     // 4. Excluir Usuário (Do Banco de Dados)
     window.deleteUser = async function(uid, name, cpf) {
@@ -570,13 +661,25 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
         }
     }
 
+// --- 1. ATUALIZAÇÃO DA FUNÇÃO DE EVENTOS DE AUTENTICAÇÃO ---
+    // Substitua a função setupAuthEventListeners inteira por esta:
+    
+    // --- 1. ATUALIZAÇÃO DA FUNÇÃO DE EVENTOS DE AUTENTICAÇÃO ---
+    // Substitua a função setupAuthEventListeners inteira por esta:
+    
     function setupAuthEventListeners() {
         const nameField = document.getElementById('name-field-container');
         const cpfField = document.getElementById('cpf-field-container'); 
-        const phoneField = document.getElementById('phone-field-container'); // NOVO
-        const phoneInput = document.getElementById('phone-input'); // NOVO
-        const companyField = document.getElementById('company-field-container'); // NOVO
-        const companyInput = document.getElementById('company-input'); // NOVO
+        const phoneField = document.getElementById('phone-field-container'); 
+        const phoneInput = document.getElementById('phone-input'); 
+        const companyField = document.getElementById('company-field-container'); 
+        const companyInput = document.getElementById('company-input'); 
+        
+        // --- NOVO: Referência ao campo de curso ---
+        const courseField = document.getElementById('course-field-container'); 
+        const courseSelect = document.getElementById('course-input');
+        // ------------------------------------------
+
         const nameInput = document.getElementById('name-input');
         const cpfInput = document.getElementById('cpf-input'); 
         const emailInput = document.getElementById('email-input');
@@ -597,23 +700,27 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
         const closePayModal = document.getElementById('close-payment-modal-btn');
         const loginModalOverlay = document.getElementById('name-modal-overlay');
         const loginModal = document.getElementById('name-prompt-modal');
-        // ... (Logo após as definições das variáveis dentro de setupAuthEventListeners)
 
-        // --- LÓGICA DO ENTER PARA LOGIN ---
-        // Se apertar Enter no campo de senha, clica no botão de entrar
+        // === CORREÇÃO DE SEGURANÇA VISUAL (INICIALIZAÇÃO) ===
+        // Garante que o campo de curso (e outros de cadastro) comecem OCULTOS se o login estiver visível
+        if (loginGroup && !loginGroup.classList.contains('hidden')) {
+            if (courseField) courseField.classList.add('hidden');
+            if (nameField) nameField.classList.add('hidden');
+            if (cpfField) cpfField.classList.add('hidden');
+            if (phoneField) phoneField.classList.add('hidden');
+            if (companyField) companyField.classList.add('hidden');
+        }
+        // =====================================================
+
+        // ... (Lógica do Enter mantida) ...
         passwordInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                btnLogin.click();
+                if (!loginGroup.classList.contains('hidden')) btnLogin.click();
+                else btnSignup.click();
             }
         });
 
-        // (Opcional) Se apertar Enter no email, pula para a senha
-        emailInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                passwordInput.focus();
-            }
-        });
-
+        // ... (Lógica do Modal de Pagamento mantida) ...
         function openPaymentModal() {
             expiredModal.classList.add('show');
             if (loginModalOverlay) loginModalOverlay.classList.add('show');
@@ -638,28 +745,41 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
                 }
             }
         });
+
+        // --- ALTERAÇÃO AQUI: Lógica de Alternar Login/Cadastro ---
         btnShowSignup?.addEventListener('click', () => {
             loginGroup.classList.add('hidden');
             signupGroup.classList.remove('hidden');
+            
+            // Mostra campos extras
             nameField.classList.remove('hidden');
             cpfField.classList.remove('hidden'); 
-            phoneField.classList.remove('hidden'); // MOSTRAR TELEFONE
+            phoneField.classList.remove('hidden'); 
             companyField.classList.remove('hidden');
+            if(courseField) courseField.classList.remove('hidden'); // MOSTRA o curso apenas aqui
+            
             authTitle.textContent = "Criar Nova Conta";
             authMsg.textContent = "Cadastre-se para o Período de Experiência.";
             feedback.textContent = "";
         });
+
         btnShowLogin?.addEventListener('click', () => {
             loginGroup.classList.remove('hidden');
             signupGroup.classList.add('hidden');
+            
+            // Esconde campos extras
             nameField.classList.add('hidden');
             cpfField.classList.add('hidden'); 
-            phoneField.classList.add('hidden'); // ESCONDER TELEFONE
+            phoneField.classList.add('hidden'); 
             companyField.classList.add('hidden');
+            if(courseField) courseField.classList.add('hidden'); // ESCONDE o curso
+            
             authTitle.textContent = "Acesso ao Sistema";
             authMsg.textContent = "Acesso Restrito";
             feedback.textContent = "";
         });
+
+        // Login Action
         btnLogin?.addEventListener('click', async () => {
             const email = emailInput.value;
             const password = passwordInput.value;
@@ -679,22 +799,26 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
                 feedback.textContent = "Erro ao entrar. Verifique seus dados.";
             }
         });
+
+        // Signup Action (Com captura do curso)
         btnSignup?.addEventListener('click', async () => {
-            const phone = phoneInput.value; // NOVO
-            const company = companyInput.value; // NOVO
+            const phone = phoneInput.value; 
+            const company = companyInput.value; 
+            const courseType = courseSelect ? courseSelect.value : 'BC'; // Captura
             const name = nameInput.value;
             const email = emailInput.value;
             const password = passwordInput.value;
             const cpf = cpfInput.value;
+
             if (!name || !email || !password || !cpf || !phone) {
-                feedback.textContent = "Todos os campos são obrigatórios.";
+                feedback.textContent = "Todos os campos obrigatórios devem ser preenchidos.";
                 feedback.className = "text-center text-sm mt-4 font-semibold text-red-500";
                 return;
             }
             feedback.textContent = "Criando conta...";
             feedback.className = "text-center text-sm mt-4 text-blue-400 font-semibold";
             try {
-                await FirebaseCourse.signUpWithEmail(name, email, password, cpf, company, phone);
+                await FirebaseCourse.signUpWithEmail(name, email, password, cpf, company, phone, courseType);
                 feedback.textContent = "Sucesso! Iniciando...";
             } catch (error) {
                 feedback.className = "text-center text-sm mt-4 text-red-400 font-semibold";
@@ -1637,7 +1761,8 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
         document.getElementById('mobile-module-container').innerHTML = getModuleListHTML();
     }
 
-    // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM CONTADORES ---
+    // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM CONTADORES E SEGURANÇA ACL ---
+    // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM SUPORTE A CATEGORIAS SP ---
     function getModuleListHTML() {
         let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2><div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo..."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div><div class="module-accordion-container space-y-2">`;
         
@@ -1646,22 +1771,56 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
             const isLocked = cat.isPremium && (!currentUserData || currentUserData.status !== 'premium');
             const lockIcon = isLocked ? '<i class="fas fa-lock text-xs ml-2 text-yellow-500"></i>' : '';
             
-            // CÁLCULO DE CONTADORES
+            // --- CÁLCULO DE CONTADORES ---
             let catTotal = 0;
             let catCompleted = 0;
+            
+            // Define quem é o usuário
+            const userType = currentUserData ? (currentUserData.courseType || 'BC') : 'BC';
+            const isManager = currentUserData ? (currentUserData.isAdmin || currentUserData.courseType === 'GESTOR') : false;
+
+            // Determina o prefixo baseado na categoria (SEGREDO AQUI)
+            // Se a categoria tem isSP: true, buscamos sp_moduleX. Senão, moduleX.
+            const prefix = cat.isSP ? 'sp_module' : 'module';
+
             for(let i = cat.range[0]; i <= cat.range[1]; i++) {
-                const mid = `module${i}`;
+                const mid = `${prefix}${i}`; // Monta o ID correto (ex: sp_module1 ou module1)
+
                 if(moduleContent[mid]) {
-                    catTotal++;
-                    if(completedModules.includes(mid)) catCompleted++;
+                    // ACL: Verifica se deve contar este módulo
+                    const isSpContent = mid.startsWith('sp_');
+                    let showIt = true;
+
+                    if (!isManager) {
+                        if (userType === 'BC' && isSpContent) showIt = false; 
+                        if (userType === 'SP' && !isSpContent) showIt = false; 
+                    }
+
+                    if (showIt) {
+                        catTotal++;
+                        if(completedModules.includes(mid)) catCompleted++;
+                    }
                 }
             }
 
+            // Se a categoria estiver vazia para este aluno, não desenha o botão dela
+            if (catTotal === 0 && !isManager) continue; 
+
             html += `<div><button class="accordion-button"><span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title} ${lockIcon}</span> <span class="module-count">${catCompleted}/${catTotal}</span> <i class="fas fa-chevron-down"></i></button><div class="accordion-panel">`;
             
+            // --- GERAÇÃO DA LISTA DE MÓDULOS ---
             for (let i = cat.range[0]; i <= cat.range[1]; i++) {
-                const m = moduleContent[`module${i}`];
+                const mid = `${prefix}${i}`; // ID Correto
+                const m = moduleContent[mid];
+
                 if (m) {
+                    // ACL: Verifica se deve exibir (Mesma lógica de cima)
+                    const isSpContent = m.id.startsWith('sp_');
+                    if (!isManager) {
+                        if (userType === 'BC' && isSpContent) continue;
+                        if (userType === 'SP' && !isSpContent) continue;
+                    }
+
                     const isDone = Array.isArray(completedModules) && completedModules.includes(m.id);
                     const itemLock = isLocked ? '<i class="fas fa-lock text-xs text-gray-400 ml-2"></i>' : '';
                     html += `<div class="module-list-item${isDone ? ' completed' : ''}" data-module="${m.id}"><i class="${m.iconClass} module-icon"></i><span style="flex:1">${m.title} ${itemLock}</span>${isDone ? '<i class="fas fa-check-circle completion-icon" aria-hidden="true"></i>' : ''}</div>`;
@@ -1669,11 +1828,25 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
             }
             html += `</div></div>`;
         }
+        
+        // Finaliza o HTML
         html += `</div>`;
         html += `<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"><h3 class="text-xl font-semibold mb-6 text-gray-800 dark:text-white flex items-center"><i class="fas fa-medal mr-2 text-yellow-500"></i> Conquistas por Área</h3><div id="achievements-grid" class="grid grid-cols-2 gap-4">`;
+        
         for (const key in moduleCategories) {
             const cat = moduleCategories[key];
-            html += `<div id="ach-cat-${key}" class="achievement-card" title="Conclua a área para ganhar: ${cat.achievementTitle}"><div class="achievement-icon"><i class="${cat.icon}"></i></div><p class="achievement-title">${cat.achievementTitle}</p></div>`;
+            let showAchievement = true;
+            
+            // Esconde conquista da área errada
+            if (currentUserData && !currentUserData.isAdmin && currentUserData.courseType !== 'GESTOR') {
+                const type = currentUserData.courseType || 'BC';
+                if (type === 'BC' && cat.isSP) showAchievement = false;
+                if (type === 'SP' && !cat.isSP) showAchievement = false;
+            }
+
+            if (showAchievement) {
+                html += `<div id="ach-cat-${key}" class="achievement-card" title="Conclua a área para ganhar: ${cat.achievementTitle}"><div class="achievement-icon"><i class="${cat.icon}"></i></div><p class="achievement-title">${cat.achievementTitle}</p></div>`;
+            }
         }
         html += `</div></div>`;
         return html;
@@ -1712,23 +1885,52 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
     function updateModuleListStyles() {
         document.querySelectorAll('.module-list-item').forEach(i => i.classList.toggle('completed', completedModules.includes(i.dataset.module)));
     }
+    // --- FUNÇÃO CORRIGIDA: VERIFICAÇÃO DE CONQUISTAS (COM ACL) ---
     function checkAchievements() {
         let newNotification = false;
+        
+        // 1. Identifica quem é o aluno
+        const userType = currentUserData ? (currentUserData.courseType || 'BC') : 'BC';
+        const isManager = currentUserData ? (currentUserData.isAdmin || currentUserData.courseType === 'GESTOR') : false;
+
         for(const key in moduleCategories) {
             const cat = moduleCategories[key];
+            
+            // 2. ACL: Se a conquista não é do curso do aluno, PULA IMEDIATAMENTE
+            // Isso impede que Bombeiro ganhe medalha de SP e vice-versa
+            if (!isManager) {
+                if (userType === 'BC' && cat.isSP) continue; 
+                if (userType === 'SP' && !cat.isSP) continue;
+            }
+
             let allComplete = true;
+            
+            // 3. Define o prefixo correto do ID (module ou sp_module)
+            const prefix = cat.isSP ? 'sp_module' : 'module';
+
+            // 4. Verifica módulo por módulo
             for(let i = cat.range[0]; i <= cat.range[1]; i++) {
-                if (!moduleContent[`module${i}`] || !completedModules.includes(`module${i}`)) {
-                    allComplete = false; break;
+                const mid = `${prefix}${i}`;
+                
+                // Se o módulo não existe no banco OU o aluno não fez -> Incompleto
+                if (!moduleContent[mid] || !completedModules.includes(mid)) {
+                    allComplete = false; 
+                    break;
                 }
             }
+
+            // 5. Se completou tudo e ainda não foi notificado -> Solta os confetes
             if (allComplete && !notifiedAchievements.includes(key)) {
                 showAchievementModal(cat.achievementTitle, cat.icon);
                 notifiedAchievements.push(key);
                 newNotification = true;
             }
+            
+            // 6. Atualiza o visual (cadeado/cor) no painel de módulos
             document.querySelectorAll(`#ach-cat-${key}`).forEach(el => el.classList.toggle('unlocked', allComplete));
         }
+        
+        // Salva estado das notificações para não repetir
         if (newNotification) localStorage.setItem('gateBombeiroNotifiedAchievements_v3', JSON.stringify(notifiedAchievements));
     }
     function showAchievementModal(title, iconClass) {
@@ -1796,18 +1998,30 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
     function updateActiveModuleInList() {
         document.querySelectorAll('.module-list-item').forEach(i => i.classList.toggle('active', i.dataset.module === currentModuleId));
     }
+    // --- FUNÇÃO CORRIGIDA: ATUALIZAR ESTADO DOS BOTÕES (Navegação) ---
     function updateNavigationButtons() {
         const prevModule = document.getElementById('prev-module');
         const nextModule = document.getElementById('next-module');
+        
         if (!prevModule || !nextModule) return;
+        
         if (!currentModuleId) {
              prevModule.disabled = true;
              nextModule.disabled = true;
              return;
         }
-        const n = parseInt(currentModuleId.replace('module',''));
-        prevModule.disabled = (n === 1);
-        nextModule.disabled = (n === totalModules); 
+        
+        // Lógica Híbrida: Detecta se é SP ou BC para extrair o número corretamente
+        let n = 0;
+        if (currentModuleId.startsWith('sp_module')) {
+            n = parseInt(currentModuleId.replace('sp_module', ''));
+        } else {
+            n = parseInt(currentModuleId.replace('module', ''));
+        }
+
+        // Bloqueia se for o primeiro (1) ou o último (totalModules)
+        prevModule.disabled = (n <= 1);
+        nextModule.disabled = (n >= totalModules); 
     }
     function setupQuizListeners() {
         document.querySelectorAll('.quiz-option').forEach(o => o.addEventListener('click', handleQuizOptionClick));
@@ -1847,23 +2061,50 @@ if (localStorage.getItem("openmanagerafterlogin") === "true") {
     }
 
     function addEventListeners() {
-        // 1. Botões de Navegação
+        // 1. Botões de Navegação (CORRIGIDO PARA SUPORTAR SP E BC)
         const nextButton = document.getElementById('next-module');
         const prevButton = document.getElementById('prev-module');
 
         prevButton?.addEventListener('click', () => {
             if (!currentModuleId) return;
-            const n = parseInt(currentModuleId.replace('module',''));
-            if(n > 1) loadModuleContent(`module${n-1}`);
+            
+            // Detecta prefixo correto (module ou sp_module)
+            let prefix = 'module';
+            let n = 0;
+
+            if (currentModuleId.startsWith('sp_module')) {
+                prefix = 'sp_module';
+                n = parseInt(currentModuleId.replace('sp_module', ''));
+            } else {
+                n = parseInt(currentModuleId.replace('module', ''));
+            }
+
+            if(n > 1) {
+                loadModuleContent(`${prefix}${n-1}`);
+            }
             nextButton?.classList.remove('blinking-button');
         });
+
         nextButton?.addEventListener('click', () => {
             if (!currentModuleId) return;
-            const n = parseInt(currentModuleId.replace('module',''));
-            if(n < totalModules) loadModuleContent(`module${n+1}`);
+            
+            // Detecta prefixo correto
+            let prefix = 'module';
+            let n = 0;
+
+            if (currentModuleId.startsWith('sp_module')) {
+                prefix = 'sp_module';
+                n = parseInt(currentModuleId.replace('sp_module', ''));
+            } else {
+                n = parseInt(currentModuleId.replace('module', ''));
+            }
+
+            // Usa totalModules (que já é filtrado por curso no login)
+            if(n < totalModules) {
+                loadModuleContent(`${prefix}${n+1}`);
+            }
             nextButton?.classList.remove('blinking-button');
-            });
-        // Listener do botão do painel de gestor
+        });
 const managerPanelBtn = document.getElementById("manager-panel-btn");
 if (managerPanelBtn) {
     managerPanelBtn.addEventListener("click", () => {
@@ -1952,15 +2193,42 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
             adminOverlay.classList.remove('show');
         });
 
-        // 4. Reset
-        document.getElementById('reset-progress')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.add('show'); document.getElementById('reset-modal-overlay')?.classList.add('show'); });
-        document.getElementById('cancel-reset-button')?.addEventListener('click', () => { document.getElementById('reset-modal')?.classList.remove('show'); document.getElementById('reset-modal-overlay')?.classList.remove('show'); });
-        document.getElementById('confirm-reset-button')?.addEventListener('click', () => {
-            localStorage.removeItem('gateBombeiroCompletedModules_v3');
-            localStorage.removeItem('gateBombeiroNotifiedAchievements_v3');
-            Object.keys(localStorage).forEach(key => { if (key.startsWith('note-')) localStorage.removeItem(key); });
-            alert('Progresso local resetado.');
-            window.location.reload();
+        // 4. Reset com Limpeza de Nuvem
+        document.getElementById('reset-progress')?.addEventListener('click', () => { 
+            document.getElementById('reset-modal')?.classList.add('show'); 
+            document.getElementById('reset-modal-overlay')?.classList.add('show'); 
+        });
+        
+        document.getElementById('cancel-reset-button')?.addEventListener('click', () => { 
+            document.getElementById('reset-modal')?.classList.remove('show'); 
+            document.getElementById('reset-modal-overlay')?.classList.remove('show'); 
+        });
+        
+        document.getElementById('confirm-reset-button')?.addEventListener('click', async () => {
+            const btn = document.getElementById('confirm-reset-button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Resetando...';
+            btn.disabled = true;
+
+            try {
+                // 1. Limpa no Banco de Dados (Firestore) se estiver logado
+                if (currentUserData && currentUserData.uid) {
+                    const db = window.__fbDB || window.fbDB;
+                    await db.collection('users').doc(currentUserData.uid).update({
+                        completedModules: [] // Zera no banco
+                    });
+                }
+
+                // 2. Limpa Local
+                window.clearLocalUserData();
+
+                alert('Progresso resetado com sucesso!');
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao resetar na nuvem, mas o local foi limpo.");
+                window.location.reload();
+            }
         });
         
         // 5. Back to Top
@@ -2303,11 +2571,8 @@ window.scrollToNextSection = function() {
 }
     // --- FUNÇÃO PARA INICIAR LOGIN COMO GESTOR ---
 window.startManagerLogin = function() {
-    // 1. Salva na memória que o usuário quer ir para o painel
-    localStorage.setItem('open_manager_after_login', 'true');
-    
-    // 2. Chama a função que abre o modal de login
-    enterSystem();
+       localStorage.setItem('open_manager_after_login', 'true');
+       enterSystem();
 };
   // VARIÁVEL GLOBAL PARA ARMAZENAR DADOS DO GESTOR TEMPORARIAMENTE
 let managerCachedUsers = [];
@@ -2316,20 +2581,15 @@ let managerCachedUsers = [];
 // BLOCO CORRIGIDO: GESTÃO DE EQUIPE, FILTRO E PROGRESSO
 // ============================================================
 
-// 1. Função Principal: Abrir Painel
-window.openManagerPanel = async function() {
-    console.log("🔓 Abrindo Painel do Gestor...");
+// --- FUNÇÃO SUBSTITUTA (Copie e cole sobre a antiga window.openManagerPanel) ---
+window.openManagerPanel = function() {
+    console.log("🔓 Abrindo Painel do Gestor (MODO TEMPO REAL)...");
 
     const db = window.__fbDB || window.fbDB; 
     
-    if (!db) {
-        alert("⏳ Sistema carregando. Tente novamente.");
-        return;
-    }
-    if (!currentUserData) {
-        alert("❌ Erro: Usuário não identificado.");
-        return;
-    }
+    // Verificação de segurança
+    if (!db) { alert("⏳ Sistema carregando. Tente novamente."); return; }
+    if (!currentUserData) { alert("❌ Erro: Usuário não identificado."); return; }
 
     const modal = document.getElementById("manager-modal");
     const overlay = document.getElementById("admin-modal-overlay");
@@ -2339,56 +2599,85 @@ window.openManagerPanel = async function() {
 
     if (!modal || !overlay) return;
 
+    // Abre o modal
     modal.classList.add("show");
     overlay.classList.add("show");
 
-    // Título atualizado
-    if (titleEl) titleEl.textContent = "Gestão de equipe";
+    if (titleEl) titleEl.textContent = "Gestão de Equipe (Ao Vivo 🔴)";
     
+    // Configura o botão de fechar para DESLIGAR a conexão (Economia de dados)
     const closeBtn = document.getElementById("close-manager-modal");
     if (closeBtn) {
         closeBtn.onclick = () => {
             modal.classList.remove("show");
+            
+            // 🔥 AQUI ESTÁ O SEGREDO: Desliga o radar ao fechar a janela
+            if (typeof managerUnsubscribe === 'function') {
+                managerUnsubscribe();
+                managerUnsubscribe = null;
+                console.log("🔒 Conexão em tempo real encerrada.");
+            }
+            
+            // Só fecha o overlay se o painel de admin geral não estiver aberto por baixo
             if (!document.getElementById("admin-modal")?.classList.contains("show")) {
                 overlay.classList.remove("show");
             }
         };
     }
 
-    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Buscando dados...</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i> Conectando ao satélite...</td></tr>`;
+
+    // --- CONEXÃO FIREBASE EM TEMPO REAL ---
+    
+    // 1. Se já existir uma conexão aberta, fecha a anterior para não duplicar
+    if (managerUnsubscribe) managerUnsubscribe();
 
     try {
-        const snapshot = await db.collection("users").get();
-        let users = [];
-        let turmasEncontradas = new Set();
+        // 2. Cria o Listener (.onSnapshot em vez de .get)
+        managerUnsubscribe = db.collection("users").onSnapshot((snapshot) => {
+            let users = [];
+            let turmasEncontradas = new Set();
 
-        snapshot.forEach(doc => {
-            const u = doc.data();
-            u.uid = doc.id;
-            // Padroniza o nome da turma para o filtro funcionar (Maiúsculo e sem espaços)
-            u.company = (u.company || "Particular").trim().toUpperCase();
-            if (!u.completedModules) u.completedModules = [];
+            snapshot.forEach(doc => {
+                const u = doc.data();
+                u.uid = doc.id;
+                // Tratamento de dados para evitar erro se o campo não existir
+                u.company = (u.company || "Particular").trim()
+                if (!u.completedModules) u.completedModules = [];
+                
+                users.push(u);
+                turmasEncontradas.add(u.company);
+            });
+
+            // Ordenação Alfabética
+            users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
             
-            users.push(u);
-            turmasEncontradas.add(u.company);
+            // Salva no cache global para o filtro usar
+            window.managerCachedUsers = users;
+
+           // Preenche SEMPRE o filtro de turmas com o snapshot atual
+if (filterSelect) {
+    const valorAtual = filterSelect.value || 'TODOS';
+    filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
+    Array.from(turmasEncontradas).sort().forEach(turma => {
+        filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
+    });
+    // Se a turma selecionada ainda existir, mantém; senão volta para TODOS
+    const exists = Array.from(filterSelect.options).some(opt => opt.value === valorAtual);
+    filterSelect.value = exists ? valorAtual : 'TODOS';
+}
+
+            // Chama o renderizador da tabela
+            window.filterManagerTable();
+            console.log("📡 Dados atualizados em tempo real! (Ping)");
+
+        }, (error) => {
+            console.error("Erro no listener:", error);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro de conexão: ${error.message}</td></tr>`;
         });
 
-        users.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-        window.managerCachedUsers = users;
-
-        // Preenche o filtro automaticamente com as turmas existentes
-        if (filterSelect) {
-            filterSelect.innerHTML = '<option value="TODOS">Todas as Turmas</option>';
-            Array.from(turmasEncontradas).sort().forEach(turma => {
-                filterSelect.innerHTML += `<option value="${turma}">${turma}</option>`;
-            });
-        }
-
-        renderManagerTable(users);
-
     } catch (err) {
-        console.error("Erro:", err);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Erro: ${err.message}</td></tr>`;
+        console.error("Erro ao iniciar listener:", err);
     }
 };
 
@@ -2426,13 +2715,24 @@ window.renderManagerTable = function(usersList) {
         return;
     }
 
-    usersList.forEach(u => {
-        const completedArr = (Array.isArray(u.completedModules)) ? u.completedModules : [];
+        usersList.forEach(u => {
+        // Garante que completedModules venha sempre como array
+        const completedArr = Array.isArray(u.completedModules)
+            ? u.completedModules
+            : (u.completedModules && typeof u.completedModules === 'object'
+                ? Object.keys(u.completedModules)   // caso salvo como objeto {id:true}
+                : []);
+
         const modulesDone = completedArr.length;
-        
+
+        // Garante total de módulos consistente
+        const total = (window.moduleContent && Object.keys(window.moduleContent).length > 0)
+            ? Object.keys(window.moduleContent).length
+            : totalCourseModules;
+
         let percent = 0;
-        if (totalCourseModules > 0) {
-            percent = Math.round((modulesDone / totalCourseModules) * 100);
+        if (total > 0) {
+            percent = Math.round((modulesDone / total) * 100);
         }
         if (percent > 100) percent = 100;
 
@@ -2557,33 +2857,243 @@ window.toggleManagerRole = async function(uid, currentStatus) {
         }
     }
 };
- // --- FUNÇÃO NOVA: SALVAR PROGRESSO NO FIREBASE (VERSÃO BLINDADA) ---
-window.saveProgressToCloud = function() {
-    console.log("🔥 SALVANDO PROGRESSO - INICIADO");  // ← ADICIONE AQUI
-    if (currentUserData && currentUserData.uid) {
-        // 1. Tenta pegar da variável global
-        let modulesToSave = completedModules;
-        
-        // 2. BLINDAGEM: Se estiver vazia, pega direto da memória física do navegador
-        if (!modulesToSave || modulesToSave.length === 0) {
-            const localData = localStorage.getItem('gateBombeiroCompletedModules_v3');
-            if (localData) {
-                modulesToSave = JSON.parse(localData);
-                completedModules = modulesToSave; // Atualiza a global também
+window.saveProgressToCloud = function(targetUid = null) {
+    return new Promise((resolve, reject) => {
+        try {
+            if (!currentUserData || !currentUserData.uid) {
+                console.warn("⚠️ Usuário não definido, não há o que salvar.");
+                resolve();
+                return;
             }
+
+            // 1. Decide para qual UID salvar
+            let finalTargetUid = targetUid || currentUserData.uid;
+
+            // 2. Pega o progresso
+            let modulesToSave = completedModules || [];
+            if (!modulesToSave || modulesToSave.length === 0) {
+                const localData = localStorage.getItem('gateBombeiroCompletedModules_v3');
+                if (localData) {
+                    modulesToSave = JSON.parse(localData);
+                    completedModules = modulesToSave;
+                }
+            }
+            modulesToSave = Array.from(new Set(modulesToSave));
+
+            console.log("📤 Enviando para nuvem. UID:", finalTargetUid, "| Módulos:", modulesToSave.length);
+
+            // 3. Envio ao Firestore
+            const db = window.__fbDB || window.fbDB;
+            if (!db) {
+                console.error("❌ ERRO: Banco de dados ainda não está pronto em saveProgressToCloud.");
+                alert("Sistema ainda está carregando. Tente novamente em alguns segundos.");
+                resolve();
+                return;
+            }
+
+            db.collection('users').doc(finalTargetUid).update({
+                completedModules: modulesToSave,
+                last_progress_update: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log("✅ SUCESSO: Progresso salvo no banco de dados!");
+
+                if (currentUserData) {
+                    currentUserData.completedModules = modulesToSave;
+                }
+
+                resolve();
+            }).catch(err => {
+                console.error("❌ ERRO NO BANCO DE DADOS:", err);
+                alert("Erro ao salvar: " + err.message);
+                reject(err);
+            });
+
+        } catch (err) {
+            console.error("❌ ERRO GERAL em saveProgressToCloud:", err);
+            reject(err);
+        }
+    });
+};
+    
+// --- FUNÇÃO PARA ALTERAR CURSO (ADMIN) ---
+window.changeUserCourse = async function(uid, currentType) {
+    const promptText = "Digite o código do curso para este aluno:\n\nBC = Bombeiro Civil\nSP = Segurança Patrimonial";
+    let newType = prompt(promptText, currentType);
+    
+    if (newType === null) return; // Cancelou
+    
+    newType = newType.toUpperCase().trim();
+    
+    // Validação simples
+    if (newType !== 'BC' && newType !== 'SP') {
+        alert("❌ Código inválido! Use apenas 'BC' ou 'SP'.");
+        return;
+    }
+
+    if (newType === currentType) {
+        alert("O aluno já está neste curso.");
+        return;
+    }
+
+    try {
+        const db = window.__fbDB || window.fbDB;
+        await db.collection('users').doc(uid).update({
+            courseType: newType
+        });
+        
+        alert(`✅ Sucesso!\nCurso alterado para: ${newType === 'SP' ? 'Segurança Patrimonial' : 'Bombeiro Civil'}.`);
+        
+        // Recarrega a tabela para mostrar a mudança
+        openAdminPanel(); 
+    } catch (e) {
+        alert("Erro ao alterar curso: " + e.message);
+        console.error(e);
+    }
+};
+
+    // --- NOVA FUNÇÃO: LIMPEZA TOTAL DE DADOS (LOGOUT/RESET) ---
+window.clearLocalUserData = function() {
+    // 1. Limpa variáveis globais da memória RAM
+    completedModules = [];
+    notifiedAchievements = [];
+    currentUserData = null;
+    totalModules = 0;
+
+    // 2. Limpa o LocalStorage (Disco)
+    localStorage.removeItem('gateBombeiroCompletedModules_v3');
+    localStorage.removeItem('gateBombeiroNotifiedAchievements_v3');
+    localStorage.removeItem('gateBombeiroLastModule');
+    localStorage.removeItem('my_session_id');
+    localStorage.removeItem('user_profile_pic');
+    
+    // Limpa notas salvas
+    Object.keys(localStorage).forEach(key => { 
+        if (key.startsWith('note-')) localStorage.removeItem(key); 
+    });
+
+    // 3. Atualiza a interface visualmente para "Zero"
+    const totalEl = document.getElementById('total-modules');
+    const completedEl = document.getElementById('completed-modules-count');
+    const progressText = document.getElementById('progress-text');
+    const progressBar = document.getElementById('progress-bar-minimal');
+    const welcome = document.getElementById('welcome-greeting');
+
+    if (totalEl) totalEl.textContent = '0';
+    if (completedEl) completedEl.textContent = '0';
+    if (progressText) progressText.textContent = '0%';
+    if (progressBar) progressBar.style.width = '0%';
+    if (welcome) welcome.textContent = 'Bem-vindo,';
+
+    // 4. Reseta checkbox visual da lista
+    document.querySelectorAll('.module-list-item').forEach(item => {
+        item.classList.remove('completed', 'active');
+        const icon = item.querySelector('.completion-icon');
+        if(icon) icon.remove();
+    });
+
+    console.log("🧹 Dados locais limpos com sucesso.");
+};
+
+    // ============================================================
+    // LÓGICA DO MODAL DE CONTATO (CURSOS EXTRAS)
+    // ============================================================
+    window.openContactModal = function(courseName) {
+        const modal = document.getElementById('course-contact-modal');
+        const overlay = document.getElementById('course-contact-overlay');
+        const titleEl = document.getElementById('contact-course-name');
+        const whatsBtn = document.getElementById('btn-whatsapp-contact');
+        const emailBtn = document.getElementById('btn-email-contact');
+
+        if (!modal || !overlay) return;
+
+        // 1. Atualiza o Nome do Curso
+        if (titleEl) titleEl.textContent = courseName;
+
+        // 2. Configura o Link do WhatsApp (SEU NÚMERO AQUI)
+        const phone = "5561998300711"; 
+        const msg = encodeURIComponent(`Olá! Tenho interesse no curso de *${courseName}*. Poderia me passar mais informações sobre turmas e valores?`);
+        if (whatsBtn) whatsBtn.href = `https://wa.me/${phone}?text=${msg}`;
+
+        // 3. Configura o Link de Email
+        if (emailBtn) emailBtn.href = `mailto:contato@bravos.com.br?subject=Interesse em ${courseName}`;
+
+        // 4. Abre o Modal
+        overlay.classList.add('show');
+        modal.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+        modal.classList.add('opacity-100', 'pointer-events-auto', 'scale-100');
+    };
+
+    // Fechar Modal
+    function closeContactModal() {
+        const modal = document.getElementById('course-contact-modal');
+        const overlay = document.getElementById('course-contact-overlay');
+        
+        if (modal) {
+            modal.classList.remove('opacity-100', 'pointer-events-auto', 'scale-100');
+            modal.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+        }
+        if (overlay) overlay.classList.remove('show');
+    }
+
+    document.getElementById('close-contact-modal')?.addEventListener('click', closeContactModal);
+    document.getElementById('course-contact-overlay')?.addEventListener('click', closeContactModal);
+
+
+    // ============================================================
+    // LÓGICA DO CARROSSEL DE CURSOS EXTRAS (ARRASTAR E SETAS)
+    // ============================================================
+    (function initExtraCoursesCarousel() {
+        const slider = document.getElementById('extra-courses-scroll');
+        const leftBtn = document.getElementById('scroll-left-btn');
+        const rightBtn = document.getElementById('scroll-right-btn');
+
+        if (!slider) return;
+
+        // --- 1. Lógica das Setas ---
+        if (rightBtn) {
+            rightBtn.addEventListener('click', () => {
+                slider.scrollBy({ left: 340, behavior: 'smooth' }); 
+            });
+        }
+        if (leftBtn) {
+            leftBtn.addEventListener('click', () => {
+                slider.scrollBy({ left: -340, behavior: 'smooth' }); 
+            });
         }
 
-        console.log("Enviando para nuvem:", modulesToSave); // <--- SE NÃO APARECER ISSO NO CONSOLE, O CÓDIGO TÁ VELHO
+        // --- 2. Lógica de "Agarrar e Arrastar" (Mouse Drag) ---
+        let isDown = false;
+        let startX;
+        let scrollLeft;
 
-        return window.__fbDB.collection('users').doc(currentUserData.uid).update({
-            completedModules: modulesToSave
-        }).then(() => {
-            console.log("Progresso salvo com sucesso!");
-            // Atualiza o objeto local para o painel ler na hora
-            currentUserData.completedModules = modulesToSave;
-        }).catch(err => console.error("Erro ao salvar progresso:", err));
-    }
-    return Promise.resolve();
-}
-    init();
-});
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.classList.add('active'); 
+            slider.classList.remove('snap-x'); 
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('active');
+            slider.classList.add('snap-x'); 
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('active');
+            slider.classList.add('snap-x'); 
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault(); 
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; 
+            slider.scrollLeft = scrollLeft - walk;
+        });
+    })();
+    
+    init(); // <--- Inicia o app
+}); // <--- Fecha o DOMContentLoaded

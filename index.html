@@ -43,6 +43,253 @@
 </head>
     
 <body class="antialiased">
+
+<div id="intro-carousel-wrapper">
+    
+    <div class="intro-vignette"></div>
+
+    <div class="intro-scroll-indicator">
+        <span>Role para baixo</span>
+        <i class="fas fa-chevron-down"></i>
+    </div>
+
+    <button id="intro-btn-prev" class="intro-nav-arrow left-6 md:left-10 intro-arrow-left-anim">
+        <i class="fas fa-chevron-left text-xl"></i>
+    </button>
+    <button id="intro-btn-next" class="intro-nav-arrow right-6 md:right-10 intro-arrow-right-anim">
+        <i class="fas fa-chevron-right text-xl"></i>
+    </button>
+
+    <div class="h-full w-full">
+        <div id="intro-carousel-track">
+            
+            <div class="intro-epic-panel w-[100vw] md:w-[33.333vw] group" onclick="dismissIntro()">
+                <div class="intro-bg-image-zoom" style="background-image: url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/BC.jpg');"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500"></div>
+                <div class="absolute bottom-0 left-0 p-8 md:p-12 w-full z-30 intro-panel-content">
+                    <div class="w-12 h-1 bg-red-600 mb-6 shadow-[0_0_15px_rgba(220,38,38,0.6)]"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-fire-extinguisher text-2xl text-red-500"></i>
+                        <span class="text-xs font-mono text-red-500 uppercase tracking-widest border border-red-500/30 px-2 py-1 rounded bg-red-500/10 backdrop-blur-sm">Formação Técnica</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-[0.9] mb-4 drop-shadow-lg">
+                        Bombeiro<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">Civil</span>
+                    </h2>
+                    <p class="text-gray-100 text-sm font-bold max-w-md leading-relaxed border-l-4 border-red-600 pl-4 drop-shadow-md">
+                        Prevenção e combate a incêndio, resgate técnico e primeiros socorros. A elite da segurança.
+                    </p>
+                </div>
+            </div>
+
+            <div class="intro-epic-panel w-[100vw] md:w-[33.333vw] group" onclick="dismissIntro()">
+                <div class="intro-bg-image-zoom" style="background-image: url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/SP.jpg');"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500"></div>
+                <div class="absolute bottom-0 left-0 p-8 md:p-12 w-full z-30 intro-panel-content">
+                    <div class="w-12 h-1 bg-blue-600 mb-6 shadow-[0_0_15px_rgba(37,99,235,0.6)]"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-shield-alt text-2xl text-blue-500"></i>
+                        <span class="text-xs font-mono text-blue-500 uppercase tracking-widest border border-blue-500/30 px-2 py-1 rounded bg-blue-500/10 backdrop-blur-sm">Tático Operacional</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-[0.9] mb-4 drop-shadow-lg">
+                        Segurança<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Privada</span>
+                    </h2>
+                    <p class="text-gray-100 text-sm font-bold max-w-md leading-relaxed border-l-4 border-blue-600 pl-4 drop-shadow-md">
+                        Estratégias de vigilância, controle de acesso e proteção de ativos de alto valor.
+                    </p>
+                </div>
+            </div>
+
+            <div class="intro-epic-panel w-[100vw] md:w-[33.333vw] group" onclick="dismissIntro()">
+                <div class="intro-bg-image-zoom" style="background-image: url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/GE.jpg');"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500"></div>
+                <div class="absolute bottom-0 left-0 p-8 md:p-12 w-full z-30 intro-panel-content">
+                    <div class="w-12 h-1 bg-purple-600 mb-6 shadow-[0_0_15px_rgba(147,51,234,0.6)]"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-chart-line text-2xl text-purple-500"></i>
+                        <span class="text-xs font-mono text-purple-500 uppercase tracking-widest border border-purple-500/30 px-2 py-1 rounded bg-purple-500/10 backdrop-blur-sm">Administrativo</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-[0.9] mb-4 drop-shadow-lg">
+                        Gestão<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-fuchsia-500">& Liderança</span>
+                    </h2>
+                    <p class="text-gray-100 text-sm font-bold max-w-md leading-relaxed border-l-4 border-purple-600 pl-4 drop-shadow-md">
+                        Painel de controle para líderes de equipe. Monitore métricas e desempenho em tempo real.
+                    </p>
+                </div>
+            </div>
+
+            <div class="intro-epic-panel w-[100vw] md:w-[33.333vw] group" onclick="dismissIntro()">
+                <div class="intro-bg-image-zoom" style="background-image: url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/INS8.png');"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-90 group-hover:opacity-80 transition-opacity duration-500"></div>
+                <div class="absolute bottom-0 left-0 p-8 md:p-12 w-full z-30 intro-panel-content">
+                    <div class="w-12 h-1 bg-emerald-500 mb-6 shadow-[0_0_15px_rgba(16,185,129,0.6)]"></div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <i class="fas fa-chalkboard-user text-2xl text-emerald-500"></i>
+                        <span class="text-xs font-mono text-emerald-500 uppercase tracking-widest border border-emerald-500/30 px-2 py-1 rounded bg-emerald-500/10 backdrop-blur-sm">Docência</span>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-[0.9] mb-4 drop-shadow-lg">
+                        Instrutor<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-600">de Cursos</span>
+                    </h2>
+                    <p class="text-gray-100 text-sm font-bold max-w-md leading-relaxed border-l-4 border-emerald-600 pl-4 drop-shadow-md">
+                        Metodologia de ensino, oratória e técnicas avançadas para formar profissionais de elite.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function showIntro() {
+            const wrapper = document.getElementById('intro-carousel-wrapper');
+            if (wrapper) wrapper.classList.remove('slide-out');
+        }
+
+        function dismissIntro() {
+            const wrapper = document.getElementById('intro-carousel-wrapper');
+            if (wrapper && !wrapper.classList.contains('slide-out')) {
+                wrapper.classList.add('slide-out');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const wrapper = document.getElementById('intro-carousel-wrapper');
+            const track = document.getElementById('intro-carousel-track');
+            const prevBtn = document.getElementById('intro-btn-prev');
+            const nextBtn = document.getElementById('intro-btn-next');
+            const mainScroller = document.getElementById('landing-hero') || window;
+            
+            if (!track || !wrapper) return;
+
+            let startX = 0;
+            let startY = 0;
+            let mouseY = 500;
+
+            window.addEventListener('mousemove', (e) => { mouseY = e.clientY; }, { passive: true });
+
+            // DESKTOP: Wheel
+            window.addEventListener('wheel', (e) => {
+                const isHidden = wrapper.classList.contains('slide-out');
+                if (!isHidden && e.deltaY > 0) dismissIntro();
+                else if (isHidden) {
+                    const currentScroll = mainScroller === window ? window.scrollY : mainScroller.scrollTop;
+                    if (currentScroll <= 0 && e.deltaY < -20 && mouseY <= 50) showIntro();
+                }
+            }, { passive: true });
+
+            // MOBILE: Touch
+            wrapper.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+
+            wrapper.addEventListener('touchmove', (e) => {
+                if(wrapper.classList.contains('slide-out')) return;
+                
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const diffX = startX - currentX;
+                const diffY = startY - currentY;
+                
+                // Rolar pra baixo (Sair)
+                if (diffY > 30 && Math.abs(diffX) < Math.abs(diffY)) {
+                    dismissIntro();
+                }
+            }, { passive: true });
+
+            wrapper.addEventListener('touchend', (e) => {
+                if(wrapper.classList.contains('slide-out')) return;
+                const endX = e.changedTouches[0].clientX;
+                const endY = e.changedTouches[0].clientY;
+                const diffX = startX - endX;
+                const diffY = startY - endY;
+                
+                // Swipe Lateral
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
+                    if (diffX > 0) moveCarousel('next'); 
+                    else moveCarousel('prev'); 
+                }
+            }, { passive: true });
+            
+            // Voltar Capa (Mobile)
+            const scrollTarget = document.getElementById('landing-hero') || document;
+            let scrollStartY = 0;
+            scrollTarget.addEventListener('touchstart', (e) => { scrollStartY = e.touches[0].clientY; }, { passive: true });
+            scrollTarget.addEventListener('touchmove', (e) => {
+                 if (!wrapper.classList.contains('slide-out')) return;
+                 const currentScroll = mainScroller === window ? window.scrollY : mainScroller.scrollTop;
+                 const currentY = e.touches[0].clientY;
+                 if (currentScroll <= 0 && (currentY - scrollStartY > 150)) showIntro();
+            }, { passive: true });
+
+            // --- LOOP ---
+            const originalItems = Array.from(track.children);
+            [...originalItems, ...originalItems].forEach(item => {
+                const clone = item.cloneNode(true);
+                clone.onclick = dismissIntro; 
+                track.appendChild(clone);
+            });
+
+            let currentX = 0;
+            // VELOCIDADE AUTOMÁTICA DOBRADA (Era 0.3, agora 0.6)
+            let speed = 0.6; 
+            let isAnimating = true; 
+            let itemWidth = 0;
+            let totalOriginalWidth = 0;
+
+            function calculateDimensions() {
+                const firstItem = track.children[0];
+                if(firstItem) {
+                    itemWidth = firstItem.offsetWidth;
+                    totalOriginalWidth = itemWidth * originalItems.length;
+                }
+            }
+            window.addEventListener('resize', calculateDimensions);
+            setTimeout(calculateDimensions, 100);
+
+            function animate() {
+                if (isAnimating && totalOriginalWidth > 0 && !wrapper.classList.contains('slide-out')) {
+                    currentX -= speed;
+                    if (Math.abs(currentX) >= totalOriginalWidth) currentX = 0;
+                    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+                }
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+
+            function moveCarousel(direction) {
+                isAnimating = false;
+                const targetMove = direction === 'next' ? -itemWidth : itemWidth;
+                const startX = currentX;
+                // DURAÇÃO DO SWIPE REDUZIDA (Era 400ms, agora 250ms)
+                const duration = 250; 
+                const startTime = performance.now();
+
+                function step(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const ease = 1 - Math.pow(1 - progress, 4);
+                    let newX = startX + (targetMove * ease);
+                    
+                    if (Math.abs(newX) >= totalOriginalWidth) {
+                         if (direction === 'next') newX += totalOriginalWidth; 
+                         else newX -= totalOriginalWidth;
+                    } else if (newX > 0) newX -= totalOriginalWidth;
+
+                    currentX = newX;
+                    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+
+                    if (progress < 1) requestAnimationFrame(step);
+                    else isAnimating = true;
+                }
+                requestAnimationFrame(step);
+            }
+
+            if(nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); moveCarousel('next'); });
+            if(prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); moveCarousel('prev'); });
+        });
+    </script>
+</div>
+    
 <div id="landing-hero" class="fixed inset-0 z-[10000] bg-[#050a14] overflow-y-auto custom-scrollbar transition-all duration-1000 ease-in-out font-sans">
     
     <nav class="fixed top-0 left-0 w-full z-50 py-3 px-4 md:py-4 md:px-12 flex justify-between items-center bg-gradient-to-b from-black/90 to-transparent backdrop-blur-sm">
@@ -102,6 +349,20 @@
     </section>
 
     <section id="features-section" class="bg-[#050a14] py-20 px-4 relative">
+
+<div class="text-center mb-16 reveal-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
+                <span class="text-orange-500 font-bold tracking-[0.2em] text-xs uppercase mb-3 block">
+                    Metodologia Exclusiva
+                </span>
+                <h2 class="text-3xl md:text-5xl font-black text-white uppercase italic leading-tight">
+                    Os 3 Pilares da <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Alta Performance</span>
+                </h2>
+                <div class="w-24 h-1.5 bg-gradient-to-r from-orange-600 to-transparent mx-auto mt-6 rounded-full"></div>
+                <p class="text-gray-400 mt-4 max-w-2xl mx-auto text-sm md:text-base">
+                    Não formamos apenas alunos. Desenvolvemos especialistas prontos para atuar, liderar e salvar vidas.
+                </p>
+            </div>
+        
         <div class="max-w-7xl mx-auto">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="group relative h-[400px] rounded-xl overflow-hidden border border-white/10 hover:border-orange-500/50 transition-all duration-500 reveal-on-scroll opacity-0 translate-y-10">
@@ -137,6 +398,417 @@
         </div>
     </section>
 
+   <section class="bg-[#050a14] py-16 px-4 border-t border-white/5 relative overflow-hidden">
+        <div class="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-end mb-8 px-2 reveal-on-scroll opacity-0 translate-y-10 transition-all duration-1000">
+                <div>
+                    <span class="text-orange-500 font-bold tracking-widest text-xs uppercase mb-2 block">Continue Evoluindo</span>
+                    <h2 class="text-2xl md:text-4xl font-black text-white uppercase italic">
+                        Especializações <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">Táticas</span>
+                    </h2>
+                </div>
+                <div class="hidden md:flex gap-2">
+                    <button id="scroll-left-btn" class="w-10 h-10 rounded-full border border-gray-700 text-gray-400 hover:text-white hover:border-orange-500 hover:bg-gray-800 transition-all flex items-center justify-center active:scale-95">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button id="scroll-right-btn" class="w-10 h-10 rounded-full border border-gray-500 text-white animate-pulse hover:animate-none hover:bg-orange-600 hover:border-orange-600 transition-all flex items-center justify-center active:scale-95">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="extra-courses-scroll" class="flex overflow-x-auto pb-8 gap-6 snap-x snap-mandatory custom-scrollbar reveal-on-scroll opacity-0 translate-x-10 transition-all duration-1000 delay-200 cursor-grab active:cursor-grabbing select-none" style="scrollbar-width: thin; scrollbar-color: #ea580c #111827;">
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-green-600/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR05.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-green-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">CIPA</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-green-500 transition-colors">NR-05 CIPA</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Comissão Interna de Prevenção de Acidentes. Formação de cipeiros e mapa de risco.
+                        </p>
+                        <button onclick="openContactModal('Curso NR-05 CIPA')" class="text-xs font-bold text-green-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-blue-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR06.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Normativa</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-500 transition-colors">NR-06 EPIs</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Uso correto, guarda e conservação de Equipamentos de Proteção Individual.
+                        </p>
+                        <button onclick="openContactModal('Curso NR-06 EPI')" class="text-xs font-bold text-blue-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-yellow-600/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR10.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-yellow-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Elétrica</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-yellow-600 transition-colors">NR-10 Segurança Elétrica</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Segurança em instalações e serviços com eletricidade. Certificação obrigatória.
+                        </p>
+                        <button onclick="openContactModal('Curso NR-10')" class="text-xs font-bold text-yellow-500 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-orange-400/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR12.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Máquinas</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-orange-400 transition-colors">NR-12 Máquinas</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Dispositivos de proteção, parada de emergência e operação segura de maquinário.
+                        </p>
+                        <button onclick="openContactModal('Curso NR-12')" class="text-xs font-bold text-orange-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-red-600/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR16.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Perigo</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-600 transition-colors">NR-16 Periculosidade</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Normas para operações perigosas, explosivos e adicional de periculosidade.
+                        </p>
+                        <button onclick="openContactModal('Curso NR-16')" class="text-xs font-bold text-red-500 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-indigo-400/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR17.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Postura</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">NR-17 Ergonomia</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Conforto, adaptação do mobiliário e prevenção de doenças ocupacionais (LER/DORT).
+                        </p>
+                        <button onclick="openContactModal('Curso NR-17 Ergonomia')" class="text-xs font-bold text-indigo-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-orange-700/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/nr20.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-orange-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Fogo</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-orange-600 transition-colors">NR-20 Inflamáveis</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Segurança e saúde no trabalho com inflamáveis e combustíveis (postos e refinarias).
+                        </p>
+                        <button onclick="openContactModal('Curso NR-20')" class="text-xs font-bold text-orange-500 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+                
+<div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-emerald-700/50 transition-all duration-300 hover:-translate-y-2">
+        <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR31.jpg')] bg-cover bg-center relative">
+            <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+            <span class="absolute top-3 right-3 bg-emerald-800 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Rural</span>
+        </div>
+        <div class="p-5">
+            <h3 class="text-xl font-bold text-white mb-2 group-hover:text-emerald-600 transition-colors">NR-31 Animais Peçonhentos</h3>
+            <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                Identificação, prevenção e primeiros socorros em acidentes com cobras, aranhas e escorpiões.
+            </p>
+            <button onclick="openContactModal('Curso NR-31 Animais Peçonhentos')" class="text-xs font-bold text-emerald-500 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+            </button>
+        </div>
+    </div>
+                
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-teal-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/NR32.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Hospitalar</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-teal-500 transition-colors">NR-32 Saúde</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Biossegurança, riscos biológicos e proteção para trabalhadores da saúde.
+                        </p>
+                        <button onclick="openContactModal('Curso NR-32')" class="text-xs font-bold text-teal-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Consultar Vagas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-green-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/CUIDADOR%20DE%20IDOSOS.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Cuidado</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-green-500 transition-colors">Cuidador de Idosos</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Técnicas de assistência, primeiros socorros geriátricos e humanização no atendimento.
+                        </p>
+                        <button onclick="openContactModal('Cuidador de Idosos')" class="text-xs font-bold text-green-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-slate-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/AUXILIAR%20DE%20NECROPSIA.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-slate-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Forense</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-slate-400 transition-colors">Auxiliar de Necropsia</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Anatomia humana, técnicas de tanatopraxia e assistência ao médico legista.
+                        </p>
+                        <button onclick="openContactModal('Auxiliar de Necropsia')" class="text-xs font-bold text-slate-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-emerald-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/AUXILIAR%20VETERIN%C3%81RIO.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Vet</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-emerald-500 transition-colors">Auxiliar Veterinário</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Cuidados com pequenos animais, auxílio em cirurgias e rotina clínica.
+                        </p>
+                        <button onclick="openContactModal('Auxiliar Veterinário')" class="text-xs font-bold text-emerald-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-pink-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/ATENDENTE%20DE%20FARM%C3%81CIA.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-pink-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Farma</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-pink-500 transition-colors">Atendente de Farmácia</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Leitura de receitas, dispensação de medicamentos e atendimento ao cliente.
+                        </p>
+                        <button onclick="openContactModal('Atendente de Farmácia')" class="text-xs font-bold text-pink-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-teal-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/AN%C3%81LISES%20CL%C3%8DNICAS.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-teal-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Lab</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-teal-500 transition-colors">Análises Clínicas</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Coleta de materiais biológicos, rotinas laboratoriais, microscopia e biossegurança.
+                        </p>
+                        <button onclick="openContactModal('Análises Clínicas')" class="text-xs font-bold text-teal-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                 <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-red-600/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/STOP%20THE%20BLEEDING.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Resgate</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-red-600 transition-colors">Stop The Bleeding</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Uso de torniquete, preenchimento de feridas e contenção de hemorragias massivas.
+                        </p>
+                        <button onclick="openContactModal('Curso Stop The Bleeding')" class="text-xs font-bold text-red-500 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-purple-400/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/LEI%20LUCAS.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Escolar</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">Lei Lucas (Escolas)</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Capacitação obrigatória em primeiros socorros para professores e monitores.
+                        </p>
+                        <button onclick="openContactModal('Lei Lucas para Escolas')" class="text-xs font-bold text-purple-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Solicitar Orçamento <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-yellow-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/ELETRICISTA.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-yellow-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Técnico</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-yellow-500 transition-colors">Eletricista Predial</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Instalação, manutenção elétrica residencial e industrial com foco total em segurança.
+                        </p>
+                        <button onclick="openContactModal('Curso de Eletricista')" class="text-xs font-bold text-yellow-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-gray-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/BARBEIRO%20PROFISSIONAL.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-gray-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Profissão</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-gray-400 transition-colors">Barbeiro Profissional</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Técnicas de corte, barba, visagismo e gestão de barbearia moderna.
+                        </p>
+                        <button onclick="openContactModal('Curso de Barbeiro')" class="text-xs font-bold text-gray-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-orange-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/BRIGADA%20VOLUNT%C3%81RIA.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-orange-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Empresas</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-orange-500 transition-colors">Brigada Voluntária</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Treinamento de equipes de emergência e evacuação dentro da sua empresa.
+                        </p>
+                        <button onclick="openContactModal('Treinamento de Brigada In Company')" class="text-xs font-bold text-orange-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Solicitar Orçamento <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                 <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-blue-900/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/SEGURAN%C3%87A%20HOSPITALAR.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-blue-900 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Patrimonial</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-600 transition-colors">Segurança Hospitalar</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Controle de acesso em unidades de saúde, gestão de crises e proteção patrimonial.
+                        </p>
+                        <button onclick="openContactModal('Agente de Segurança Hospitalar')" class="text-xs font-bold text-blue-500 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-blue-400/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/LIBRAS.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Inclusão</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">LIBRAS</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Comunicação inclusiva essencial para emergências e atendimento ao público surdo.
+                        </p>
+                        <button onclick="openContactModal('Curso de LIBRAS')" class="text-xs font-bold text-blue-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/ORAT%C3%93RIA.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Comunicação</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-purple-500 transition-colors">Oratória</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Domine a arte de falar em público, comando de voz e comunicação assertiva.
+                        </p>
+                        <button onclick="openContactModal('Curso de Oratória')" class="text-xs font-bold text-purple-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-indigo-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/INTELIG%C3%8ANCIA%20ARTIFICIAL.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Inovação</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-indigo-500 transition-colors">Inteligência Artificial</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Domine o ChatGPT e ferramentas de IA para automação de tarefas e produtividade.
+                        </p>
+                        <button onclick="openContactModal('Curso de Inteligência Artificial')" class="text-xs font-bold text-indigo-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="min-w-[280px] md:min-w-[320px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden snap-center group hover:border-cyan-500/50 transition-all duration-300 hover:-translate-y-2">
+                    <div class="h-40 bg-[url('https://raw.githubusercontent.com/instrutormedeiros/ProjetoBC/refs/heads/main/assets/img/JORNALISMO.jpg')] bg-cover bg-center relative">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all"></div>
+                        <span class="absolute top-3 right-3 bg-cyan-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase">Mídia</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold text-white mb-2 group-hover:text-cyan-500 transition-colors">Jornalismo</h3>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                            Técnicas de reportagem, redação, apuração de fatos e produção para mídia digital.
+                        </p>
+                        <button onclick="openContactModal('Curso de Jornalismo')" class="text-xs font-bold text-cyan-400 uppercase tracking-wider hover:text-white flex items-center gap-2">
+                            Verificar Turmas <i class="fas fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    
     <section class="bg-[#050a14] py-24 px-4 overflow-hidden relative">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-orange-600/10 rounded-full blur-[150px] pointer-events-none"></div>
 
@@ -502,6 +1174,20 @@
                         <input type="text" id="company-input" class="w-full pl-12 p-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 transition-all outline-none text-base" placeholder="Ex: Turma Alfa ou Coca-Cola">
                     </div>
                 </div>
+                <!-- ... outros campos (Nome, CPF, Telefone, Empresa) ... -->
+                
+                <div id="course-field-container">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Curso de Interesse</label>
+                    <div class="relative">
+                        <i class="fas fa-graduation-cap absolute left-3 top-3.5 text-gray-400"></i>
+                        <select id="course-input" class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none appearance-none text-gray-700 dark:text-gray-200 cursor-pointer">
+                            <option value="BC" selected>Bombeiro Civil</option>
+                            <option value="SP">Segurança Patrimonial</option>
+                        </select>
+                        <i class="fas fa-chevron-down absolute right-3 top-4 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
                 <div>
                     <label class="text-sm font-bold text-orange-500 ml-1 uppercase tracking-wider">Email de Acesso</label>
                     <div class="relative mt-1">
@@ -703,6 +1389,11 @@
         
         <div class="p-4 bg-gray-100 overflow-y-auto flex-grow">
             <div class="overflow-x-auto bg-white rounded-lg shadow">
+                 <div id="admin-stats" class="mb-2 text-xs text-gray-600 flex gap-4">
+  <span>Total: <strong id="admin-total-users">0</strong></span>
+  <span>Premium: <strong id="admin-total-premium">0</strong></span>
+  <span>Trial: <strong id="admin-total-trial">0</strong></span>
+</div>
                 <table class="min-w-full divide-y divide-gray-200" id="admin-users-table">
                     <thead class="bg-gray-50">
                         <tr>
@@ -844,5 +1535,47 @@
         Painel Gestor
     </span>
 </div>
+
+  <div id="course-contact-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-0 rounded-2xl overflow-hidden shadow-2xl transform transition-all scale-95 opacity-0 pointer-events-none" style="background: #0f172a; border: 1px solid #334155; z-index: 20005;">
+        
+        <div class="relative h-32 bg-gray-800">
+            <div class="absolute inset-0 bg-gradient-to-tr from-orange-600 to-red-600 opacity-90"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <i class="fas fa-comments text-5xl text-white drop-shadow-lg"></i>
+            </div>
+            <button id="close-contact-modal" class="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors bg-black/20 rounded-full w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-6 text-center">
+            <h3 class="text-xl font-bold text-white mb-2">Interesse no Curso</h3>
+            <p id="contact-course-name" class="text-orange-500 font-bold text-lg mb-4 uppercase tracking-wider border-b border-gray-700 pb-2 inline-block">
+                NOME DO CURSO
+            </p>
+            <p class="text-gray-400 text-sm mb-6 leading-relaxed">
+                Este é um curso de especialização presencial/híbrido. Fale diretamente com nosso setor de matrícula para verificar a próxima turma.
+            </p>
+
+            <div class="space-y-3">
+                <a id="btn-whatsapp-contact" href="#" target="_blank" class="flex items-center justify-center w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-green-500/20 group">
+                    <i class="fab fa-whatsapp text-2xl mr-3 group-hover:scale-110 transition-transform"></i>
+                    Chamar no WhatsApp
+                </a>
+
+                <a id="btn-email-contact" href="#" class="flex items-center justify-center w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all border border-gray-600">
+                    <i class="fas fa-envelope mr-3"></i>
+                    Enviar E-mail
+                </a>
+            </div>
+        </div>
+        
+        <div class="bg-gray-900 p-3 text-center border-t border-gray-800">
+            <p class="text-[10px] text-gray-500">Respondemos em horário comercial.</p>
+        </div>
+    </div>
+    
+    <div id="course-contact-overlay" class="modal-overlay bg-black/80 backdrop-blur-sm" style="z-index: 20004;"></div>           
+                
 </body>
 </html>

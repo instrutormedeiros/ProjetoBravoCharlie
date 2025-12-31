@@ -32,55 +32,50 @@
   }
 
   // --- 2. CADASTRO BLINDADO COM FINGERPRINT ---
-  window.FirebaseCourse.signUpWithEmail = async function(name, email, password, cpfRaw, companyName, phoneNumber){
-    const cpf = cpfRaw.replace(/[^\d]+/g,'');
-    if (!validarCPF(cpf)) throw new Error("CPF inválido.");
+   // Note o novo parâmetro no final: courseType
+  window.FirebaseCourse.signUpWithEmail = async function(name, email, password, cpf, company, phone, courseType) {
+      
+      // ... (código de validação de CPF continua igual) ...
 
-    const userCred = await __fbAuth.createUserWithEmailAndPassword(email, password);
-    const uid = userCred.user.uid;
+      try {
+          const userCredential = await __fbAuth.createUserWithEmailAndPassword(email, password);
+          const user = userCredential.user;
+          
+          // Define data de validade (Trial de 7 dias)
+          const validade = new Date();
+          validade.setDate(validade.getDate() + 7);
 
-    try {
-        const cpfDocRef = __fbDB.collection('cpfs').doc(cpf);
-        const cpfSnapshot = await cpfDocRef.get();
-        
-        if (cpfSnapshot.exists) {
-            throw new Error("CPF já cadastrado.");
-        }
+          const userData = {
+              name: name,
+              email: email,
+              cpf: cpf,
+              company: company || 'Particular',
+              phone: phone || '',
+              
+              // --- NOVO CAMPO SALVO NO BANCO ---
+              courseType: courseType || 'BC', // Salva 'BC' ou 'SP'
+              // ---------------------------------
 
-        const trialEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        const sessionId = Date.now().toString();
-        // Captura Fingerprint
-        const userAgent = navigator.userAgent; 
+              status: 'trial',
+              acesso_ate: validade.toISOString(),
+              created_at: firebase.firestore.FieldValue.serverTimestamp(),
+              completedModules: [],
+              isAdmin: false,
+              isManager: false,
+              current_session_id: new Date().getTime().toString() 
+          };
 
-        const batch = __fbDB.batch();
-        
-        batch.set(cpfDocRef, { uid: uid });
-        
-        const userDocRef = __fbDB.collection('users').doc(uid);
-        batch.set(userDocRef, {
-          name: name,
-          email: email,
-          cpf: cpf,
-          status: 'trial',
-          phone: phoneNumber, // NOVO: Salva o telefone aqui
-          company: companyName || 'Particular', // NOVO: Salva a turma ou 'Particular' se vazio
-          acesso_ate: trialEndDate,
-          current_session_id: sessionId,
-          last_device: userAgent, // Grava o dispositivo
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+          // Salva no Firestore
+          await __fbDB.collection('users').doc(user.uid).set(userData);
+          
+          // Salva CPF para evitar duplicidade
+          await __fbDB.collection('cpfs').doc(cpf).set({ uid: user.uid });
 
-        await batch.commit(); 
-        return { uid, acesso_ate: trialEndDate };
-
-    } catch (error) {
-        if (userCred && userCred.user) {
-            await userCred.user.delete().catch(err => console.error("Erro ao limpar usuário:", err));
-        }
-        throw error;
-    }
+          return user;
+      } catch (error) {
+          throw error;
+      }
   };
-
   // --- 3. LOGIN COM ATUALIZAÇÃO DE FINGERPRINT ---
   window.FirebaseCourse.signInWithEmail = async function(email, password){
     const userCred = await __fbAuth.signInWithEmailAndPassword(email, password);

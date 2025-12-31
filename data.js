@@ -1845,6 +1845,273 @@ const moduleContent = {
                 <div class="loader"></div>
             </div>
         `
+    },
+    // --- INÍCIO DOS MÓDULOS DE SEGURANÇA PATRIMONIAL (CONTEÚDO COMPLETO) ---
+
+    'sp_module1': {
+        id: "sp_module1",
+        title: "SP - Legislação Aplicada",
+        iconClass: "fas fa-balance-scale",
+        driveLink: "", 
+        content: `
+            <h3>SEGURANÇA PATRIMONIAL E AGENTE DE PORTARIA - LEGISLAÇÃO APLICADA</h3>
+            
+            <h4>1. ARTIGO 5° DA CONSTITUIÇÃO FEDERAL DE 1988</h4>
+            
+            <div class="key-concept">
+                <strong>PRINCÍPIO DA IGUALDADE:</strong> Todos são Iguais perante a lei, sem distinção de qualquer natureza, garantindo-se aos brasileiros e aos estrangeiros residentes no País a inviolabilidade do direito à vida, à liberdade, à Igualdade, à segurança e à propriedade.
+            </div>
+            <p>Embora o art. 5º da constituição diga textualmente que os direitos e garantias fundamentais são garantidos aos brasileiros e aos estrangeiros residentes no país, a jurisprudência entendeu de forma diversa.</p>
+
+            <h4>2. PRINCÍPIO DA INVIOLABILIDADE DE DOMICÍLIO</h4>
+            <p>Lembre-se que os direitos fundamentais surgem como proteção do indivíduo contra o poder estatal. Imagine se o Estado fosse todo poderoso e seus agentes pudessem entrar nas casas dos cidadãos. Isso afetaria completamente a liberdade, individualidade e tranquilidade do indivíduo.</p>
+            <p>A casa é asilo inviolável do indivíduo, ninguém nela podendo penetrar sem consentimento do morador, salvo em caso de:</p>
+            <ul>
+                <li><strong>1.</strong> Flagrante delito ou desastre;</li>
+                <li><strong>2.</strong> Prestação de socorro;</li>
+                <li><strong>3.</strong> Durante o dia, por determinação judicial. (CF, art. 5º, XII).</li>
+            </ul>
+
+            <h4>3. PRINCÍPIO DA INVIOLABILIDADE DA CORRESPONDÊNCIA</h4>
+            <p>Segundo a constituição de 1988, art. 5º XII, é inviolável o sigilo da correspondência e das comunicações telegráficas, de dados e das comunicações telefônicas, salvo em último caso, por ordem judicial, nas hipóteses e na forma que a lei estabelece para fins de investigação criminal ou instrução processual penal.</p>
+            <p><strong>Distinção Importante:</strong></p>
+            <ul>
+                <li><strong>Quebra do sigilo telefônico:</strong> trata-se de acesso aos dados de ligações telefônicas (quem ligou para quem).</li>
+                <li><strong>Interceptação telefônica:</strong> trata-se de gravação das conversas estabelecidas entre os locutores, ou seja, refere-se ao conteúdo da conversa.</li>
+            </ul>
+
+            <h4>4. PRINCÍPIO DA LIBERDADE</h4>
+            <p>Considerando o direito à liberdade, a prisão de uma pessoa deve ser considerada como medida excepcional.</p>
+            <p>Ninguém será preso senão em flagrante delito ou por ordem escrita e fundamentada de autoridade judiciária competente, salvo nos casos de transgressão militar ou crime propriamente militar, definido em lei.</p>
+            <p>De início podemos observar que exceto nas prisões militares ou em flagrante, a CF limita às autoridades judiciárias a competência para determinar a prisão. Isso ocorre porque qualquer pessoa pode efetuar prisão em flagrante delito, sendo uma faculdade para o particular e um dever para autoridade policial.</p>
+
+            <h4>5. PRINCÍPIO DA LIBERDADE DE LOCOMOÇÃO</h4>
+            <p>A liberdade física, de locomoção, é expressamente assegurada no art. 5º, XV ("é livre a locomoção no território nacional em tempo de paz, podendo qualquer pessoa, nos termos da lei, nele entrar, permanecer ou dele sair com seus bens").</p>
+            <p>De se observar que abrange não só liberdade física, mas a de pensamento, de crença e convicções, de expressão, de associação, de reunião, etc.</p>
+
+            <h4>6. PRINCÍPIO DA PRESUNÇÃO DE INOCÊNCIA</h4>
+            <p>Também conhecido por "princípio da não culpabilidade". Ninguém será considerado culpado até o trânsito em julgado de sentença penal condenatória.</p>
+
+            <hr>
+
+            <h3>DEFINIÇÃO DE CRIMES</h3>
+            <ul>
+                <li><strong>1. CRIME CONSUMADO:</strong> É quando nele se reúne todos os elementos de sua definição legal. O ato praticado pela pessoa resulta exatamente em que a lei diz ser crime.</li>
+                <li><strong>2. CRIME TENTADO:</strong> É crime tentado quando iniciada a execução, não se consuma por circunstâncias alheias à vontade do agente. Aqui a pessoa quer ainda o resultado, mas acontece algo que a impede que realize seu desejo.</li>
+                <li><strong>3. CRIME CULPOSO:</strong> Consiste na prática não intencional do delito, faltando, porém, o agente a um dever de atenção e cuidado. As modalidades de culpa são negligência, imprudência e a imperícia.</li>
+                <li><strong>4. CRIME DOLOSO:</strong> É quando a pessoa quis o resultado ou assumiu o risco de produzi-lo, ou seja, consiste no propósito de praticar o fato descrito na lei penal. Crimes dolosos são os crimes intencionais.</li>
+            </ul>
+
+            <hr>
+
+            <h3>LEGÍTIMA DEFESA E EXCLUDENTES (DECRETO LEI Nº 2.848/1940)</h3>
+            
+            <h4>Artigo 25 - Legítima Defesa</h4>
+            <p>Entende-se em legítima defesa quem, usando <strong>moderadamente</strong> dos <strong>meios necessários</strong>, repele <strong>injusta agressão</strong>, <strong>atual ou iminente</strong>, a direito seu ou de outrem.</p>
+            <p>Como se extrai do art. 23, II, do Código Penal, a legítima defesa é causa de exclusão da ilicitude. Destarte, o fato típico praticado em legitima defesa é licito. Não configura crime.</p>
+            
+            <p><strong>Requisitos cumulativos:</strong> Agressão injusta; atual ou iminente; direito próprio ou alheio; reação com os meios necessários; e o uso moderado dos meios necessários.</p>
+            <p><em>"Meios necessários são aqueles que o agente tem á sua disposição para repelir a agressão injusta, atual ou iminente, a direito seu ou de outrem, no momento em que é praticada".</em></p>
+
+            <h4>Artigo 23 - Exclusão de Ilicitude</h4>
+            <p>Não há crime quando o agente pratica o fato:</p>
+            <ol type="I">
+                <li>Em estado de necessidade;</li>
+                <li>Em legítima defesa;</li>
+                <li>Em estrito cumprimento de dever legal ou no exercício regular e direito.</li>
+            </ol>
+            <p><strong>Parágrafo único:</strong> O agente, em qualquer das hipóteses deste artigo, responderá pelo excesso doloso ou culposo.</p>
+        `
+    },
+
+    'sp_module2': {
+        id: "sp_module2",
+        title: "SP - Noções de Vigilância",
+        iconClass: "fas fa-eye",
+        driveLink: "",
+        content: `
+            <h3>O TRABALHO DE SEGURANÇA PATRIMONIAL</h3>
+            <p>É uma das atividades de segurança privada que é destinada a proteger as pessoas e o patrimônio nos limites dos estabelecimentos ou da área destinada aos eventos sociais, conforme disposto na portaria 3.233/12.</p>
+            
+            <p><strong>O SEGURANÇA PATRIMONIAL:</strong> É o profissional capacitado por curso de formação, empregado nas empresas especializadas ou nas que possuem serviço orgânico de segurança (próprios). É quem executa as atividades da segurança dentro do estabelecimento ou do evento social através de uma atuação preventiva, com o objetivo de preservar a integridade das pessoas e do patrimônio.</p>
+
+            <h4>1. CONDUTA DO SEGURANÇA</h4>
+            <p>Com relação à conduta, o segurança precisa transmitir credibilidade, por isso deve agir com honestidade, civilidade, educação, discrição e gentileza, priorizando as relações públicas e preservando os direitos humanos. Além disso, há a necessidade de preservar o sigilo profissional, a fim de evitar fuga de informações sensíveis.</p>
+            <p><strong>Sigilo:</strong> Não se deve comentar sobre o horário de diretores, gerentes e do carro forte, sobre armamentos, numerários, efetivos e sistema de segurança em geral. A postura, o comportamento e a apresentação pessoal são essenciais.</p>
+
+            <h4>2. PERFIL DO SEGURANÇA</h4>
+            <ul class="feature-list">
+                <li><strong>ALERTA:</strong> O segurança deve estar e demonstrar que está atento a tudo o que acontece na sua área de atuação, através de inspeção visual constante. Deve permanecer na expectativa de risco em tempo integral e não menosprezá-los. "A segurança é o estado de atenção permanente".</li>
+                <li><strong>DINÂMICO:</strong> Deve motivar-se constantemente, demonstrando agilidade, presteza, firmeza, energia e vitalidade o tempo todo.</li>
+                <li><strong>INTERATIVO:</strong> Interagir com o público com civilidade, educação e gentileza. "Olhar nos olhos das pessoas durante comunicação gera credibilidade". Evitar discussões geradas pelo estresse.</li>
+                <li><strong>PREVENTIVO:</strong> Prever riscos e agir para diminuir a probabilidade da ocorrência. Verificar histórico, avaliar criminalidade, criar cenários (trazer a realidade de fora para dentro). "Não existe segurança sem prevenção".</li>
+                <li><strong>PROATIVO:</strong> Antecipar-se a futuro problema ou necessidade. Na percepção de alguma situação crítica, agir para evitar que se potencialize.</li>
+                <li><strong>TÉCNICO:</strong> Buscar se especializar constantemente, estar em condições de aplicar todo o conhecimento adquirido no curso de formação e defesa pessoal.</li>
+                <li><strong>ADESTRADO:</strong> Preparado fisicamente e mentalmente para empregar com desenvoltura as técnicas de defesa pessoal ou uso progressivo da força, equipamentos não letais e acessórios.</li>
+            </ul>
+
+            <h4>3. FORMAS DE ATUAÇÃO</h4>
+            <ul>
+                <li><strong>SEGURANÇA PREVENTIVA:</strong> Prioridade. A maior parte do tempo é focada para detectar, inibir, retardar ou impedir ocorrências. Todos os procedimentos são direcionados para impedir que riscos se concretizem.</li>
+                <li><strong>SEGURANÇA REPRESSIVA:</strong> Atributo visível através do uso de uniforme (operacional ou social). Há necessidade de mostrar que existe segurança para evitar a ação de delinquentes. Não confundir ostensiva com agressivo.</li>
+            </ul>
+
+            <h4>4. LOCAIS DE ATUAÇÃO E PECULIARIDADES</h4>
+            
+            <p><strong>SEGURANÇA EM SHOPPING CENTER:</strong> Ambiente de lazer. Seguranças em locais estratégicos, atentos mas com muita discrição para não constranger clientes. Problemas comuns: furtos (lojas/clientes/estacionamento) e incidentes comportamentais.</p>
+
+            <p><strong>SEGURANÇA EM HOSPITAL E CLÍNICAS:</strong> Riscos diversos: furto de medicamentos, sequestro e trocas de bebês, fuga de doentes, resgate de criminosos. Pontos críticos: acessos e setor de emergência. O segurança deve ter equilíbrio e paciência para lidar com o estresse de familiares. Em perturbação da ordem, chamar guarda municipal/PM para evitar confronto direto.</p>
+
+            <p><strong>SEGURANÇA EM ESCOLA:</strong> Riscos: furtos, roubos, ameaças, vandalismo, drogas. Controle de acesso rígido. Perfil deve impor respeito de forma amistosa para criar confiança, mas sem intimidades demais com alunos. Atenção a mudanças de comportamento e pessoas estranhas nas imediações.</p>
+
+            <p><strong>SEGURANÇA EM PRÉDIOS E CONDOMÍNIOS:</strong> Perigos frequentes: arrastões e assaltos. Papel fundamental: controle de entrada e saída (pessoas e veículos). Maioria dos criminosos acessa pela portaria ou garagem. Atenção a disfarces (falsos prestadores de serviço, falsos policiais, etc).</p>
+
+            <p><strong>SEGURANÇA EM EVENTOS SOCIAIS:</strong> Obrigatória segurança patrimonial em eventos com público superior a 3.000 pessoas (Portaria 3.233/2012). Exige curso de extensão (50h). Equilíbrio emocional fundamental para lidar com multidões. Atitude preventiva e ostensiva.</p>
+
+            <h4>5. TERMINOLOGIAS</h4>
+            <ul>
+                <li><strong>SEDE DE GUARDA:</strong> Local destinado para guardar ou realizar a passagem dos materiais, equipamentos, livros de ocorrência.</li>
+                <li><strong>ÁREA DE GUARDA:</strong> Envolve todo o ambiente (imóvel) vigiado sob responsabilidade do vigilante.</li>
+                <li><strong>POSTO DE SERVIÇO:</strong> Local onde o vigilante permanece executando suas atividades.</li>
+                <li><strong>PASSAGEM DE SERVIÇO:</strong> Ato de substituir outro vigilante. O vigilante informa-se de alterações, verifica livros, materiais e armamento. A conferência deve ocorrer na presença dos dois.</li>
+            </ul>
+
+            <h4>6. RONDAS E SERVIÇOS MÓVEIS</h4>
+            <p>Visam verificar irregularidades. Devem ser realizadas em horários e itinerários variados e aleatórios para confundir o inimigo.</p>
+            <ul>
+                <li><strong>Período Noturno:</strong> Segurança não deve se expor (circular em locais com menos luminosidade).</li>
+                <li><strong>Período Diurno:</strong> Deve ser ostensivo (se fazer notar).</li>
+            </ul>
+            <p><strong>Tipos de Ronda:</strong></p>
+            <ul>
+                <li><strong>Interna:</strong> Interior das instalações, setores desativados.</li>
+                <li><strong>Externa:</strong> Estacionamentos, jardins, áreas livres de circulação.</li>
+                <li><strong>Periféricas:</strong> Próximas às barreiras limítrofes (cercas, muros, grades).</li>
+            </ul>
+
+            <h4>7. SEGURANÇA FÍSICA DAS INSTALAÇÕES</h4>
+            <ul>
+                <li><strong>RECURSO HUMANO:</strong> Pessoas envolvidas (Gestor, supervisor, vigilante, porteiro).</li>
+                <li><strong>RECURSOS TÉCNICOS:</strong> Dispositivos e sistemas (Alarmes, CFTV, controle de acesso, botão de pânico, cerca elétrica).</li>
+                <li><strong>ARQUITETÔNICO:</strong> Passivos e estáticos (Muros, cercas, grades, portões, iluminação).</li>
+            </ul>
+        `
+    },
+
+    'sp_module3': {
+        id: "sp_module3",
+        title: "SP - Uso Progressivo da Força",
+        iconClass: "fas fa-fist-raised",
+        driveLink: "",
+        content: `
+            <h3>USO PROGRESSIVO DA FORÇA</h3>
+            <p><strong>Importante:</strong> Força é o momento em que o segurança deve intervir, impedindo pessoas ou grupo de pessoas que, por algum motivo, decidiram contrariar as normas e diretrizes predefinidas, ou mesmo a própria lei.</p>
+
+            <h4>1. PRINCÍPIOS BÁSICOS SOBRE O USO DA FORÇA</h4>
+            <p>Antes de qualquer iniciativa, deve-se atender aos seguintes princípios:</p>
+            <ul>
+                <li><strong>Princípio da legalidade:</strong> O segurança só poderá utilizar a força para a consecução de um objetivo legal e nos estritos limites da lei.</li>
+                <li><strong>Princípio da necessidade:</strong> Determinado nível de força só pode ser empregado quando níveis de menor intensidade não forem suficientes.</li>
+                <li><strong>Princípio da proporcionalidade:</strong> O nível da força utilizada deve sempre ser compatível com a gravidade da ameaça representada pela ação do opositor.</li>
+                <li><strong>Princípio da conveniência:</strong> Força não poderá ser empregada quando, em função do contexto, possa ocasionar danos de maior relevância do que os objetivos legais pretendidos.</li>
+            </ul>
+
+            <h4>2. NÍVEIS DE FORÇA (ESCALA)</h4>
+            <p>A divisão da força em níveis diferentes, de forma gradual e progressiva.</p>
+            
+            <div class="key-concept">
+                <strong>NÍVEL 1- PRESENÇA FÍSICA:</strong> A mera presença do segurança uniformizado pode ser na maioria dos casos o bastante para conter um crime ou prevenir ações.
+            </div>
+            
+            <div class="key-concept">
+                <strong>NÍVEL 2- VERBALIZAÇÃO:</strong> Baseia-se na ampla variedade de habilidades de comunicação, capitalizando a aceitação da autoridade. Utilizada em conjunto com a presença física.
+            </div>
+
+            <div class="key-concept">
+                <strong>NÍVEL 3- CONTROLE DE CONTATO OU MÃOS LIVRES:</strong> Emprego de habilidades de contato físico para atingir o controle, quando esgotada a verbalização. Utilizam-se apenas as mãos livres (técnicas de imobilização).
+            </div>
+
+            <div class="key-concept">
+                <strong>NÍVEL 4- TÉCNICAS DE SUBMISSÃO OU CONTROLE FÍSICO:</strong> Força suficiente para superar a resistência ativa. Podem ser utilizados cães, técnicas de forçamento e agentes químicos.
+            </div>
+
+            <div class="key-concept">
+                <strong>NÍVEL 5- TÁTICAS DEFENSIVAS NÃO LETAIS:</strong> Medidas para deter ação agressiva imediata. Métodos não letais: gases fortes, forçamento de articulações e equipamentos de impacto. <br><em>Nota:</em> Aqui se enquadra a utilização de arma de fogo APENAS para controle intimatório (sacar e apontar), sem disparo.
+            </div>
+
+            <div class="key-concept">
+                <strong>NÍVEL 6- FORÇA LETAL:</strong> Último grau de perigo. Táticas absolutas e imediatas para deter ameaça mortal. É o mais extremo uso da força, utilizado apenas em último caso.
+            </div>
+
+            <h4>3. TRIÂNGULO DA FORÇA LETAL</h4>
+            <p>Modelo de tomada de decisão. Os três fatores (lados do triângulo) têm que estar presentes SIMULTANEAMENTE para justificar o uso da força letal.</p>
+            <ul>
+                <li><strong>HABILIDADE:</strong> É a capacidade física do suspeito de causar dano (possuir uma arma de fogo/faca ou ter força física/arte marcial superior).</li>
+                <li><strong>OPORTUNIDADE:</strong> Diz respeito ao potencial de usar a habilidade. Não existe oportunidade se o suspeito está fora de alcance (ex: tem uma faca mas está longe).</li>
+                <li><strong>RISCO:</strong> Existe quando o suspeito toma vantagem de sua habilidade e oportunidade para colocar o segurança ou inocente em iminente perigo físico.</li>
+            </ul>
+        `
+    },
+
+    'sp_module4': {
+        id: "sp_module4",
+        title: "SP - Primeiros Socorros",
+        iconClass: "fas fa-kit-medical",
+        driveLink: "",
+        content: `
+            <h3>SBV - SUPORTE BÁSICO DE VIDA</h3>
+
+            <h4>1. PARADA CARDIORRESPIRATÓRIA (PCR)</h4>
+            <p><strong>Definição:</strong> Supressão súbita e inesperada dos batimentos cardíacos. (Não existe respiração e nem pulsação).</p>
+            <p><strong>SINAIS DE PCR:</strong></p>
+            <ul>
+                <li>Inconsciência;</li>
+                <li>Apneia (suspensão da respiração) ou Gasping (respiração agônica involuntária);</li>
+                <li>Ausência de circulação/perfusão;</li>
+                <li>Cianose acentuada (coloração azul-arroxeada).</li>
+            </ul>
+            
+            <p><strong>RCP - REANIMAÇÃO CARDIOPULMONAR (Protocolo):</strong></p>
+            <ul>
+                <li><strong>Lactente:</strong> 30 compressões x 02 ventilações durante 05 ciclos.</li>
+                <li><strong>Criança:</strong> 30 compressões x 02 ventilações durante 05 ciclos.</li>
+                <li><strong>Adulto:</strong> 30 compressões x 02 ventilações durante 05 ciclos.</li>
+            </ul>
+            <p><strong>RCP DE ALTA QUALIDADE:</strong> Permite retorno total do tórax entre compressões; Alternar socorristas a cada 5 ciclos; Minimizar interrupções.</p>
+            
+            <p><strong>SITUAÇÕES PARA NÃO INICIAR RCP (Morte Evidente):</strong> Decapitação, Carbonização, Evisceração, Decomposição, Rigor Mortis (Rigidez Cadavérica).</p>
+
+            <h4>2. OVACE (OBSTRUÇÃO DE VIAS AÉREAS POR CORPO ESTRANHO)</h4>
+            <p>É a obstrução súbita das Vias Aéreas superiores. Causas: Língua, corpos estranhos, danos ao tecido, epiglote.</p>
+            
+            <p><strong>Sinais de Obstrução:</strong></p>
+            <ul>
+                <li><strong>Sinal universal de asfixia:</strong> vítima segura o pescoço com o polegar e o dedo indicador;</li>
+                <li>Incapacidade de falar;</li>
+                <li>Tosse fraca e ineficaz;</li>
+                <li>Pele cianótica.</li>
+            </ul>
+            
+            <p><strong>MANOBRA DE HEIMLICH EM BEBÊS (Lactentes):</strong></p>
+            <ol>
+                <li>Apoiar o bebê no braço, com a cabeça mais abaixo que o corpo, mantendo boca aberta.</li>
+                <li>Aplicar <strong>5 batidas</strong> com o calcanhar da mão nas costas (entre escápulas).</li>
+                <li>Virar o bebê (barriga para cima) e iniciar <strong>5 compressões</strong> no peito (linha dos mamilos).</li>
+                <li>Repetir o ciclo até expelir o objeto.</li>
+            </ol>
+
+            <h4>3. HEMOSTASIA (CONTROLE DE HEMORRAGIA)</h4>
+            <p>Conjunto de procedimentos para conter hemorragia.</p>
+            
+            <p><strong>TÉCNICAS:</strong></p>
+            <ol>
+                <li><strong>Compressão Direta:</strong> Pressão direta em cima do ferimento com gaze ou pano limpo. Importante: Não retirar a gaze mesmo se encharcar (colocar outra por cima) para não interromper coagulação.</li>
+                <li><strong>Compressão Indireta:</strong> Comprimir o vaso num local acima do ferimento (artérias principais como braquial ou femoral).</li>
+                <li><strong>Elevação do Membro:</strong> Usa-se a gravidade a favor para diminuir fluxo.</li>
+                <li><strong>Torniquete:</strong> Uso justificado em <strong>última instância</strong> (amputação traumática e esmagamento). Envolver membro com bandagem de 10cm, usar graveto/caneta como válvula. <strong>Cuidado:</strong> É essencial afrouxar a cada <strong>12 minutos</strong> para permitir perfusão.</li>
+                <li><strong>Garrote:</strong> Recurso quando compressão não surte efeito, usando borracha/tecido, mas menos firme que o torniquete.</li>
+            </ol>
+        `
     }
 };
 
@@ -1858,6 +2125,7 @@ const moduleCategories = {
     nr33: { id: "nr33", title: "NR 33 - Espaço Confinado", achievementTitle: "Perito Confinado", range: [41, 42], icon: "fas fa-person-booth" }, 
     nr35: { id: "nr35", title: "NR 35 - Trabalho em Altura", achievementTitle: "Mestre do Ar", range: [43, 52], icon: "fas fa-hard-hat" },
     simulados: { id: "simulados", title: "Simulados por Matéria", achievementTitle: "Mestre dos Testes", range: [53, 57], icon: "fas fa-clipboard-check", isPremium: true },
+    seguranca_patrimonial: { id: "seguranca_patrimonial", title: "Segurança Patrimonial", achievementTitle: "Guardião do Patrimônio", range: [1, 4], icon: "fas fa-shield-alt", isSP: true },
     
     // BÔNUS E NOVIDADES
     bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [58, 62], icon: "fas fa-star", isPremium: true }
@@ -1867,4 +2135,5 @@ if (typeof window !== 'undefined') {
   window.moduleContent = moduleContent;
   window.moduleCategories = moduleCategories;
 }
+
 
