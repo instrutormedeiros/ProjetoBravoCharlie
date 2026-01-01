@@ -3094,6 +3094,69 @@ window.clearLocalUserData = function() {
             slider.scrollLeft = scrollLeft - walk;
         });
     })();
+
+    // === CÓDIGO DE PRECISÃO: CARROSSEL TOPO FLUÍDO ===
+    (function initHeroScroll() {
+        const slider = document.getElementById('intro-carousel-track');
+        // Seleciona as setas baseado nas classes que existem no seu CSS
+        const leftBtn = document.querySelector('.intro-nav-arrow.left-6');
+        const rightBtn = document.querySelector('.intro-nav-arrow.right-6');
+
+        if (!slider) return;
+
+        // 1. Configura as Setas (Direita/Esquerda)
+        if (rightBtn) {
+            // Remove comportamento antigo clonando o botão
+            const newRight = rightBtn.cloneNode(true);
+            rightBtn.parentNode.replaceChild(newRight, rightBtn);
+            
+            newRight.addEventListener('click', (e) => {
+                e.preventDefault();
+                slider.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
+            });
+        }
+        
+        if (leftBtn) {
+            // Remove comportamento antigo clonando o botão
+            const newLeft = leftBtn.cloneNode(true);
+            leftBtn.parentNode.replaceChild(newLeft, leftBtn);
+
+            newLeft.addEventListener('click', (e) => {
+                e.preventDefault();
+                slider.scrollBy({ left: -window.innerWidth, behavior: 'smooth' });
+            });
+        }
+
+        // 2. Configura o "Agarrar e Arrastar" (Mouse Drag)
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2; // Velocidade do arraste
+            slider.scrollLeft = scrollLeft - walk;
+        });
+    })();
     
     init(); // <--- Inicia o app
 }); // <--- Fecha o DOMContentLoaded
