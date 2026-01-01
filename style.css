@@ -1106,18 +1106,11 @@ details[open] summary ~ * {
 }
 .intro-epic-panel {
     position: relative;
-    
-    /* A CORREÇÃO ESTÁ AQUI EMBAIXO: */
-    /* Mudamos de 100vw para 100% para não estourar a tela */
-    flex: 0 0 100%;
-    min-width: 100%; 
-    width: 100%;
-    height: 100%; 
-    
-    scroll-snap-align: start;      /* Ponto de parada do carrossel */
+    height: 100vh; height: 100dvh;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.1);
     overflow: hidden;
-    margin: 0;
-    padding: 0;
+    cursor: default;
 }
 .intro-bg-image-zoom {
     transition: transform 1.5s cubic-bezier(0.19, 1, 0.22, 1);
@@ -1157,30 +1150,7 @@ details[open] summary ~ * {
     transition: all 0.3s ease;
 }
 .intro-nav-arrow:hover { background: rgba(255, 255, 255, 0.3); color: white; transform: scale(1.1); }
-#intro-carousel-track {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    overflow-x: auto;              /* Habilita a rolagem fluida */
-    scroll-snap-type: x mandatory; /* Obriga a parar na imagem certa */
-    scroll-behavior: smooth;
-    scrollbar-width: none;         /* Esconde barra de rolagem (Firefox) */
-    cursor: grab;                  /* Cursor de mãozinha */
-    margin: 0;
-    padding: 0;
-}
-
-/* Remove a barra de rolagem visual no Chrome/Safari */
-#intro-carousel-track::-webkit-scrollbar {
-    display: none;
-}
-
-/* Estilo quando você está segurando e arrastando */
-#intro-carousel-track.active {
-    cursor: grabbing;
-    scroll-snap-type: none;        /* Solta o "ímã" para arrastar livremente */
-    scroll-behavior: auto;
-}
+#intro-carousel-track { display: flex; height: 100%; width: max-content; will-change: transform; }
 #intro-carousel-wrapper .absolute.bottom-0.h-1 { display: none; }
 
 /* --- MOBILE OPTIMIZATION --- */
@@ -1226,4 +1196,3 @@ details[open] summary ~ * {
     .intro-nav-arrow::after { content: ''; position: absolute; inset: -10px; }
     .intro-bg-image-zoom { background-position: center center; transform: none !important; }
 }
-
