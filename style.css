@@ -1106,13 +1106,13 @@ details[open] summary ~ * {
 }
 .intro-epic-panel {
     position: relative;
-    /* Força o painel a ter 100% da largura da tela */
-    flex: 0 0 100%; 
-    width: 100vw;
-    height: 100%;
-    scroll-snap-align: start; /* Ponto de parada */
+    /* TRAVA O TAMANHO NO LIMITE DA TELA */
+    flex: 0 0 100vw; 
+    width: 100vw;  
+    height: 100vh; /* Força a altura original da capa */
+    
+    scroll-snap-align: start;
     overflow: hidden;
-    border-right: none; /* Remove borda antiga se houver */
 }
 .intro-bg-image-zoom {
     transition: transform 1.5s cubic-bezier(0.19, 1, 0.22, 1);
@@ -1156,24 +1156,20 @@ details[open] summary ~ * {
     display: flex;
     width: 100%;
     height: 100%;
-    /* Ativa a rolagem nativa e fluida */
-    overflow-x: auto; 
-    scroll-snap-type: x mandatory; /* Obriga a parar na imagem certa */
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    scrollbar-width: none; /* Esconde barra no Firefox */
-    cursor: grab; /* Mãozinha aberta */
-    will-change: scroll-position;
+    scrollbar-width: none; /* Firefox */
+    cursor: grab;
 }
 
-/* Esconde barra no Chrome/Safari */
 #intro-carousel-track::-webkit-scrollbar {
-    display: none;
+    display: none; /* Chrome/Safari */
 }
 
-/* Quando estiver arrastando com o mouse */
 #intro-carousel-track.active {
-    cursor: grabbing; 
-    scroll-snap-type: none; /* Solta o imã para arrastar livre */
+    cursor: grabbing;
+    scroll-snap-type: none;
     scroll-behavior: auto;
 }
 #intro-carousel-wrapper .absolute.bottom-0.h-1 { display: none; }
@@ -1221,4 +1217,5 @@ details[open] summary ~ * {
     .intro-nav-arrow::after { content: ''; position: absolute; inset: -10px; }
     .intro-bg-image-zoom { background-position: center center; transform: none !important; }
 }
+
 
