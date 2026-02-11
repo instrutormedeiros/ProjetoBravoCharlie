@@ -763,10 +763,10 @@
                 
                 const encoded = encodeURIComponent(text);
                 
-                this.showAlert('Redirecionando', 'Você será redirecionado para o WhatsApp. Envie a mensagem gerada para a secretaria.', 'fa-whatsapp');
+                this.showAlert('Redirecionando', 'Você será redirecionado para o WhatsApp. Envie a mensagem gerada para o Instrutor.', 'fa-whatsapp');
                 setTimeout(() => {
                      // Instrutor: Substitua o link abaixo pelo seu número se desejar
-                     window.open(`https://wa.me/?text=${encoded}`, '_blank');
+                     window.open(`https://wa.me/5561998300711?text=${encoded}`, '_blank');
                 }, 2000);
             },
 
