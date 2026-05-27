@@ -1713,29 +1713,17 @@ const moduleContent = {
 
    'module58': { 
         id: "module58", 
-        title: "58. Biblioteca Premium", 
+        title: "58. Bônus: Material Exclusivo", 
         iconClass: "fas fa-star", 
         driveLink: "https://drive.google.com/drive/folders/1_3zurujjEjatAA6wbiHw6BMzMd7Nakch?usp=drive_link",
-        content: `
-            <section class="bonus-hero-panel">
-                <span><i class="fas fa-crown"></i> Área Premium</span>
-                <h3>Biblioteca Digital do Profissional</h3>
-                <p>Materiais de apoio, arquivos complementares e referências para consulta rápida durante seus estudos e revisões.</p>
-            </section>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div class="bonus-info-card"><i class="fas fa-folder-open"></i><strong>Materiais extras</strong><span>Conteúdos de apoio em um só lugar.</span></div>
-                <div class="bonus-info-card"><i class="fas fa-rotate"></i><strong>Atualizações</strong><span>A biblioteca pode receber novos arquivos.</span></div>
-                <div class="bonus-info-card"><i class="fas fa-bookmark"></i><strong>Revisão rápida</strong><span>Use como consulta antes dos simulados.</span></div>
-            </div>
-            <div class="key-concept mt-6"><h5>Como acessar</h5><p>Clique no botão de Drive abaixo. O acesso abre em uma nova aba para você consultar e voltar ao curso quando quiser.</p></div>
-        ` 
+        content: `<h3><i class="fas fa-crown text-yellow-500 mr-2"></i> Acesso VIP à Biblioteca Digital</h3><p>Parabéns por investir na sua formação profissional! Como assinante Premium, você tem acesso vitalício à nossa biblioteca.</p><div class="key-concept"><h5>Como Acessar</h5><p>Clique no botão azul para ir ao Drive.</p></div>` 
     },
     
     'module59': {
         id: "module59",
-        title: "59. Central de Ferramentas",
+        title: "59. Ferramentas Operacionais",
         iconClass: "fas fa-tools",
-        content: `<h3><i class="fas fa-briefcase mr-2 text-gray-600 dark:text-gray-400"></i> Central de Ferramentas</h3><p>Recursos práticos para organizar plantão, estudos, saúde operacional e rotina profissional.</p><div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"></div>`
+        content: `<h3><i class="fas fa-briefcase mr-2 text-gray-600 dark:text-gray-400"></i> Painel do Profissional</h3><p>Ferramentas práticas para o dia a dia operacional e administrativo.</p><div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"></div>`
     },
 
     // --- NOVOS MÓDULOS ---
@@ -1746,22 +1734,30 @@ const moduleContent = {
         iconClass: "fas fa-skull-crossbones",
         isSurvival: true, // Flag para identificar
         content: `
-            <section class="survival-landing">
-                <div class="survival-landing-content">
-                    <span><i class="fas fa-heart-pulse"></i> Treino de pressão</span>
-                    <h3>Modo Sobrevivência</h3>
-                    <p>Responda perguntas aleatórias do curso, mantenha suas vidas e tente superar seu próprio recorde.</p>
-                    <div class="survival-rules-grid">
-                        <div><i class="fas fa-heart"></i><strong>3 vidas</strong><small>Errou, perde uma.</small></div>
-                        <div><i class="fas fa-shuffle"></i><strong>Banco aleatório</strong><small>Questões de todo o curso.</small></div>
-                        <div><i class="fas fa-trophy"></i><strong>Recorde pessoal</strong><small>Volte para melhorar.</small></div>
-                    </div>
-                    <button id="start-survival-btn" class="action-button pulse-button text-xl px-8 py-4 bg-red-600 hover:bg-red-700 border-red-800">
-                        <i class="fas fa-play mr-2"></i> INICIAR DESAFIO
-                    </button>
-                    <div id="survival-last-score" class="mt-4 text-sm text-gray-500"></div>
+            <div class="text-center">
+                <div class="mb-6 text-6xl animate-bounce">💀</div>
+                <h3 class="text-3xl font-bold text-red-600 mb-2">Desafio Sobrevivência</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6">Prove que você é elite. Responda o máximo de perguntas sem perder suas 3 vidas.</p>
+                
+                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-6 text-left max-w-md mx-auto border border-gray-200 dark:border-gray-700">
+                    <h5 class="font-bold text-gray-800 dark:text-white mb-2"><i class="fas fa-scroll mr-2"></i> Regras:</h5>
+                    <ul class="text-sm space-y-2 text-gray-600 dark:text-gray-400">
+                        <li><i class="fas fa-heart text-red-500 mr-2"></i> Você começa com <strong>3 vidas</strong>.</li>
+                        <li><i class="fas fa-random mr-2"></i> Perguntas aleatórias de <strong>todo o curso</strong>.</li>
+                        <li><i class="fas fa-trophy text-yellow-500 mr-2"></i> Entre para o Ranking Global.</li>
+                        <li class="text-xs mt-2 pt-2 border-t border-gray-300 dark:border-gray-600 italic">
+                            * Usuários Grátis: 1 tentativa a cada 24h.<br>
+                            * Premium: Tentativas ilimitadas.
+                        </li>
+                    </ul>
                 </div>
-            </section>
+
+                <button id="start-survival-btn" class="action-button pulse-button text-xl px-8 py-4 bg-red-600 hover:bg-red-700 border-red-800">
+                    <i class="fas fa-play mr-2"></i> INICIAR DESAFIO
+                </button>
+                
+                <div id="survival-last-score" class="mt-4 text-sm text-gray-500"></div>
+            </div>
         `
     },
 
@@ -1772,9 +1768,9 @@ const moduleContent = {
         isRPG: true,
         content: `
             <div class="text-center">
-                <div class="bonus-mode-icon tactical"><i class="fas fa-fire-extinguisher"></i></div>
+                <div class="mb-4 text-5xl text-orange-500"><i class="fas fa-fire-fighter"></i></div>
                 <h3 class="text-2xl font-bold mb-2">Simulador de Decisões</h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-6">Você no comando de uma ocorrência. Analise risco, prioridade e conduta antes de agir.</p>
+                <p class="text-gray-600 dark:text-gray-300 mb-6">Você no comando. Suas escolhas salvam vidas ou causam desastres.</p>
                 <button id="start-rpg-btn" class="action-button text-lg px-6 py-3 bg-orange-600 hover:bg-orange-700">
                     <i class="fas fa-book-open mr-2"></i> Iniciar Cenário: "O Galpão"
                 </button>
@@ -2132,7 +2128,7 @@ const moduleCategories = {
     seguranca_patrimonial: { id: "seguranca_patrimonial", title: "Segurança Patrimonial", achievementTitle: "Guardião do Patrimônio", range: [1, 4], icon: "fas fa-shield-alt", isSP: true },
     
     // BÔNUS E NOVIDADES
-    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [58, 61], icon: "fas fa-star", isPremium: true }
+    bonus: { id: "bonus", title: "Bônus & Ferramentas", achievementTitle: "Caçador de Recompensas", range: [58, 62], icon: "fas fa-star", isPremium: true }
 };
 
 if (typeof window !== 'undefined') {

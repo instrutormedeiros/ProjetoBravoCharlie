@@ -29,7 +29,7 @@
       }
     </script>
 
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1175,6 +1175,7 @@
                         <input type="text" id="company-input" class="w-full pl-12 p-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 transition-all outline-none text-base" placeholder="Ex: Turma Alfa ou Coca-Cola">
                     </div>
                 </div>
+                <!-- ... outros campos (Nome, CPF, Telefone, Empresa) ... -->
                 
                 <div id="course-field-container">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Curso de Interesse</label>
@@ -1210,10 +1211,6 @@
                 <button id="login-button" class="w-full py-3.5 px-6 bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 bg-[length:200%_auto] animate-gradient hover:scale-[1.02] text-white font-bold text-base rounded-xl shadow-[0_10px_20px_rgba(234,88,12,0.3)] transition-all transform uppercase tracking-wide">
                     ACESSAR PLATAFORMA <i class="fas fa-arrow-right ml-2"></i>
                 </button>
-<button id="btn-biometric-login" class="w-full mt-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl flex items-center justify-center border border-gray-600 transition-all group">
-    <i class="fas fa-fingerprint mr-2 text-orange-500 group-hover:scale-110"></i>
-    Acessar com Biometria
-</button>
                 
                 <div class="flex flex-col space-y-3 pt-4 items-center border-t border-gray-800 mt-4">
                     <div class="grid grid-cols-2 gap-4 w-full">
@@ -1251,13 +1248,8 @@
             <button id="close-payment-modal-btn" class="text-gray-400 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
         </div>
         <div class="p-4 md:p-8 bg-gray-900 overflow-y-auto custom-scrollbar">
-            <div class="payment-trust-strip">
-                <div><i class="fas fa-lock"></i><span>Pagamento seguro</span></div>
-                <div><i class="fas fa-bolt"></i><span>Liberação rápida</span></div>
-                <div><i class="fab fa-pix"></i><span>PIX ou link</span></div>
-            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="payment-plan-card bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-500 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
+                <div class="bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-500 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
                     <div class="p-5 text-center bg-gray-800/50 border-b border-gray-700">
                         <h3 class="text-xl font-bold text-blue-400">MENSAL</h3>
                         <div class="mt-3"><span class="text-sm text-gray-400">R$</span><span class="text-4xl font-extrabold text-white">29,90</span></div>
@@ -1278,7 +1270,7 @@
                     </div>
                 </div>
                 
-                <div class="payment-plan-card featured bg-gray-800 rounded-xl border-2 border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.15)] transform md:-translate-y-2 relative overflow-hidden flex flex-col">
+                <div class="bg-gray-800 rounded-xl border-2 border-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.15)] transform md:-translate-y-2 relative overflow-hidden flex flex-col">
                     <div class="absolute top-0 right-0 bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">MAIS POPULAR</div>
                     <div class="p-5 text-center bg-gradient-to-b from-gray-800 to-gray-700 border-b border-gray-600">
                         <h3 class="text-xl font-bold text-orange-500">SEMESTRAL</h3>
@@ -1301,7 +1293,7 @@
                     </div>
                 </div>
                 
-                <div class="payment-plan-card bg-gray-800 rounded-xl border border-gray-700 hover:border-green-500 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
+                <div class="bg-gray-800 rounded-xl border border-gray-700 hover:border-green-500 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
                     <div class="p-5 text-center bg-gray-800/50 border-b border-gray-700">
                         <h3 class="text-xl font-bold text-green-400">ANUAL</h3>
                         <div class="mt-3"><span class="text-sm text-gray-400">R$</span><span class="text-4xl font-extrabold text-white">69,90</span></div>
@@ -1329,8 +1321,7 @@
             </div>
         </div>
     </div>
-    
-    <div id="manager-modal" class="modal w-[95%] max-w-7xl mx-auto overflow-hidden flex flex-col max-h-[90vh]" style="background: #f8f9fa; border: 1px solid #e2e8f0; color: #1a202c; z-index: 20002 !important;">
+                <div id="manager-modal" class="modal w-[95%] max-w-7xl mx-auto overflow-hidden flex flex-col max-h-[90vh]" style="background: #f8f9fa; border: 1px solid #e2e8f0; color: #1a202c; z-index: 20002 !important;">
         <div class="bg-blue-900 p-4 border-b border-blue-800 flex justify-between items-center flex-shrink-0">
             <div>
                 <h2 class="text-xl font-bold text-white flex items-center">
@@ -1342,12 +1333,6 @@
         </div>
         
         <div class="p-4 bg-gray-100 overflow-y-auto flex-grow custom-scrollbar">
-
-            <div class="mb-6 relative">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="manager-search-input" class="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 transition-all" placeholder="Pesquisar aluno na tropa...">
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white p-4 rounded shadow border-l-4 border-blue-500">
                     <p class="text-xs text-gray-500 uppercase font-bold">Total de Alunos</p>
@@ -1366,12 +1351,12 @@
                     <p class="text-2xl font-bold text-gray-800" id="mgr-pending">0</p>
                 </div>
             </div>
-            <div class="flex justify-between items-center mb-4">
+<div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-filter text-gray-400"></i>
                     <select id="mgr-filter-turma" onchange="filterManagerTable()" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2">
                         <option value="TODOS">Todas as Turmas</option>
-                    </select>
+                        </select>
                 </div>
             </div>
             <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -1395,7 +1380,6 @@
             </div>
         </div>
     </div>
-    
     <div id="admin-modal" class="modal w-[95%] max-w-6xl mx-auto overflow-hidden flex flex-col max-h-[90vh]" style="background: #f8f9fa; border: 1px solid #e2e8f0; color: #1a202c; z-index: 20002 !important;">
         <div class="bg-gray-800 p-4 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
             <h2 class="text-xl font-bold text-white flex items-center">
@@ -1405,18 +1389,12 @@
         </div>
         
         <div class="p-4 bg-gray-100 overflow-y-auto flex-grow">
-
-            <div class="mb-6 relative">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                <input type="text" id="admin-search-input" class="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 transition-all" placeholder="Filtrar por nome, CPF ou e-mail...">
-            </div>
-
             <div class="overflow-x-auto bg-white rounded-lg shadow">
                  <div id="admin-stats" class="mb-2 text-xs text-gray-600 flex gap-4">
-                    <span>Total: <strong id="admin-total-users">0</strong></span>
-                    <span>Premium: <strong id="admin-total-premium">0</strong></span>
-                    <span>Trial: <strong id="admin-total-trial">0</strong></span>
-                </div>
+  <span>Total: <strong id="admin-total-users">0</strong></span>
+  <span>Premium: <strong id="admin-total-premium">0</strong></span>
+  <span>Trial: <strong id="admin-total-trial">0</strong></span>
+</div>
                 <table class="min-w-full divide-y divide-gray-200" id="admin-users-table">
                     <thead class="bg-gray-50">
                         <tr>
@@ -1434,7 +1412,6 @@
             </div>
         </div>
     </div>
-    
     <div id="admin-modal-overlay" class="modal-overlay bg-black/90 backdrop-blur-sm" style="z-index: 20001 !important;"></div>
 
     <div id="ios-install-modal" class="modal">
@@ -1490,32 +1467,66 @@
     <script src="course.js" defer></script>
     <script src="tools_logic.js" defer></script> <script src="firebase-init.js" defer></script>
     <script src="app_final.js" defer></script>
-    <div id="iam-ai-widget" class="iam-ai-widget hidden" aria-live="polite">
-        <section id="iam-ai-panel" class="iam-ai-panel" aria-label="IAM - Inteligência Artificial Medeiros">
-            <header class="iam-ai-header">
-                <div>
-                    <span>IAM</span>
-                    <strong>Inteligência Artificial Medeiros</strong>
-                </div>
-                <button id="iam-ai-close" type="button" aria-label="Fechar IAM"><i class="fas fa-times"></i></button>
-            </header>
-            <iframe
-                id="iam-ai-frame"
-                title="IAM - Inteligência Artificial Medeiros"
-                src="https://iam-intelig-ncia-artificial-medeiros-801400632400.us-west2.run.app/"
-                loading="lazy"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allow="clipboard-read; clipboard-write">
-            </iframe>
-        </section>
-        <button id="iam-ai-launcher" class="iam-ai-launcher" type="button" aria-expanded="false" aria-controls="iam-ai-panel" title="Abrir IAM">
-            <span class="iam-ai-mark" aria-hidden="true">
-                <i class="fas fa-shield-alt"></i>
-                <i class="fas fa-bolt"></i>
-            </span>
-            <span>IAM</span>
-        </button>
-    </div>
+    
+<script type="text/javascript">
+  (function(d, t) {
+      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      v.onload = function() {
+        // Início da configuração (Baseado no Código Novo)
+        window.voiceflow.chat.load({
+          verify: { projectID: '69247d068e3b774e5660d59d' },
+          url: 'https://general-runtime.voiceflow.com',
+          versionID: 'production',
+          // Mantive o 'render' pois seu CSS depende das classes do modo overlay
+          render: { mode: 'overlay' }, 
+          voice: {
+            url: "https://runtime-api.voiceflow.com"
+          }
+        }).then(() => {
+            // --- INÍCIO DA SUA PERSONALIZAÇÃO (CSS INJETADO) ---
+            // Esta parte garante que suas regras de responsividade sejam aplicadas
+            // assim que o Shadow DOM do chat for carregado.
+            const checkChat = setInterval(() => {
+                const chatHost = document.getElementById('voiceflow-chat');
+                if (chatHost && chatHost.shadowRoot) {
+                    clearInterval(checkChat);
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @media (max-width: 768px) {
+                            .vfrc-launcher {
+                                bottom: 110px !important; 
+                                left: 20px !important;
+                                right: auto !important;
+                                position: fixed !important;
+                                opacity: 0.6 !important;
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+                            }
+                            .vfrc-widget--chat {
+                                bottom: 110px !important; 
+                                height: 65vh !important; 
+                                width: 85vw !important;
+                                left: 20px !important;
+                                right: auto !important;
+                                border-radius: 16px !important;
+                            }
+                            .vfrc-widget.is-mobile {
+                                background: transparent !important;
+                                width: auto !important;
+                                height: auto !important;
+                                position: static !important;
+                            }
+                        }
+                        .vfrc-launcher:active, .vfrc-launcher:hover { opacity: 1 !important; }
+                    `;
+                    chatHost.shadowRoot.appendChild(style);
+                }
+            }, 500);
+            // --- FIM DA SUA PERSONALIZAÇÃO ---
+        });
+      }
+      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+  })(document, 'script');
+    </script>
                <div id="manager-fab" class="hidden fixed top-24 right-4 z-[9999] group animate-fade-in-up">
     <button onclick="if((window.__fbDB || window.fbDB) && typeof openManagerPanel === 'function'){ openManagerPanel(); } else { alert('Aguarde o carregamento do sistema...'); }" 
             class="flex items-center justify-center w-12 h-12 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-500 hover:scale-110 transition-all duration-300 border-2 border-white/20">
@@ -1565,7 +1576,7 @@
         </div>
     </div>
     
-    <div id="course-contact-overlay" class="modal-overlay bg-black/80 backdrop-blur-sm" style="z-index: 20004;"></div>            
+    <div id="course-contact-overlay" class="modal-overlay bg-black/80 backdrop-blur-sm" style="z-index: 20004;"></div>           
 
 <div vw class="enabled">
   <div vw-access-button class="active"></div>
