@@ -1,15 +1,16 @@
-/* sw.js — Service Worker V8 (Forçando atualização para exibir Ferramentas)
+/* sw.js — Service Worker V19 (Ferramentas premium e IAM)
    - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v8'; // <--- MUDAMOS PARA V8
+const CACHE_NAME = 'pbc-static-v19';
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
-  '/style.css',
+  '/style.css?v=19',
   '/app_final.js',
   '/data.js',
   '/quizzes.js',
   '/course.js',
+  '/tools_logic.js',
   '/firebase-init.js'
 ];
 

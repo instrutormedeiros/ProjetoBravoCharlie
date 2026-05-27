@@ -1,6 +1,90 @@
 /* === ARQUIVO app_final.js (VERSÃO FINAL V10.1 - CORREÇÃO TOTAL MODULES) === */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ============================================================
+// SISTEMA TÁTICO DE BUSCA EM TEMPO REAL (BLINDADO)
+// ============================================================
+const normalizeSearchText = (value) => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const onlyDigits = (value) => String(value || '').replace(/\D/g, '');
+
+const userMatchesSearch = (user, searchTerm) => {
+    const term = normalizeSearchText(searchTerm);
+    const termDigits = onlyDigits(searchTerm);
+
+    if (!term && !termDigits) return true;
+
+    const fields = [
+        user?.name,
+        user?.email,
+        user?.cpf,
+        user?.phone,
+        user?.company,
+        user?.courseType,
+        user?.status,
+        user?.planType
+    ];
+
+    const textMatch = term && fields.some(field => normalizeSearchText(field).includes(term));
+    const digitMatch = termDigits && [user?.cpf, user?.phone].some(field => onlyDigits(field).includes(termDigits));
+
+    return Boolean(textMatch || digitMatch);
+};
+
+window.filterAdminTable = function() {
+    const input = document.getElementById('admin-search-input');
+    if (!input) return;
+    const termo = normalizeSearchText(input.value);
+    const termoDigits = onlyDigits(input.value);
+    const linhas = document.querySelectorAll('#admin-table-body tr');
+    linhas.forEach(linha => {
+        const rowText = normalizeSearchText(linha.innerText);
+        const rowDigits = onlyDigits(linha.innerText);
+        const matchesEmpty = !termo && !termoDigits;
+        const matchesText = termo && rowText.includes(termo);
+        const matchesDigits = termoDigits && rowDigits.includes(termoDigits);
+        linha.style.display = (matchesEmpty || matchesText || matchesDigits) ? '' : 'none';
+    });
+};
+
+window.filterManagerTable = function() {
+    const input = document.getElementById('manager-search-input');
+    const select = document.getElementById('mgr-filter-turma');
+    const selectedTurma = select ? select.value : 'TODOS';
+    
+    if (!window.managerCachedUsers) return;
+
+    let filteredList = window.managerCachedUsers;
+
+    // Filtra por Turma do Select
+    if (selectedTurma !== 'TODOS') {
+        filteredList = window.managerCachedUsers.filter(u => u.company === selectedTurma);
+    }
+
+    // Filtra por Texto do Input (Nome, Email ou CPF)
+    if (input && input.value) {
+        filteredList = filteredList.filter(u => userMatchesSearch(u, input.value));
+    }
+
+    // Chama o renderizador da sua tabela passando os dados filtrados
+    if (typeof renderManagerTable === 'function') {
+        renderManagerTable(filteredList);
+    }
+};
+
+// Deixa o documento inteiro escutando a digitação (Evita perder o ouvinte)
+document.body.addEventListener('input', (e) => {
+    if (e.target.id === 'admin-search-input') {
+        window.filterAdminTable();
+    }
+    if (e.target.id === 'manager-search-input') {
+        window.filterManagerTable();
+    }
+});
 
     // --- VARIÁVEIS GLOBAIS DO APP ---
     const contentArea = document.getElementById('content-area');
@@ -15,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentModuleId = null;
     let cachedQuestionBanks = {}; 
     let currentUserData = null; 
+    window.__getCurrentUserData = () => currentUserData;
 
     // --- VARIÁVEIS PARA O SIMULADO ---
     let simuladoTimerInterval = null;
@@ -44,6 +129,79 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminModal = document.getElementById('admin-modal');
     const adminOverlay = document.getElementById('admin-modal-overlay');
     const closeAdminBtn = document.getElementById('close-admin-modal');
+
+    function showAppToast(title, message = '', type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast app-toast app-toast-${type}`;
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        toast.innerHTML = `
+            <i class="fas ${icons[type] || icons.info}"></i>
+            <div>
+                <p class="font-bold">${title}</p>
+                ${message ? `<p class="text-sm">${message}</p>` : ''}
+            </div>
+        `;
+        if (toastContainer) toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 4500);
+    }
+
+    const OPTIONAL_PROGRESS_CATEGORIES = ['simulados', 'bonus'];
+
+    function getVisibleModuleIds(userDataOverride = currentUserData, options = {}) {
+        const ids = [];
+        const includeOptional = options.includeOptional === true;
+        const userType = userDataOverride ? (userDataOverride.courseType || 'BC') : 'BC';
+        const isManager = userDataOverride ? (userDataOverride.isAdmin || userDataOverride.courseType === 'GESTOR') : false;
+
+        for (const key in moduleCategories) {
+            if (!includeOptional && OPTIONAL_PROGRESS_CATEGORIES.includes(key)) continue;
+            const cat = moduleCategories[key];
+            const prefix = cat.isSP ? 'sp_module' : 'module';
+            for (let i = cat.range[0]; i <= cat.range[1]; i++) {
+                const id = `${prefix}${i}`;
+                const module = moduleContent[id];
+                if (!module) continue;
+                const isSpContent = id.startsWith('sp_');
+                if (!isManager) {
+                    if (userType === 'BC' && isSpContent) continue;
+                    if (userType === 'SP' && !isSpContent) continue;
+                }
+                if (!ids.includes(id)) ids.push(id);
+            }
+        }
+        return ids;
+    }
+
+    function getLearningStats() {
+        const visibleIds = getVisibleModuleIds();
+        const allVisibleIds = getVisibleModuleIds(currentUserData, { includeOptional: true });
+        const doneCount = visibleIds.filter(id => completedModules.includes(id)).length;
+        const total = visibleIds.length || totalModules || 1;
+        const percent = Math.min(100, Math.round((doneCount / total) * 100));
+        const lastModuleId = localStorage.getItem('gateBombeiroLastModule');
+        const nextModuleId = visibleIds.find(id => !completedModules.includes(id)) || visibleIds[0] || 'module1';
+        const lastModule = lastModuleId && moduleContent[lastModuleId] ? moduleContent[lastModuleId] : null;
+        const nextModule = nextModuleId && moduleContent[nextModuleId] ? moduleContent[nextModuleId] : null;
+
+        return {
+            visibleIds,
+            allVisibleIds,
+            doneCount,
+            total,
+            percent,
+            lastModuleId,
+            nextModuleId,
+            lastModule,
+            nextModule,
+            remaining: Math.max(total - doneCount, 0),
+            achievementCount: notifiedAchievements.length
+        };
+    }
 
     // --- ACESSIBILIDADE ---
     const fab = document.getElementById('accessibility-fab');
@@ -296,6 +454,7 @@ setTimeout(() => {
         
         setupHeaderScroll();
         setupRippleEffects();
+        setupIamWidget();
     }
 
     function onLoginSuccess(user, userData) {
@@ -328,6 +487,9 @@ setTimeout(() => {
         const adminBtn = document.getElementById('admin-panel-btn');
         const mobileAdminBtn = document.getElementById('mobile-admin-btn');
         const managerFab = document.getElementById("manager-fab");
+        const iamWidget = document.getElementById('iam-ai-widget');
+
+        if (iamWidget) iamWidget.classList.remove('hidden');
 
         if (userData.isAdmin === true) {
             if(adminBtn) adminBtn.classList.remove('hidden');
@@ -359,26 +521,8 @@ setTimeout(() => {
             localStorage.removeItem('gateBombeiroCompletedModules_v3');
         }
 
-        // --- CORREÇÃO DA CONTAGEM DE MÓDULOS (62 vs 4) ---
-        // Aqui recalculamos o totalModules baseado APENAS no que o aluno pode ver
-        let count = 0;
-        const userCourse = userData.courseType || 'BC';
-        const isAdm = userData.isAdmin || userData.courseType === 'GESTOR';
-
-        Object.keys(window.moduleContent || {}).forEach(modId => {
-            const isSp = modId.startsWith('sp_');
-            
-            if (isAdm) {
-                count++; // Admin vê tudo (66)
-            } else {
-                // Aluno BC: conta se NÃO for SP
-                if (userCourse === 'BC' && !isSp) count++;
-                // Aluno SP: conta se FOR SP
-                else if (userCourse === 'SP' && isSp) count++;
-            }
-        });
-        
-        totalModules = count; // Atualiza a variável global
+        // Conta apenas os módulos que este usuário realmente pode acessar.
+        totalModules = getVisibleModuleIds(currentUserData).length;
         // --------------------------------------------------
 
         // Atualiza a interface com o número correto
@@ -896,6 +1040,11 @@ window.manageUserAccess = async function(uid) {
       
     // --- CARREGAMENTO DE MÓDULOS (ROTEADOR PRINCIPAL) ---
     async function loadModuleContent(id) {
+        if (id === 'module62') {
+            localStorage.removeItem('gateBombeiroLastModule');
+            loadModuleContent('module59');
+            return;
+        }
         if (!id || !moduleContent[id]) return;
         const d = moduleContent[id];
         const num = parseInt(id.replace('module', ''));
@@ -943,19 +1092,31 @@ window.manageUserAccess = async function(uid) {
             // 2. FERRAMENTAS (Módulo 59)
             else if (id === 'module59') { 
                 contentArea.innerHTML = `
-                    <h3 class="text-3xl mb-4 pb-4 border-b text-blue-600 dark:text-blue-400 flex items-center">
-                        <i class="fas fa-tools mr-3"></i> Ferramentas Operacionais
-                    </h3>
+                    <section class="tools-hero-panel">
+                        <div class="tools-hero-content">
+                            <div class="tools-main-mark">
+                                <i class="fas fa-shield-halved"></i>
+                                <span><i class="fas fa-bolt"></i></span>
+                            </div>
+                            <div>
+                                <span><i class="fas fa-layer-group"></i> Hub profissional</span>
+                                <h3>Central de Ferramentas</h3>
+                                <p>20 ferramentas com apoio da IAM para rotina, carreira, documentos, oportunidades, avisos e treino prático pós-curso.</p>
+                            </div>
+                        </div>
+                    </section>
                     <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 `;
                 const grid = document.getElementById('tools-grid');
                 if (typeof ToolsApp !== 'undefined') {
-                    ToolsApp.renderPonto(grid);
-                    ToolsApp.renderEscala(grid);
-                    ToolsApp.renderPlanner(grid);
-                    ToolsApp.renderWater(grid);
-                    ToolsApp.renderNotes(grid);
-                    ToolsApp.renderHealth(grid);
+                    if (typeof ToolsApp.renderProfessionalSuite === 'function') {
+                        ToolsApp.renderProfessionalSuite(grid);
+                    } else {
+                        ToolsApp.renderChecklist(grid);
+                        ToolsApp.renderPonto(grid);
+                        ToolsApp.renderEscala(grid);
+                        ToolsApp.renderPlanner(grid);
+                    }
                 } else {
                     grid.innerHTML = '<p class="text-red-500">Erro: Script de Ferramentas não carregado.</p>';
                 }
@@ -974,22 +1135,26 @@ window.manageUserAccess = async function(uid) {
             // 4. RPG (Módulo 61)
             else if (d.isRPG) {
                 contentArea.innerHTML = `
-                    <h3 class="text-2xl font-bold mb-6 flex items-center text-orange-500">
-                        <i class="fas fa-headset mr-3"></i> Central de Operações
-                    </h3>
-                    <p class="mb-4 text-gray-400">Equipe de prontidão. Temos 3 chamados pendentes. Qual ocorrência você assume?</p>
-                    <div class="space-y-4">
+                    <section class="rpg-command-hero">
+                        <span><i class="fas fa-headset"></i> Central de Operações</span>
+                        <h3>Simulador de Ocorrências</h3>
+                        <p>Escolha uma ocorrência, avalie riscos e tome decisões como responsável pela primeira resposta.</p>
+                    </section>
+                    <div class="rpg-card-grid">
                         <button id="rpg-opt-1" class="rpg-card-btn group">
-                            <h4 class="font-bold text-lg group-hover:text-orange-500 transition-colors"><i class="fas fa-fire mr-2"></i> Incêndio em Galpão Industrial</h4>
-                            <p class="text-sm text-gray-400 mt-1">Risco de Backdraft. Vítimas possíveis.</p>
+                            <small>Ocorrência 01</small>
+                            <h4><i class="fas fa-fire mr-2"></i> Incêndio em Galpão Industrial</h4>
+                            <p>Risco de backdraft, porta quente e vítimas possíveis.</p>
                         </button>
                         <button id="rpg-opt-2" class="rpg-card-btn group">
-                            <h4 class="font-bold text-lg group-hover:text-blue-500 transition-colors"><i class="fas fa-car-crash mr-2"></i> Acidente Veicular</h4>
-                            <p class="text-sm text-gray-400 mt-1">Vítima presa às ferragens. Trauma grave.</p>
+                            <small>Em breve</small>
+                            <h4><i class="fas fa-car-crash mr-2"></i> Acidente Veicular</h4>
+                            <p>Vítima presa às ferragens, trauma grave e controle de cena.</p>
                         </button>
                         <button id="rpg-opt-3" class="rpg-card-btn group">
-                            <h4 class="font-bold text-lg group-hover:text-yellow-500 transition-colors"><i class="fas fa-dungeon mr-2"></i> Espaço Confinado (Silo)</h4>
-                            <p class="text-sm text-gray-400 mt-1">Trabalhador inconsciente. Atmosfera desconhecida.</p>
+                            <small>Em breve</small>
+                            <h4><i class="fas fa-dungeon mr-2"></i> Espaço Confinado</h4>
+                            <p>Trabalhador inconsciente, atmosfera desconhecida e resgate técnico.</p>
                         </button>
                     </div>
                 `;
@@ -1023,7 +1188,14 @@ window.manageUserAccess = async function(uid) {
                 `;
 
                 let html = `
-                    <h3 class="flex items-center text-3xl mb-6 pb-4 border-b"><i class="${d.iconClass} mr-4 ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
+                    <div class="study-module-header">
+                        <span class="study-kicker"><i class="fas fa-book-open"></i> Modo estudo</span>
+                        <h3><i class="${d.iconClass} ${getCategoryColor(id)} fa-fw"></i>${d.title}</h3>
+                        <div class="study-header-actions">
+                            <span><i class="fas fa-headphones"></i> Áudio disponível</span>
+                            <span><i class="fas fa-pencil-alt"></i> Exercícios ao final</span>
+                        </div>
+                    </div>
                     ${audioHtml}
                     <div>${d.content}</div>
                 `;
@@ -1080,7 +1252,7 @@ window.manageUserAccess = async function(uid) {
                     }
                 }
 
-                html += `<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-right"><button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button></div><div class="mt-10 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700"><h4 class="text-xl font-bold mb-3 text-secondary dark:text-gray-200"><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4><p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Suas notas para este módulo. Elas são salvas automaticamente no seu navegador.</p><textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${savedNote}</textarea></div>`;
+                html += `<div class="module-complete-panel"><div><strong>Terminou esta aula?</strong><span>Marque como concluída para atualizar seu progresso.</span></div><button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button></div><div class="notes-panel"><h4><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4><p>Suas notas para este módulo. Elas são salvas automaticamente no seu navegador.</p><textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${savedNote}</textarea></div>`;
 
                 contentArea.innerHTML = html;
                 setupQuizListeners();
@@ -1123,11 +1295,12 @@ window.manageUserAccess = async function(uid) {
             // Game Over
             localStorage.setItem('lastSurvivalScore', survivalScore);
             contentArea.innerHTML = `
-                <div class="text-center animate-slide-in p-8">
-                    <h2 class="text-4xl font-bold text-red-600 mb-4">GAME OVER</h2>
-                    <div class="text-6xl mb-6">💀</div>
-                    <p class="text-2xl text-gray-800 dark:text-white mb-2">Sua Pontuação Final</p>
-                    <div class="text-5xl font-extrabold text-orange-500 mb-8">${survivalScore}</div>
+                <div class="survival-result-panel animate-slide-in">
+                    <div class="bonus-mode-icon danger"><i class="fas fa-heart-crack"></i></div>
+                    <span>Fim da tentativa</span>
+                    <h2>Modo Sobrevivência encerrado</h2>
+                    <p>Sua pontuação final foi</p>
+                    <strong>${survivalScore}</strong>
                     <button id="retry-survival" class="action-button pulse-button">Tentar Novamente</button>
                 </div>
             `;
@@ -1145,19 +1318,22 @@ window.manageUserAccess = async function(uid) {
         for(let i=0; i<survivalLives; i++) hearts += '<i class="fas fa-heart text-red-600 text-2xl mx-1 survival-life-heart"></i>';
 
         contentArea.innerHTML = `
-            <div class="flex justify-between items-center mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div class="survival-arena">
+            <div class="survival-status-bar">
                 <div class="flex items-center">${hearts}</div>
-                <div class="text-xl font-bold text-blue-600 dark:text-blue-400">Pontos: ${survivalScore}</div>
+                <div>Pontos: <strong>${survivalScore}</strong></div>
             </div>
-            <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg animate-fade-in">
-                <p class="font-bold text-lg mb-6 text-gray-800 dark:text-white">Questão ${currentSurvivalIndex + 1}: ${q.question}</p>
-                <div class="space-y-3">
+            <div class="survival-question-card animate-fade-in">
+                <span>Questão ${currentSurvivalIndex + 1}</span>
+                <p>${q.question}</p>
+                <div class="survival-options-grid">
                     ${Object.keys(q.options).map(key => `
-                        <button class="w-full text-left p-4 rounded border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors survival-option" data-key="${key}">
-                            <span class="font-bold text-orange-500 mr-2">${key.toUpperCase()})</span> ${q.options[key]}
+                        <button class="survival-option" data-key="${key}">
+                            <span>${key.toUpperCase()}</span> ${q.options[key]}
                         </button>
                     `).join('')}
                 </div>
+            </div>
             </div>
         `;
 
@@ -1202,11 +1378,12 @@ window.manageUserAccess = async function(uid) {
 
         let html = `
             <div class="max-w-2xl mx-auto animate-fade-in">
-                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div class="rpg-scene-panel">
                     ${scene.image ? `<img src="${scene.image}" class="w-full h-48 object-cover">` : ''}
-                    <div class="p-6">
-                        <p class="text-lg text-gray-800 dark:text-gray-200 mb-6 leading-relaxed">${scene.text}</p>
-                        <div class="space-y-3">
+                    <div class="rpg-scene-body">
+                        <span><i class="fas fa-radio"></i> Decisão operacional</span>
+                        <p>${scene.text}</p>
+                        <div class="rpg-choice-stack">
         `;
 
         scene.options.forEach(opt => {
@@ -1221,9 +1398,9 @@ window.manageUserAccess = async function(uid) {
         contentArea.innerHTML = html;
 
         if(scene.type === 'death') {
-            contentArea.querySelector('.bg-white').classList.add('border-red-500', 'border-2');
+            contentArea.querySelector('.rpg-scene-panel')?.classList.add('danger');
         } else if(scene.type === 'win') {
-            contentArea.querySelector('.bg-white').classList.add('border-green-500', 'border-2');
+            contentArea.querySelector('.rpg-scene-panel')?.classList.add('success');
             if(typeof confetti === 'function') confetti();
         }
 
@@ -1346,7 +1523,7 @@ window.manageUserAccess = async function(uid) {
 
         // --- 4. TIMER STICKY (HTML ATUALIZADO) ---
         contentArea.innerHTML = `
-            <div class="pt-4 pb-12 relative">
+            <div class="simulado-pro-page">
                 
                 <div id="simulado-timer-bar" class="simulado-floating-timer">
                     <i class="fas fa-clock text-orange-500"></i>
@@ -1355,16 +1532,17 @@ window.manageUserAccess = async function(uid) {
                     <span class="text-xs text-gray-300">Questão <span id="q-current">1</span>/${activeSimuladoQuestions.length}</span>
                 </div>
                 
-                <div class="mt-4 mb-8 text-center px-4">
-                     <h3 class="text-2xl md:text-3xl font-bold text-blue-900 dark:text-white border-b-2 border-orange-500 inline-block pb-2">
+                <div class="simulado-pro-hero">
+                     <span><i class="fas fa-clipboard-check"></i> Simulados por Matéria</span>
+                     <h3>
                         ${moduleData.title}
                      </h3>
-                     <p class="text-sm text-gray-500 mt-3"><i class="fas fa-info-circle"></i> Modo Prova: O resultado sai ao final.</p>
+                     <p>Modo prova com tempo, navegação por questão e gabarito comentado ao final.</p>
                 </div>
 
                 <div id="question-display-area" class="simulado-question-container"></div>
                 
-                <div class="mt-8 flex justify-between items-center px-2">
+                <div class="simulado-nav-row">
                     <button id="sim-prev-btn" class="action-button bg-gray-600" style="visibility: hidden;">
                         <i class="fas fa-arrow-left mr-2"></i> Anterior
                     </button>
@@ -1397,14 +1575,14 @@ window.manageUserAccess = async function(uid) {
         const savedAnswer = userAnswers[index] || null; 
         
         let html = `
-            <div class="bg-gray-100 dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-800 animate-slide-in">
-                <div class="flex items-start mb-6">
-                    <div class="w-1 h-8 bg-orange-500 mr-3 mt-1 rounded"></div>
-                    <p class="font-bold text-lg text-gray-800 dark:text-white leading-relaxed">
+            <div class="simulado-question-card animate-slide-in">
+                <div class="simulado-question-title">
+                    <div>${String(index + 1).padStart(2, '0')}</div>
+                    <p>
                         ${q.question}
                     </p>
                 </div>
-                <div class="space-y-3">
+                <div class="simulado-options-stack">
         `;
         
         for (const key in q.options) {
@@ -1428,10 +1606,10 @@ window.manageUserAccess = async function(uid) {
         prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
         if (index === activeSimuladoQuestions.length - 1) {
             nextBtn.innerHTML = '<i class="fas fa-check-double mr-2"></i> ENTREGAR';
-            nextBtn.className = "sim-nav-btn bg-green-600 text-white hover:bg-green-500 shadow-lg transform hover:scale-105 transition-transform px-6 py-2 rounded font-bold";
+            nextBtn.className = "sim-nav-btn sim-submit-btn";
         } else {
             nextBtn.innerHTML = 'Próxima <i class="fas fa-arrow-right ml-2"></i>';
-            nextBtn.className = "sim-nav-btn bg-blue-600 text-white hover:bg-blue-500 px-6 py-2 rounded font-bold";
+            nextBtn.className = "sim-nav-btn sim-next-btn";
         }
     }
 
@@ -1683,11 +1861,94 @@ window.manageUserAccess = async function(uid) {
             btn.parentNode.replaceChild(newBtn, btn);
             newBtn.addEventListener('click', () => { loadModuleContent('module1'); });
         }
+        const continueBtn = document.getElementById('continue-course');
+        continueBtn?.addEventListener('click', () => loadModuleContent(continueBtn.dataset.module || 'module1'));
+
+        document.querySelectorAll('[data-open-module]').forEach(button => {
+            button.addEventListener('click', () => loadModuleContent(button.dataset.openModule || 'module1'));
+        });
+
+        document.querySelector('[data-quick-action="modules"]')?.addEventListener('click', () => {
+            if (window.innerWidth < 1024) openSidebar();
+            else document.querySelector('.sidebar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        document.getElementById('student-open-payment')?.addEventListener('click', () => {
+            document.getElementById('expired-modal')?.classList.add('show');
+            document.getElementById('name-modal-overlay')?.classList.add('show');
+        });
+
+        document.getElementById('restart-tour-inline')?.addEventListener('click', () => startOnboardingTour(true));
         updateBreadcrumbs();
     }
 
     function getWelcomeContent() {
-        return `<div class="text-center py-8"><div class="floating inline-block p-5 bg-red-100 dark:bg-red-900/50 rounded-full mb-6"><i class="fas fa-fire-extinguisher text-6xl text-red-600"></i></div><h2 class="text-4xl font-bold mb-4 text-blue-900 dark:text-white">Torne-se um Bombeiro de Elite</h2><p class="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">Bem-vindo ao <strong class="font-bold text-orange-500 dark:text-orange-400">Curso de Formação para Bombeiro Civil e Brigadista</strong>.</p><button id="start-course" class="action-button pulse text-lg"><i class="fas fa-play-circle mr-2"></i> Iniciar Curso Agora</button></div>`;
+        const stats = getLearningStats();
+        const userName = (currentUserData?.name || 'Aluno').split(' ')[0];
+        const continueId = stats.lastModuleId && moduleContent[stats.lastModuleId] ? stats.lastModuleId : stats.nextModuleId;
+        const continueTitle = stats.lastModule?.title || stats.nextModule?.title || 'Primeiro módulo';
+        const nextTitle = stats.nextModule?.title || 'Curso concluído';
+        const courseLabel = currentUserData?.courseType === 'SP' ? 'Segurança Patrimonial' : 'Bombeiro Civil e Brigadista';
+
+        return `
+            <section class="student-home">
+                <div class="student-home-hero">
+                    <div>
+                        <span class="student-eyebrow"><i class="fas fa-shield-alt"></i> ${courseLabel}</span>
+                        <h2>Olá, ${userName}. Vamos continuar sua evolução?</h2>
+                        <p>Seu painel está pronto com o próximo passo, desempenho e atalhos para estudar sem perder tempo.</p>
+                        <div class="student-hero-actions">
+                            <button id="continue-course" data-module="${continueId}" class="action-button">
+                                <i class="fas fa-play-circle mr-2"></i> Continuar de onde parei
+                            </button>
+                            <button id="start-course" class="secondary-action-button">
+                                <i class="fas fa-list-ul mr-2"></i> Ver primeiro módulo
+                            </button>
+                        </div>
+                    </div>
+                    <div class="student-progress-ring" style="--progress:${stats.percent * 3.6}deg">
+                        <span>${stats.percent}%</span>
+                        <small>concluído</small>
+                    </div>
+                </div>
+
+                <div class="student-dashboard-grid">
+                    <article class="student-stat-card">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                        <span>Módulos concluídos</span>
+                        <strong>${stats.doneCount}/${stats.total}</strong>
+                    </article>
+                    <article class="student-stat-card">
+                        <i class="fas fa-route text-orange-500"></i>
+                        <span>Restantes</span>
+                        <strong>${stats.remaining}</strong>
+                    </article>
+                    <article class="student-stat-card">
+                        <i class="fas fa-medal text-yellow-500"></i>
+                        <span>Conquistas</span>
+                        <strong>${stats.achievementCount}</strong>
+                    </article>
+                </div>
+
+                <div class="student-next-panel">
+                    <div>
+                        <span class="student-eyebrow"><i class="fas fa-book-reader"></i> Próximo foco</span>
+                        <h3>${nextTitle}</h3>
+                        <p>Recomendação: conclua o próximo módulo e faça os exercícios de fixação logo em seguida.</p>
+                    </div>
+                    <button class="secondary-action-button" data-open-module="${stats.nextModuleId}">
+                        <i class="fas fa-arrow-right mr-2"></i> Abrir próximo
+                    </button>
+                </div>
+
+                <div class="student-quick-actions">
+                    <button data-quick-action="modules"><i class="fas fa-layer-group"></i><span>Módulos</span></button>
+                    <button data-open-module="${stats.nextModuleId}"><i class="fas fa-pencil-alt"></i><span>Exercícios</span></button>
+                    <button id="student-open-payment"><i class="fas fa-crown"></i><span>Planos</span></button>
+                    <button id="restart-tour-inline"><i class="fas fa-circle-question"></i><span>Tutorial</span></button>
+                </div>
+            </section>
+        `;
     }
 
     function setupProtection() {
@@ -1764,7 +2025,28 @@ window.manageUserAccess = async function(uid) {
     // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM CONTADORES E SEGURANÇA ACL ---
     // --- FUNÇÃO ATUALIZADA: LISTA DE MÓDULOS COM SUPORTE A CATEGORIAS SP ---
     function getModuleListHTML() {
-        let html = `<h2 class="text-2xl font-semibold mb-5 flex items-center text-blue-900 dark:text-white"><i class="fas fa-list-ul mr-3 text-orange-500"></i> Conteúdo do Curso</h2><div class="mb-4 relative"><input type="text" class="module-search w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700" placeholder="Buscar módulo..."><i class="fas fa-search absolute right-3 top-3.5 text-gray-400"></i></div><div class="module-accordion-container space-y-2">`;
+        let html = `
+            <div class="module-sidebar-header">
+                <div>
+                    <h2><i class="fas fa-list-ul"></i> Conteúdo do Curso</h2>
+                    <p>Escolha uma aula ou continue pelo seu progresso.</p>
+                </div>
+            </div>
+            <div class="module-search-shell">
+                <i class="fas fa-search"></i>
+                <input type="text" class="module-search" placeholder="Buscar módulo...">
+                <button type="button" class="module-search-clear" title="Limpar busca"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="module-search-meta">
+                <span class="module-search-count">Mostrando todos os módulos</span>
+            </div>
+            <div class="module-empty-state hidden">
+                <i class="fas fa-magnifying-glass"></i>
+                <strong>Nenhum módulo encontrado</strong>
+                <span>Tente buscar por outro termo.</span>
+            </div>
+            <div class="module-accordion-container space-y-2">
+        `;
         
         for (const k in moduleCategories) {
             const cat = moduleCategories[k];
@@ -1806,7 +2088,17 @@ window.manageUserAccess = async function(uid) {
             // Se a categoria estiver vazia para este aluno, não desenha o botão dela
             if (catTotal === 0 && !isManager) continue; 
 
-            html += `<div><button class="accordion-button"><span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title} ${lockIcon}</span> <span class="module-count">${catCompleted}/${catTotal}</span> <i class="fas fa-chevron-down"></i></button><div class="accordion-panel">`;
+            const catPercent = catTotal ? Math.round((catCompleted / catTotal) * 100) : 0;
+            html += `
+                <div class="module-category">
+                    <button class="accordion-button">
+                        <span><i class="${cat.icon} w-6 mr-2 text-gray-500"></i>${cat.title} ${lockIcon}</span>
+                        <span class="module-count">${catCompleted}/${catTotal}</span>
+                        <i class="fas fa-chevron-down"></i>
+                        <span class="category-progress" style="width:${catPercent}%"></span>
+                    </button>
+                    <div class="accordion-panel">
+            `;
             
             // --- GERAÇÃO DA LISTA DE MÓDULOS ---
             for (let i = cat.range[0]; i <= cat.range[1]; i++) {
@@ -1823,7 +2115,17 @@ window.manageUserAccess = async function(uid) {
 
                     const isDone = Array.isArray(completedModules) && completedModules.includes(m.id);
                     const itemLock = isLocked ? '<i class="fas fa-lock text-xs text-gray-400 ml-2"></i>' : '';
-                    html += `<div class="module-list-item${isDone ? ' completed' : ''}" data-module="${m.id}"><i class="${m.iconClass} module-icon"></i><span style="flex:1">${m.title} ${itemLock}</span>${isDone ? '<i class="fas fa-check-circle completion-icon" aria-hidden="true"></i>' : ''}</div>`;
+                    const moduleNumber = String(i).padStart(2, '0');
+                    const statusLabel = isDone ? 'Concluído' : (isLocked ? 'Premium' : 'Disponível');
+                    html += `
+                        <div class="module-list-item${isDone ? ' completed' : ''}${isLocked ? ' locked' : ''}" data-module="${m.id}" data-status="${statusLabel}">
+                            <span class="module-number">${moduleNumber}</span>
+                            <i class="${m.iconClass} module-icon"></i>
+                            <span class="module-item-title">${m.title} ${itemLock}</span>
+                            <span class="module-status-pill">${statusLabel}</span>
+                            ${isDone ? '<i class="fas fa-check-circle completion-icon" aria-hidden="true"></i>' : ''}
+                        </div>
+                    `;
                 }
             }
             html += `</div></div>`;
@@ -1845,7 +2147,24 @@ window.manageUserAccess = async function(uid) {
             }
 
             if (showAchievement) {
-                html += `<div id="ach-cat-${key}" class="achievement-card" title="Conclua a área para ganhar: ${cat.achievementTitle}"><div class="achievement-icon"><i class="${cat.icon}"></i></div><p class="achievement-title">${cat.achievementTitle}</p></div>`;
+                const prefix = cat.isSP ? 'sp_module' : 'module';
+                let achTotal = 0;
+                let achDone = 0;
+                for (let i = cat.range[0]; i <= cat.range[1]; i++) {
+                    const mid = `${prefix}${i}`;
+                    if (!moduleContent[mid]) continue;
+                    achTotal++;
+                    if (completedModules.includes(mid)) achDone++;
+                }
+                const achPercent = achTotal ? Math.round((achDone / achTotal) * 100) : 0;
+                html += `
+                    <div id="ach-cat-${key}" class="achievement-card" title="Conclua a área para ganhar: ${cat.achievementTitle}">
+                        <div class="achievement-icon"><i class="${cat.icon}"></i></div>
+                        <p class="achievement-title">${cat.achievementTitle}</p>
+                        <div class="achievement-progress"><span style="width:${achPercent}%"></span></div>
+                        <small>${achDone}/${achTotal} módulos</small>
+                    </div>
+                `;
             }
         }
         html += `</div></div>`;
@@ -1853,12 +2172,16 @@ window.manageUserAccess = async function(uid) {
     }
 
     function updateProgress() {
-        // CORREÇÃO: Check para evitar divisão por zero
-        if (totalModules === 0) return;
-        
-        const p = (completedModules.length / totalModules) * 100;
+        const visibleIds = getVisibleModuleIds();
+        if (visibleIds.length === 0) return;
+        const visibleCompleted = visibleIds.filter(id => completedModules.includes(id));
+        const visibleTotal = visibleIds.length;
+        totalModules = visibleTotal;
+        const p = Math.min(100, (visibleCompleted.length / visibleTotal) * 100);
         document.getElementById('progress-text').textContent = `${p.toFixed(0)}%`;
-        document.getElementById('completed-modules-count').textContent = completedModules.length;
+        document.getElementById('completed-modules-count').textContent = visibleCompleted.length;
+        document.getElementById('total-modules').textContent = visibleTotal;
+        document.getElementById('course-modules-count').textContent = visibleTotal;
         if (document.getElementById('progress-bar-minimal')) {
             document.getElementById('progress-bar-minimal').style.width = `${p}%`;
         }
@@ -1867,7 +2190,7 @@ window.manageUserAccess = async function(uid) {
         // Atualiza contadores do sidebar
         populateModuleLists(); 
         
-        if (totalModules > 0 && completedModules.length === totalModules) showCongratulations();
+        if (visibleTotal > 0 && visibleCompleted.length === visibleTotal) showCongratulations();
     }
 
     function showCongratulations() {
@@ -1876,11 +2199,7 @@ window.manageUserAccess = async function(uid) {
         if(typeof confetti === 'function') confetti({particleCount:150, spread:90, origin:{y:0.6},zIndex:200});
     }
     function showAchievementToast(title) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.innerHTML = `<i class="fas fa-trophy"></i><div><p class="font-bold">Módulo Concluído!</p><p class="text-sm">${title}</p></div>`;
-        if (toastContainer) toastContainer.appendChild(toast);
-        setTimeout(() => toast.remove(), 4500);
+        showAppToast('Módulo concluído', title, 'success');
     }
     function updateModuleListStyles() {
         document.querySelectorAll('.module-list-item').forEach(i => i.classList.toggle('completed', completedModules.includes(i.dataset.module)));
@@ -2111,6 +2430,20 @@ if (managerPanelBtn) {
         console.log("🔓 Botão de gestor clicado!");
         openManagerPanel();
     });
+    // Lógica da busca Admin
+document.getElementById('admin-search-input')?.addEventListener('input', function(e) {
+    window.filterAdminTable();
+});
+
+// Lógica da busca Gestor
+document.getElementById('manager-search-input')?.addEventListener('input', function(e) {
+    window.filterManagerTable();
+});
+
+// Ligar o botão de biometria
+document.getElementById('btn-biometric-login')?.addEventListener('click', () => {
+    FirebaseCourse.loginWithBiometrics();
+});
 }
 
 // --- NOVO: Botão Manual de Salvar Progresso (Rodapé) ---
@@ -2123,9 +2456,9 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
 
     try {
         await window.saveProgressToCloud(); // Chama a função blindada que já criamos
-        alert("✅ Sucesso!\nSeu progresso foi salvo na nuvem.");
+        showAppToast('Progresso salvo', 'Sua evolução foi sincronizada na nuvem.', 'success');
     } catch (error) {
-        alert("❌ Erro ao salvar: " + error.message);
+        showAppToast('Erro ao salvar', error.message, 'error');
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -2151,15 +2484,20 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
         // 2. Busca
         document.body.addEventListener('input', e => {
             if(e.target.matches('.module-search')) {
-                const s = e.target.value.toLowerCase();
-                const container = e.target.closest('div.relative');
-                if (container) {
-                    const accordionContainer = container.nextElementSibling;
+                const s = normalizeSearchText(e.target.value);
+                const root = e.target.closest('#desktop-module-container, #mobile-module-container');
+                if (root) {
+                    const accordionContainer = root.querySelector('.module-accordion-container');
+                    const countEl = root.querySelector('.module-search-count');
+                    const emptyEl = root.querySelector('.module-empty-state');
                     if (accordionContainer) {
-                            accordionContainer.querySelectorAll('.module-list-item').forEach(i => {
-                            const text = i.textContent.toLowerCase();
+                        let visibleCount = 0;
+                        const allItems = accordionContainer.querySelectorAll('.module-list-item');
+                        allItems.forEach(i => {
+                            const text = normalizeSearchText(i.textContent);
                             const match = text.includes(s);
                             i.style.display = match ? 'flex' : 'none';
+                            if (match) visibleCount++;
                             if(match && s.length > 0) {
                                 const panel = i.closest('.accordion-panel');
                                 const btn = panel.previousElementSibling;
@@ -2169,6 +2507,12 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
                                 }
                             }
                         });
+                        if (countEl) {
+                            countEl.textContent = s.length > 0
+                                ? `${visibleCount} resultado${visibleCount === 1 ? '' : 's'} encontrado${visibleCount === 1 ? '' : 's'}`
+                                : 'Mostrando todos os módulos';
+                        }
+                        emptyEl?.classList.toggle('hidden', visibleCount > 0 || s.length === 0);
                         if(s.length === 0) {
                             accordionContainer.querySelectorAll('.accordion-button').forEach(btn => {
                                 btn.classList.remove('active');
@@ -2178,6 +2522,17 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
                     }
                 }
             }
+        });
+
+        document.body.addEventListener('click', e => {
+            const clearBtn = e.target.closest('.module-search-clear');
+            if (!clearBtn) return;
+            const root = clearBtn.closest('#desktop-module-container, #mobile-module-container');
+            const input = root?.querySelector('.module-search');
+            if (!input) return;
+            input.value = '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.focus();
         });
 
         // 3. Admin Panel (Correção Mobile)
@@ -2289,47 +2644,55 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
         document.getElementById('close-congrats')?.addEventListener('click', () => { document.getElementById('congratulations-modal').classList.remove('show'); document.getElementById('modal-overlay').classList.remove('show'); });
         closeAchButton?.addEventListener('click', hideAchievementModal);
         achievementOverlay?.addEventListener('click', hideAchievementModal);
+        setupIamWidget();
     }
 // ... (restante do código anterior) ...
 
-   // --- 6. LIMITE IA (CORREÇÃO DE SEGURANÇA) ---
-    function initVoiceflowLimit() {
-        // Verifica se o chat existe antes de tentar monitorar
-        if (!window.voiceflow || !window.voiceflow.chat || typeof window.voiceflow.chat.on !== 'function') {
-            // Se não carregou ainda, tenta de novo em 3 segundos (até 5 vezes)
-            let attempts = 0;
-            const retry = setInterval(() => {
-                attempts++;
-                if (window.voiceflow && window.voiceflow.chat && typeof window.voiceflow.chat.on === 'function') {
-                    setupVoiceflowListener();
-                    clearInterval(retry);
-                }
-                if (attempts > 5) clearInterval(retry); // Desiste sem quebrar o site
-            }, 3000);
-            return;
-        }
-        setupVoiceflowListener();
-    }
+   // --- 6. IAM - INTELIGÊNCIA ARTIFICIAL MEDEIROS ---
+    function setupIamWidget() {
+        const widget = document.getElementById('iam-ai-widget');
+        const launcher = document.getElementById('iam-ai-launcher');
+        const closeBtn = document.getElementById('iam-ai-close');
+        const frame = document.getElementById('iam-ai-frame');
 
-    function setupVoiceflowListener() {
-        window.voiceflow.chat.on('user:message', () => {
+        if (!widget || !launcher || launcher.dataset.bound === 'true') return;
+        launcher.dataset.bound = 'true';
+
+        const closeIam = () => {
+            widget.classList.remove('open');
+            launcher.setAttribute('aria-expanded', 'false');
+        };
+
+        const openIam = () => {
             const today = new Date().toLocaleDateString();
             const key = `ai_usage_${today}`;
-            let count = parseInt(localStorage.getItem(key) || '0') + 1;
-            localStorage.setItem(key, count);
+            let count = parseInt(window.localStorage?.getItem(key) || '0') + 1;
 
             const isPremium = currentUserData && currentUserData.status === 'premium';
             const limit = isPremium ? 50 : 5; 
 
             if (count > limit) {
-                alert(`⚠️ Limite diário de IA atingido (${limit} perguntas).\nAssine o Premium para continuar.`);
-                const chatDiv = document.getElementById('voiceflow-chat');
-                if(chatDiv) chatDiv.style.display = 'none';
+                showAppToast('Limite diário da IAM atingido', `Seu plano permite ${limit} aberturas por dia.`, 'warning');
+                document.getElementById('expired-modal')?.classList.add('show');
+                document.getElementById('name-modal-overlay')?.classList.add('show');
+                return;
             }
+
+            window.localStorage?.setItem(key, count);
+            widget.classList.add('open');
+            launcher.setAttribute('aria-expanded', 'true');
+            if (frame && !frame.src) frame.src = 'https://iam-intelig-ncia-artificial-medeiros-801400632400.us-west2.run.app/';
+        };
+
+        launcher.addEventListener('click', () => {
+            if (widget.classList.contains('open')) closeIam();
+            else openIam();
+        });
+        closeBtn?.addEventListener('click', closeIam);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeIam();
         });
     }
-    // Inicia monitoramento
-    setTimeout(initVoiceflowLimit, 5000);
 
    // --- 7. TOUR GUIADO (ONBOARDING - AJUSTE FINAL MOBILE/DESKTOP) ---
     function startOnboardingTour(isManual = false) {
@@ -2356,10 +2719,10 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
                     } 
                 },
                 { 
-                    element: '#voiceflow-chat', 
+                    element: '#iam-ai-launcher', 
                     popover: { 
-                        title: '2. BravoGPT (IA)', 
-                        description: 'Tire dúvidas com nossa Inteligência Artificial, dedicada a você.', 
+                        title: '2. IAM (IA)', 
+                        description: 'Tire dúvidas com a Inteligência Artificial Medeiros.', 
                         // AJUSTE 1: No celular, o balão fica EM CIMA (top) para não cobrir o rodapé
                         // No desktop, fica à DIREITA (right)
                         side: isMobile ? "top" : "right", 
@@ -2455,7 +2818,7 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
     // --- FUNÇÃO PIX ---
     window.copyPixKey = function(key) {
         navigator.clipboard.writeText(key).then(() => {
-            alert("Chave PIX copiada: " + key);
+            showAppToast('Chave PIX copiada', key, 'success');
         }).catch(err => {
             prompt("Copie a chave manualmente:", key);
         });
@@ -2683,6 +3046,7 @@ if (filterSelect) {
 
 // 2. Função de Filtro Inteligente
 window.filterManagerTable = function() {
+    const input = document.getElementById('manager-search-input');
     const select = document.getElementById('mgr-filter-turma');
     const selectedTurma = select ? select.value : 'TODOS';
     
@@ -2694,6 +3058,10 @@ window.filterManagerTable = function() {
         filteredList = window.managerCachedUsers.filter(u => u.company === selectedTurma);
     }
 
+    if (input && input.value) {
+        filteredList = filteredList.filter(u => userMatchesSearch(u, input.value));
+    }
+
     renderManagerTable(filteredList);
 };
 
@@ -2701,10 +3069,6 @@ window.filterManagerTable = function() {
 window.renderManagerTable = function(usersList) {
     const tbody = document.getElementById('manager-table-body');
     if (!tbody) return;
-
-    const totalCourseModules = (window.moduleContent && Object.keys(window.moduleContent).length > 0) 
-        ? Object.keys(window.moduleContent).length 
-        : 62;
 
     let html = '';
     let stats = { total: 0, completed: 0, progress: 0, pending: 0 };
@@ -2723,12 +3087,9 @@ window.renderManagerTable = function(usersList) {
                 ? Object.keys(u.completedModules)   // caso salvo como objeto {id:true}
                 : []);
 
-        const modulesDone = completedArr.length;
-
-        // Garante total de módulos consistente
-        const total = (window.moduleContent && Object.keys(window.moduleContent).length > 0)
-            ? Object.keys(window.moduleContent).length
-            : totalCourseModules;
+        const userVisibleModules = getVisibleModuleIds(u);
+        const total = userVisibleModules.length || 1;
+        const modulesDone = userVisibleModules.filter(id => completedArr.includes(id)).length;
 
         let percent = 0;
         if (total > 0) {
@@ -2774,7 +3135,7 @@ window.renderManagerTable = function(usersList) {
                         <button onclick="editUserClass('${u.uid}', '${turma}')" class="text-gray-300 hover:text-blue-500 opacity-0 group-hover:opacity-100"><i class="fas fa-pencil-alt"></i></button>
                     </div>
                 </td>
-                <td class="px-4 py-3" title="${modulesDone}/${totalCourseModules}">
+                <td class="px-4 py-3" title="${modulesDone}/${total}">
                     <div class="flex items-center w-full max-w-[140px]">
                         <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2 overflow-hidden">
                             <div class="${progressColor} h-2 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
@@ -2983,6 +3344,13 @@ window.clearLocalUserData = function() {
     if (progressText) progressText.textContent = '0%';
     if (progressBar) progressBar.style.width = '0%';
     if (welcome) welcome.textContent = 'Bem-vindo,';
+    const iamWidget = document.getElementById('iam-ai-widget');
+    const iamLauncher = document.getElementById('iam-ai-launcher');
+    if (iamWidget) {
+        iamWidget.classList.add('hidden');
+        iamWidget.classList.remove('open');
+    }
+    if (iamLauncher) iamLauncher.setAttribute('aria-expanded', 'false');
 
     // 4. Reseta checkbox visual da lista
     document.querySelectorAll('.module-list-item').forEach(item => {
@@ -3095,5 +3463,6 @@ window.clearLocalUserData = function() {
         });
     })();
     
+    setupIamWidget();
     init(); // <--- Inicia o app
 }); // <--- Fecha o DOMContentLoaded

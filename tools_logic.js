@@ -2,6 +2,114 @@
 
 (function(){
     window.ToolsApp = window.ToolsApp || {};
+    const ToolsApp = window.ToolsApp;
+    window.ToolsApp.toast = function(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `toast app-toast app-toast-${type}`;
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-circle-info'}"></i><div><p class="font-bold">${message}</p></div>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 4200);
+    };
+
+    // =================================================================
+    // 0. CHECKLIST DE PLANTÃO
+    // =================================================================
+    window.ToolsApp.renderChecklist = function(container) {
+        const defaults = [
+            'Uniforme e EPI conferidos',
+            'Rádio/celular carregado',
+            'Escala e posto confirmados',
+            'Kit de primeiros socorros verificado',
+            'Extintores/rotas observados',
+            'Registro de passagem anotado'
+        ];
+        const saved = JSON.parse(localStorage.getItem('tool_checklist_v1')) || defaults.map(text => ({ text, done: false }));
+        localStorage.setItem('tool_checklist_v1', JSON.stringify(saved));
+
+        container.innerHTML += `
+            <div class="tool-card tool-card-featured">
+                <h3 class="tool-title"><i class="fas fa-clipboard-check text-emerald-500"></i> Checklist de Plantão</h3>
+                <p class="tool-helper">Use antes de sair para o serviço ou ao assumir posto.</p>
+                <div id="checklist-progress" class="tool-progress"><span></span></div>
+                <ul id="checklist-list" class="space-y-2 mt-4"></ul>
+                <div class="flex gap-2 mt-4">
+                    <input id="checklist-new" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:text-white text-sm" placeholder="Adicionar item...">
+                    <button onclick="ToolsApp.addChecklistItem()" class="tool-icon-btn bg-emerald-600 hover:bg-emerald-500 text-white" title="Adicionar"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="mt-3 flex justify-between items-center">
+                    <button onclick="ToolsApp.resetChecklist()" class="text-xs text-blue-500 hover:text-blue-700 font-bold"><i class="fas fa-rotate-left mr-1"></i> Reiniciar</button>
+                    <button onclick="ToolsApp.clearChecklist()" class="text-xs text-red-500 hover:text-red-700 font-bold"><i class="fas fa-trash-alt mr-1"></i> Limpar</button>
+                </div>
+            </div>
+        `;
+        setTimeout(ToolsApp.updateChecklist, 100);
+    };
+
+    window.ToolsApp.getChecklist = function() {
+        return JSON.parse(localStorage.getItem('tool_checklist_v1')) || [];
+    };
+
+    window.ToolsApp.saveChecklist = function(items) {
+        localStorage.setItem('tool_checklist_v1', JSON.stringify(items));
+        ToolsApp.updateChecklist();
+    };
+
+    window.ToolsApp.updateChecklist = function() {
+        const list = document.getElementById('checklist-list');
+        const bar = document.querySelector('#checklist-progress span');
+        if (!list) return;
+        const items = ToolsApp.getChecklist();
+        const done = items.filter(item => item.done).length;
+        const percent = items.length ? Math.round((done / items.length) * 100) : 0;
+        if (bar) bar.style.width = `${percent}%`;
+        list.innerHTML = items.length ? items.map((item, index) => `
+            <li class="checklist-row ${item.done ? 'done' : ''}">
+                <button onclick="ToolsApp.toggleChecklist(${index})" class="checklist-check" title="Marcar item">
+                    <i class="fas ${item.done ? 'fa-check-circle' : 'fa-circle'}"></i>
+                </button>
+                <span>${item.text}</span>
+                <button onclick="ToolsApp.removeChecklistItem(${index})" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
+            </li>
+        `).join('') : '<li class="p-3 text-center text-gray-400 text-sm italic">Nenhum item no checklist.</li>';
+    };
+
+    window.ToolsApp.toggleChecklist = function(index) {
+        const items = ToolsApp.getChecklist();
+        if (!items[index]) return;
+        items[index].done = !items[index].done;
+        ToolsApp.saveChecklist(items);
+    };
+
+    window.ToolsApp.addChecklistItem = function() {
+        const input = document.getElementById('checklist-new');
+        const value = input?.value.trim();
+        if (!value) return;
+        const items = ToolsApp.getChecklist();
+        items.push({ text: value, done: false });
+        input.value = '';
+        ToolsApp.saveChecklist(items);
+    };
+
+    window.ToolsApp.removeChecklistItem = function(index) {
+        const items = ToolsApp.getChecklist();
+        items.splice(index, 1);
+        ToolsApp.saveChecklist(items);
+    };
+
+    window.ToolsApp.resetChecklist = function() {
+        const items = ToolsApp.getChecklist().map(item => ({ ...item, done: false }));
+        ToolsApp.saveChecklist(items);
+        ToolsApp.toast('Checklist reiniciado');
+    };
+
+    window.ToolsApp.clearChecklist = function() {
+        if(confirm('Apagar todos os itens do checklist?')) {
+            localStorage.removeItem('tool_checklist_v1');
+            ToolsApp.updateChecklist();
+        }
+    };
 
     // =================================================================
     // 1. PONTO ELETRÔNICO
@@ -346,7 +454,8 @@
     };
 
     window.ToolsApp.setWaterGoal = function(val) {
-        let data = JSON.parse(localStorage.getItem('tool_water_v4'));
+        const today = new Date().toLocaleDateString();
+        let data = JSON.parse(localStorage.getItem('tool_water_v4')) || { date: today, count: 0, goal: 3000 };
         data.goal = parseInt(val);
         localStorage.setItem('tool_water_v4', JSON.stringify(data));
         ToolsApp.updateWaterUI(data);
@@ -423,13 +532,655 @@
     // 6. Planejador
     window.ToolsApp.renderPlanner = function(c) {
        const t=localStorage.getItem('tool_planner')||'';
-       c.innerHTML+=`<div class="tool-card"><h3 class="tool-title"><i class="fas fa-book text-indigo-500"></i> Planejador</h3><textarea id="pl-t" class="w-full h-24 p-2 border rounded dark:bg-gray-700 dark:text-white text-xs resize-none" placeholder="Escreva suas metas...">${t}</textarea><div class="flex justify-between mt-2"><button onclick="ToolsApp.clearPlanner()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Limpar Texto</button><button onclick="localStorage.setItem('tool_planner',document.getElementById('pl-t').value);alert('Salvo!')" class="bg-indigo-600 hover:bg-indigo-500 text-white py-1 px-3 rounded text-xs font-bold shadow">Salvar</button></div></div>`;
+       c.innerHTML+=`<div class="tool-card"><h3 class="tool-title"><i class="fas fa-book text-indigo-500"></i> Planejador</h3><p class="tool-helper">Metas de estudo, pendências de plantão ou plano da semana.</p><textarea id="pl-t" class="w-full h-28 p-3 border rounded dark:bg-gray-700 dark:text-white text-sm resize-none" placeholder="Ex: revisar APH, separar EPI, confirmar escala...">${t}</textarea><div class="flex justify-between mt-2"><button onclick="ToolsApp.clearPlanner()" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors"><i class="fas fa-trash-alt mr-1"></i> Limpar Texto</button><button onclick="ToolsApp.savePlanner()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 px-3 rounded text-xs font-bold shadow"><i class="fas fa-save mr-1"></i> Salvar</button></div></div>`;
+    };
+    window.ToolsApp.savePlanner = function() {
+        localStorage.setItem('tool_planner', document.getElementById('pl-t').value);
+        ToolsApp.toast('Planejador salvo');
     };
     window.ToolsApp.clearPlanner = function() {
         if(confirm('Limpar o texto do planejador?')) {
             localStorage.removeItem('tool_planner');
             document.getElementById('pl-t').value = '';
         }
+    };
+
+    // =================================================================
+    // 7. CENTRAL PROFISSIONAL - 20 FERRAMENTAS
+    // =================================================================
+    const toolStore = {
+        get(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+            catch (e) { return fallback; }
+        },
+        set(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+    };
+
+    const getUser = () => (typeof window.__getCurrentUserData === 'function' ? window.__getCurrentUserData() : null) || {};
+    const toolValue = id => (document.getElementById(id)?.value || '').trim();
+    const setToolOutput = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+    };
+    const copyToolOutput = async id => {
+        const value = document.getElementById(id)?.value || document.getElementById(id)?.innerText || '';
+        if (!value.trim()) return ToolsApp.toast('Nada para copiar', 'info');
+        try {
+            await navigator.clipboard.writeText(value);
+            ToolsApp.toast('Texto copiado');
+        } catch (e) {
+            ToolsApp.toast('Selecione e copie manualmente', 'info');
+        }
+    };
+    window.ToolsApp.copyToolOutput = copyToolOutput;
+    window.ToolsApp.openIamAssistant = function() {
+        const launcher = document.getElementById('iam-ai-launcher');
+        const widget = document.getElementById('iam-ai-widget');
+        const panel = document.getElementById('iam-ai-panel');
+        if (widget) widget.classList.remove('hidden');
+        if (panel && widget) {
+            widget.classList.add('open');
+            launcher?.setAttribute('aria-expanded', 'true');
+            return;
+        }
+        launcher?.click();
+    };
+
+    function toolShell(id, icon, title, subtitle, body, extraClass = '') {
+        return `
+            <article class="tool-card pro-tool ${extraClass}" id="${id}">
+                <div class="pro-tool-head">
+                    <div class="pro-tool-icon"><i class="${icon}"></i></div>
+                    <div>
+                        <span class="pro-tool-kicker">Ferramenta profissional</span>
+                        <h3 class="tool-title">${title}</h3>
+                        <p class="tool-helper">${subtitle}</p>
+                    </div>
+                </div>
+                <div class="pro-ai-strip">
+                    <div class="pro-ai-mark">IAM</div>
+                    <div>
+                        <strong>Use a IAM para melhorar este resultado</strong>
+                        <span>Peça para revisar texto, deixar mais formal, simular entrevista, criar plano ou adaptar para sua situação.</span>
+                    </div>
+                    <button type="button" onclick="ToolsApp.openIamAssistant()"><i class="fas fa-wand-magic-sparkles"></i> Abrir IAM</button>
+                </div>
+                <div class="pro-tool-body">
+                    ${body}
+                </div>
+            </article>
+        `;
+    }
+
+    function input(id, label, placeholder = '', type = 'text') {
+        return `<label class="pro-field"><span>${label}</span><input id="${id}" type="${type}" placeholder="${placeholder}"></label>`;
+    }
+
+    function textarea(id, label, placeholder = '', rows = 4) {
+        return `<label class="pro-field pro-field-full"><span>${label}</span><textarea id="${id}" rows="${rows}" placeholder="${placeholder}"></textarea></label>`;
+    }
+
+    function outputArea(id, rows = 7) {
+        return `<textarea id="${id}" class="pro-output" rows="${rows}" readonly placeholder="O resultado aparecerá aqui."></textarea>`;
+    }
+
+    function actions(primary, copyId = null) {
+        return `
+            <div class="pro-actions">
+                ${primary}
+                ${copyId ? `<button class="tool-mini-btn ghost" onclick="ToolsApp.copyToolOutput('${copyId}')"><i class="fas fa-copy"></i> Copiar</button>` : ''}
+            </div>
+        `;
+    }
+
+    function listTool(key, listId, emptyText, renderItem) {
+        const list = document.getElementById(listId);
+        if (!list) return;
+        const items = toolStore.get(key, []);
+        list.innerHTML = items.length ? items.map(renderItem).join('') : `<div class="pro-empty">${emptyText}</div>`;
+    }
+
+    window.ToolsApp.renderProfessionalSuite = function(container) {
+        container.classList.remove('md:grid-cols-2');
+        container.classList.remove('xl:grid-cols-3');
+        container.classList.add('tools-hub-grid');
+        const tools = [
+            ['occurrence', 'Relatório de Ocorrência', 'Registro formal pronto para copiar.', 'fas fa-file-shield', 'Operacional', 'renderOccurrenceReport'],
+            ['hours', 'Horas Trabalhadas', 'Soma entrada, intervalo e saída.', 'fas fa-business-time', 'Calculadora', 'renderWorkHours'],
+            ['shift', 'Plantão e Hora Extra', 'Estimativa rápida de extras.', 'fas fa-coins', 'Calculadora', 'renderShiftCalculator'],
+            ['review', 'Revisão Inteligente', 'Plano curto de revisão.', 'fas fa-brain', 'Estudo', 'renderSmartReview'],
+            ['protocols', 'Protocolos Rápidos', 'Consulta objetiva de condutas.', 'fas fa-book-medical', 'Estudo', 'renderProtocolLibrary'],
+            ['documents', 'Central de Documentos', 'Controle de validade e pendências.', 'fas fa-folder-open', 'Organização', 'renderDocumentCenter'],
+            ['pro-report', 'Relatório Profissional', 'Transforma notas em texto formal.', 'fas fa-file-signature', 'Operacional', 'renderProfessionalReport'],
+            ['resume', 'Currículo Automático', 'Base de currículo editável.', 'fas fa-id-badge', 'Carreira', 'renderResumeBuilder'],
+            ['letter', 'Carta de Apresentação', 'Mensagem pronta para vaga.', 'fas fa-envelope-open-text', 'Carreira', 'renderCoverLetter'],
+            ['interview', 'Preparador de Entrevista', 'Perguntas para treinar.', 'fas fa-comments', 'Carreira', 'renderInterviewPrep'],
+            ['bio', 'Bio Profissional', 'Bio para perfil e WhatsApp.', 'fas fa-user-tie', 'Carreira', 'renderProfessionalBio'],
+            ['portfolio', 'Portfólio Profissional', 'Histórico de experiências.', 'fas fa-briefcase', 'Carreira', 'renderPortfolio'],
+            ['certificates', 'Certificados e Validades', 'Acompanhe vencimentos.', 'fas fa-certificate', 'Organização', 'renderCertificateTracker'],
+            ['posture', 'Mentor de Postura', 'Orientações práticas de conduta.', 'fas fa-person-rays', 'Carreira', 'renderPostureMentor'],
+            ['card', 'Identidade Profissional', 'Cartão digital de apresentação.', 'fas fa-address-card', 'Identidade', 'renderDigitalProfessionalCard'],
+            ['operation', 'Modo Operação', 'Missões rápidas de treino.', 'fas fa-tower-observation', 'Treino', 'renderOperationMode'],
+            ['crisis', 'Simulador de Crise', 'Decisão sob pressão.', 'fas fa-triangle-exclamation', 'Treino', 'renderCrisisSimulator'],
+            ['wallet', 'Carteira de Conquistas', 'Resumo de evolução.', 'fas fa-medal', 'Identidade', 'renderAchievementWallet'],
+            ['announcements', 'Avisos Importantes', 'Recados, vagas e leitura.', 'fas fa-bullhorn', 'Comunicação', 'renderAdminAnnouncements'],
+            ['suggestions', 'Caixa de Sugestões', 'Canal direto com alunos.', 'fas fa-inbox', 'Comunicação', 'renderSuggestionBox']
+        ];
+        window.professionalToolsCatalog = tools;
+        container.innerHTML = `
+            <div class="tools-section-banner">
+                <div>
+                    <span><i class="fas fa-sparkles"></i> 20 ferramentas</span>
+                    <h3>Central Profissional do Aluno</h3>
+                    <p>Escolha uma ferramenta abaixo. A tela abre uma por vez para ficar limpa, legível e fácil de usar.</p>
+                </div>
+            </div>
+            <div class="tools-hub-layout">
+                <aside class="tools-catalog-panel">
+                    <div class="tools-catalog-header">
+                        <strong>Ferramentas</strong>
+                        <span>${tools.length} disponíveis</span>
+                    </div>
+                    <div class="tools-catalog-grid">
+                        ${tools.map(([id, title, desc, icon, tag], index) => `
+                            <button class="tools-catalog-card ${index === 0 ? 'active' : ''}" data-tool-id="${id}" onclick="ToolsApp.openProfessionalTool('${id}')">
+                                <i class="${icon}"></i>
+                                <span>${tag}</span>
+                                <strong>${title}</strong>
+                                <small>${desc}</small>
+                            </button>
+                        `).join('')}
+                    </div>
+                </aside>
+                <section class="tools-detail-panel">
+                    <div id="professional-tool-detail"></div>
+                </section>
+            </div>
+        `;
+        ToolsApp.openProfessionalTool('occurrence');
+    };
+
+    window.ToolsApp.openProfessionalTool = function(toolId) {
+        const tool = (window.professionalToolsCatalog || []).find(item => item[0] === toolId);
+        const detail = document.getElementById('professional-tool-detail');
+        if (!tool || !detail || typeof ToolsApp[tool[5]] !== 'function') return;
+        document.querySelectorAll('.tools-catalog-card').forEach(card => {
+            card.classList.toggle('active', card.dataset.toolId === toolId);
+        });
+        detail.innerHTML = '';
+        detail.classList.add('tool-detail-loading');
+        ToolsApp[tool[5]](detail);
+        detail.classList.remove('tool-detail-loading');
+        setTimeout(() => {
+            ToolsApp.refreshDocuments?.();
+            ToolsApp.refreshCertificates?.();
+            ToolsApp.refreshPortfolio?.();
+            ToolsApp.refreshAnnouncements?.();
+            ToolsApp.refreshSuggestions?.();
+        }, 100);
+        if (window.innerWidth < 900) {
+            detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    window.ToolsApp.renderOccurrenceReport = function(c) {
+        c.innerHTML += toolShell('tool-occurrence', 'fas fa-file-shield', 'Relatório de Ocorrência', 'Gere um texto limpo para copiar e enviar.', `
+            <div class="pro-grid">
+                ${input('occ-local', 'Local', 'Condomínio, evento, empresa...')}
+                ${input('occ-date', 'Data e hora', '', 'datetime-local')}
+                ${input('occ-type', 'Tipo', 'Mal súbito, princípio de incêndio...')}
+                ${input('occ-victim', 'Envolvidos', 'Nome, setor ou sem vítima')}
+                ${textarea('occ-desc', 'Descrição objetiva', 'Relate o que foi visto e feito.', 3)}
+                ${textarea('occ-action', 'Providências', 'Isolamento, acionamento, orientação, atendimento...', 3)}
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.generateOccurrenceReport()"><i class="fas fa-wand-magic-sparkles"></i> Gerar relatório</button>`, 'occ-output')}
+            ${outputArea('occ-output')}
+        `, 'tool-card-featured');
+    };
+    window.ToolsApp.generateOccurrenceReport = function() {
+        const date = toolValue('occ-date') ? new Date(toolValue('occ-date')).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
+        setToolOutput('occ-output', `RELATÓRIO DE OCORRÊNCIA\n\nData/Hora: ${date}\nLocal: ${toolValue('occ-local') || 'Não informado'}\nTipo de ocorrência: ${toolValue('occ-type') || 'Não informado'}\nEnvolvidos: ${toolValue('occ-victim') || 'Não informado'}\n\nDescrição:\n${toolValue('occ-desc') || 'Não informado'}\n\nProvidências adotadas:\n${toolValue('occ-action') || 'Não informado'}\n\nResponsável pelo registro: ${getUser().name || 'Aluno/Profissional'}\n`);
+    };
+
+    window.ToolsApp.renderWorkHours = function(c) {
+        c.innerHTML += toolShell('tool-hours', 'fas fa-business-time', 'Calculadora de Horas Trabalhadas', 'Some entrada, intervalo e saída em poucos segundos.', `
+            <div class="pro-grid">
+                ${input('hours-in', 'Entrada', '', 'time')}
+                ${input('hours-lunch-out', 'Saída intervalo', '', 'time')}
+                ${input('hours-lunch-in', 'Volta intervalo', '', 'time')}
+                ${input('hours-out', 'Saída', '', 'time')}
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.calculateWorkHours()"><i class="fas fa-calculator"></i> Calcular</button>`, 'hours-output')}
+            <div id="hours-output" class="pro-result">Informe os horários para calcular.</div>
+        `);
+    };
+    function timeToMinutes(v) {
+        if (!v) return null;
+        const [h, m] = v.split(':').map(Number);
+        return h * 60 + m;
+    }
+    function diffMinutes(start, end) {
+        if (start === null || end === null) return 0;
+        return end >= start ? end - start : (end + 1440) - start;
+    }
+    function minutesLabel(total) {
+        const h = Math.floor(total / 60);
+        const m = total % 60;
+        return `${h}h ${String(m).padStart(2, '0')}m`;
+    }
+    window.ToolsApp.calculateWorkHours = function() {
+        const total = diffMinutes(timeToMinutes(toolValue('hours-in')), timeToMinutes(toolValue('hours-lunch-out'))) + diffMinutes(timeToMinutes(toolValue('hours-lunch-in')), timeToMinutes(toolValue('hours-out')));
+        document.getElementById('hours-output').innerHTML = total ? `<strong>${minutesLabel(total)}</strong><span> trabalhadas no dia</span>` : 'Preencha os horários principais.';
+    };
+
+    window.ToolsApp.renderShiftCalculator = function(c) {
+        c.innerHTML += toolShell('tool-shift-extra', 'fas fa-coins', 'Calculadora de Plantão e Hora Extra', 'Estime horas extras e valor aproximado.', `
+            <div class="pro-grid">
+                ${input('extra-hours', 'Horas trabalhadas', '12', 'number')}
+                ${input('extra-base', 'Jornada prevista', '8', 'number')}
+                ${input('extra-rate', 'Valor da hora', '15', 'number')}
+                ${input('extra-percent', 'Adicional (%)', '50', 'number')}
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.calculateExtraHours()"><i class="fas fa-calculator"></i> Calcular extra</button>`, 'extra-output')}
+            <div id="extra-output" class="pro-result">Resultado da hora extra.</div>
+        `);
+    };
+    window.ToolsApp.calculateExtraHours = function() {
+        const hours = parseFloat(toolValue('extra-hours')) || 0;
+        const base = parseFloat(toolValue('extra-base')) || 0;
+        const rate = parseFloat(toolValue('extra-rate')) || 0;
+        const percent = parseFloat(toolValue('extra-percent')) || 0;
+        const extra = Math.max(hours - base, 0);
+        const total = extra * rate * (1 + percent / 100);
+        document.getElementById('extra-output').innerHTML = `<strong>${extra.toFixed(1)}h extras</strong><span>Valor estimado: R$ ${total.toFixed(2).replace('.', ',')}</span>`;
+    };
+
+    window.ToolsApp.renderSmartReview = function(c) {
+        const topics = ['APH e XABCDE', 'Combate a incêndio', 'Abandono de área', 'Produtos perigosos', 'Salvamento em altura', 'Legislação e postura'];
+        c.innerHTML += toolShell('tool-review', 'fas fa-brain', 'Modo Revisão Inteligente', 'Monte um plano rápido de revisão.', `
+            <div class="pro-grid">
+                ${input('review-min', 'Minutos disponíveis', '20', 'number')}
+                <label class="pro-field"><span>Foco</span><select id="review-focus">${topics.map(t => `<option>${t}</option>`).join('')}</select></label>
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.generateReviewPlan()"><i class="fas fa-bolt"></i> Criar revisão</button>`, 'review-output')}
+            ${outputArea('review-output', 6)}
+        `);
+    };
+    window.ToolsApp.generateReviewPlan = function() {
+        const min = parseInt(toolValue('review-min')) || 20;
+        const focus = toolValue('review-focus');
+        setToolOutput('review-output', `REVISÃO INTELIGENTE - ${focus}\n\n${Math.ceil(min * 0.25)} min: releia os pontos-chave.\n${Math.ceil(min * 0.35)} min: responda perguntas do tema.\n${Math.ceil(min * 0.25)} min: explique em voz alta como se estivesse ensinando.\n${Math.max(3, Math.floor(min * 0.15))} min: anote 3 erros para revisar amanhã.`);
+    };
+
+    window.ToolsApp.renderProtocolLibrary = function(c) {
+        const protocols = [
+            ['APH - XABCDE', 'X: hemorragia grave. A: vias aéreas. B: respiração. C: circulação. D: neurológico. E: exposição e ambiente.'],
+            ['Princípio de incêndio', 'Avaliar cena, acionar apoio, cortar energia se seguro, escolher extintor correto, manter rota de fuga.'],
+            ['Abandono de área', 'Manter calma, orientar fluxo, priorizar rotas seguras, não usar elevador, conferir ponto de encontro.'],
+            ['Espaço confinado', 'Não entrar sem permissão, monitoramento atmosférico, ventilação, equipe e plano de resgate.']
+        ];
+        c.innerHTML += toolShell('tool-protocols', 'fas fa-book-medical', 'Biblioteca de Protocolos Rápidos', 'Consulta curta para decisão rápida.', `
+            <div class="pro-stack">${protocols.map(([title, text]) => `<details class="pro-details"><summary>${title}</summary><p>${text}</p></details>`).join('')}</div>
+        `);
+    };
+
+    window.ToolsApp.renderDocumentCenter = function(c) {
+        c.innerHTML += toolShell('tool-documents', 'fas fa-folder-open', 'Central de Documentos', 'Controle seus documentos importantes.', `
+            <div class="pro-grid">
+                ${input('doc-name', 'Documento', 'CNH, certificado, ASO...')}
+                ${input('doc-date', 'Validade', '', 'date')}
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.addDocumentItem()"><i class="fas fa-plus"></i> Adicionar</button>`)}
+            <div id="doc-list" class="pro-list"></div>
+        `);
+    };
+    window.ToolsApp.addDocumentItem = function() {
+        const name = toolValue('doc-name');
+        if (!name) return;
+        const items = toolStore.get('tool_documents_v1', []);
+        items.unshift({ id: Date.now(), name, date: toolValue('doc-date') });
+        toolStore.set('tool_documents_v1', items);
+        document.getElementById('doc-name').value = '';
+        ToolsApp.refreshDocuments();
+    };
+    window.ToolsApp.removeDocumentItem = function(id) {
+        toolStore.set('tool_documents_v1', toolStore.get('tool_documents_v1', []).filter(i => i.id !== id));
+        ToolsApp.refreshDocuments();
+    };
+    window.ToolsApp.refreshDocuments = function() {
+        listTool('tool_documents_v1', 'doc-list', 'Nenhum documento cadastrado.', i => `<div class="pro-list-row"><span><strong>${i.name}</strong><small>${i.date || 'Sem validade'}</small></span><button onclick="ToolsApp.removeDocumentItem(${i.id})"><i class="fas fa-times"></i></button></div>`);
+    };
+
+    window.ToolsApp.renderProfessionalReport = function(c) {
+        c.innerHTML += toolShell('tool-pro-report', 'fas fa-file-signature', 'Gerador de Relatório Profissional', 'Transforme anotações em texto formal.', `
+            <div class="pro-grid">${textarea('prorep-notes', 'Anotações', 'O que aconteceu, onde, quando e providências...', 5)}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.generateProfessionalReport()"><i class="fas fa-wand-magic-sparkles"></i> Profissionalizar</button>`, 'prorep-output')}
+            ${outputArea('prorep-output', 7)}
+        `);
+    };
+    window.ToolsApp.generateProfessionalReport = function() {
+        setToolOutput('prorep-output', `RELATO PROFISSIONAL\n\nConforme registro realizado por ${getUser().name || 'responsável'}, informa-se que:\n\n${toolValue('prorep-notes') || 'Descreva a situação para gerar o relatório.'}\n\nAs providências foram conduzidas conforme orientação operacional, mantendo prioridade na segurança das pessoas, preservação do local e comunicação aos responsáveis.`);
+    };
+
+    window.ToolsApp.renderResumeBuilder = function(c) {
+        c.innerHTML += toolShell('tool-resume', 'fas fa-id-badge', 'Currículo Profissional Automático', 'Base de currículo pronta para editar.', `
+            <div class="pro-grid">
+                ${input('cv-role', 'Objetivo', 'Bombeiro Civil / Brigadista')}
+                ${input('cv-city', 'Cidade', 'Sua cidade')}
+                ${textarea('cv-skills', 'Habilidades', 'APH, prevenção, atendimento ao público...', 3)}
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.generateResume()"><i class="fas fa-file-lines"></i> Gerar currículo</button>`, 'cv-output')}
+            ${outputArea('cv-output', 8)}
+        `);
+    };
+    window.ToolsApp.generateResume = function() {
+        const u = getUser();
+        setToolOutput('cv-output', `${u.name || 'Nome do aluno'}\n${u.email || ''} ${u.phone ? '| ' + u.phone : ''}\n${toolValue('cv-city')}\n\nOBJETIVO\n${toolValue('cv-role') || 'Atuação profissional na área operacional.'}\n\nRESUMO\nProfissional em formação pela plataforma Bravo Charlie, com foco em disciplina, segurança, prevenção, atendimento e atuação responsável.\n\nHABILIDADES\n${toolValue('cv-skills') || 'Preencha suas principais habilidades.'}`);
+    };
+
+    window.ToolsApp.renderCoverLetter = function(c) {
+        c.innerHTML += toolShell('tool-letter', 'fas fa-envelope-open-text', 'Gerador de Carta de Apresentação', 'Uma mensagem pronta para vaga ou indicação.', `
+            <div class="pro-grid">${input('letter-company', 'Empresa/vaga', 'Nome da empresa')}${input('letter-role', 'Cargo', 'Bombeiro Civil')}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.generateCoverLetter()"><i class="fas fa-paper-plane"></i> Gerar carta</button>`, 'letter-output')}
+            ${outputArea('letter-output', 7)}
+        `);
+    };
+    window.ToolsApp.generateCoverLetter = function() {
+        const u = getUser();
+        setToolOutput('letter-output', `Olá, equipe ${toolValue('letter-company') || ''}.\n\nMeu nome é ${u.name || '...'} e tenho interesse na oportunidade de ${toolValue('letter-role') || 'atuação profissional'}. Estou em constante desenvolvimento, com foco em postura, responsabilidade, prevenção e atendimento seguro.\n\nColoco-me à disposição para entrevista e envio de documentos.\n\nAtenciosamente,\n${u.name || ''}`);
+    };
+
+    window.ToolsApp.renderInterviewPrep = function(c) {
+        const questions = ['Fale sobre você.', 'Por que devemos contratar você?', 'Como age sob pressão?', 'Conte uma situação difícil que resolveu.', 'Qual sua disponibilidade?'];
+        c.innerHTML += toolShell('tool-interview', 'fas fa-comments', 'Preparador de Entrevista', 'Perguntas para treinar antes da seleção.', `
+            <div class="pro-stack">${questions.map(q => `<div class="pro-prompt"><strong>${q}</strong><span>Responda em até 60 segundos, com exemplo real e postura objetiva.</span></div>`).join('')}</div>
+        `);
+    };
+
+    window.ToolsApp.renderProfessionalBio = function(c) {
+        c.innerHTML += toolShell('tool-bio', 'fas fa-user-tie', 'Gerador de Bio Profissional', 'Bio para WhatsApp, Instagram ou perfil.', `
+            <div class="pro-grid">${input('bio-role', 'Área', 'Bombeiro Civil')}${input('bio-tone', 'Tom', 'Profissional e direto')}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.generateBio()"><i class="fas fa-wand-magic-sparkles"></i> Gerar bio</button>`, 'bio-output')}
+            ${outputArea('bio-output', 4)}
+        `);
+    };
+    window.ToolsApp.generateBio = function() {
+        setToolOutput('bio-output', `${getUser().name || 'Profissional'} | ${toolValue('bio-role') || 'Área operacional'}\nFoco em segurança, prevenção, disciplina e atendimento responsável.\nDisponível para oportunidades, eventos e atuação profissional.`);
+    };
+
+    window.ToolsApp.renderPortfolio = function(c) {
+        c.innerHTML += toolShell('tool-portfolio', 'fas fa-briefcase', 'Portfólio Profissional', 'Monte histórico de cursos, eventos e experiências.', `
+            <div class="pro-grid">${input('portfolio-title', 'Registro', 'Curso, evento, experiência...')}${input('portfolio-date', 'Data', '', 'date')}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.addPortfolioItem()"><i class="fas fa-plus"></i> Adicionar</button>`)}
+            <div id="portfolio-list" class="pro-list"></div>
+        `);
+    };
+    window.ToolsApp.addPortfolioItem = function() {
+        const title = toolValue('portfolio-title');
+        if (!title) return;
+        const items = toolStore.get('tool_portfolio_v1', []);
+        items.unshift({ id: Date.now(), title, date: toolValue('portfolio-date') });
+        toolStore.set('tool_portfolio_v1', items);
+        document.getElementById('portfolio-title').value = '';
+        ToolsApp.refreshPortfolio();
+    };
+    window.ToolsApp.refreshPortfolio = function() {
+        listTool('tool_portfolio_v1', 'portfolio-list', 'Nenhum item no portfólio.', i => `<div class="pro-list-row"><span><strong>${i.title}</strong><small>${i.date || 'Sem data'}</small></span><button onclick="ToolsApp.removePortfolioItem(${i.id})"><i class="fas fa-times"></i></button></div>`);
+    };
+    window.ToolsApp.removePortfolioItem = function(id) {
+        toolStore.set('tool_portfolio_v1', toolStore.get('tool_portfolio_v1', []).filter(i => i.id !== id));
+        ToolsApp.refreshPortfolio();
+    };
+
+    window.ToolsApp.renderCertificateTracker = function(c) {
+        c.innerHTML += toolShell('tool-certificates', 'fas fa-certificate', 'Controle de Certificados e Validades', 'Evite perder reciclagens e vencimentos.', `
+            <div class="pro-grid">${input('cert-name', 'Certificado', 'Bombeiro Civil')}${input('cert-date', 'Validade', '', 'date')}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.addCertificateItem()"><i class="fas fa-plus"></i> Adicionar</button>`)}
+            <div id="cert-list" class="pro-list"></div>
+        `);
+    };
+    window.ToolsApp.addCertificateItem = function() {
+        const name = toolValue('cert-name');
+        if (!name) return;
+        const items = toolStore.get('tool_certificates_v1', []);
+        items.unshift({ id: Date.now(), name, date: toolValue('cert-date') });
+        toolStore.set('tool_certificates_v1', items);
+        document.getElementById('cert-name').value = '';
+        ToolsApp.refreshCertificates();
+    };
+    window.ToolsApp.refreshCertificates = function() {
+        listTool('tool_certificates_v1', 'cert-list', 'Nenhum certificado cadastrado.', i => {
+            const days = i.date ? Math.ceil((new Date(i.date) - new Date()) / 86400000) : null;
+            const status = days === null ? 'Sem validade' : days < 0 ? 'Vencido' : `${days} dias restantes`;
+            return `<div class="pro-list-row"><span><strong>${i.name}</strong><small>${status}</small></span><button onclick="ToolsApp.removeCertificateItem(${i.id})"><i class="fas fa-times"></i></button></div>`;
+        });
+    };
+    window.ToolsApp.removeCertificateItem = function(id) {
+        toolStore.set('tool_certificates_v1', toolStore.get('tool_certificates_v1', []).filter(i => i.id !== id));
+        ToolsApp.refreshCertificates();
+    };
+
+    window.ToolsApp.renderPostureMentor = function(c) {
+        const tips = ['Chegue antes do horário e observe o ambiente.', 'Fale pouco, registre bem e cumpra procedimento.', 'Postura limpa, uniforme alinhado e comunicação respeitosa.', 'Não prometa o que não depende de você.', 'Em conflito, baixe o tom e aumente a clareza.'];
+        c.innerHTML += toolShell('tool-posture', 'fas fa-person-rays', 'Mentor de Postura Profissional', 'Conselhos rápidos para se destacar.', `
+            <div id="posture-tip" class="pro-quote">${tips[0]}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.nextPostureTip()"><i class="fas fa-shuffle"></i> Nova orientação</button>`)}
+        `);
+        window.postureTips = tips;
+    };
+    window.ToolsApp.nextPostureTip = function() {
+        const tips = window.postureTips || [];
+        document.getElementById('posture-tip').innerText = tips[Math.floor(Math.random() * tips.length)] || '';
+    };
+
+    window.ToolsApp.renderDigitalProfessionalCard = function(c) {
+        const u = getUser();
+        c.innerHTML += toolShell('tool-pro-card', 'fas fa-address-card', 'Cartão de Identidade Profissional Digital', 'Perfil bonito para apresentar por QR/link.', `
+            <div class="pro-id-card">
+                <div class="pro-id-mark"><i class="fas fa-shield-alt"></i></div>
+                <div><strong>${u.name || 'Aluno Bravo Charlie'}</strong><span>${u.courseType === 'SP' ? 'Segurança Patrimonial' : 'Bombeiro Civil / Brigadista'}</span></div>
+                <small>Status: ${u.status === 'premium' ? 'Premium' : 'Aluno'} | Turma: ${u.company || 'Particular'}</small>
+            </div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.copyProfessionalCard()"><i class="fas fa-share-nodes"></i> Copiar apresentação</button>`)}
+        `);
+    };
+    window.ToolsApp.copyProfessionalCard = function() {
+        const u = getUser();
+        navigator.clipboard?.writeText(`${u.name || 'Aluno'} - ${u.courseType === 'SP' ? 'Segurança Patrimonial' : 'Bombeiro Civil / Brigadista'}\nFormação Bravo Charlie\nContato: ${u.phone || u.email || ''}`);
+        ToolsApp.toast('Apresentação copiada');
+    };
+
+    window.ToolsApp.renderOperationMode = function(c) {
+        const ops = ['Operação Evento: controle de público, rotas e comunicação.', 'Operação Condomínio: prevenção, rondas e resposta rápida.', 'Operação Escola: abandono, calma e proteção de crianças.', 'Operação Indústria: riscos específicos, isolamento e apoio técnico.'];
+        c.innerHTML += toolShell('tool-operation', 'fas fa-tower-observation', 'Modo Operação', 'Missões rápidas para treinar raciocínio.', `
+            <div id="operation-output" class="pro-quote">${ops[0]}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.nextOperationMission()"><i class="fas fa-play"></i> Sortear missão</button>`)}
+        `);
+        window.operationMissions = ops;
+    };
+    window.ToolsApp.nextOperationMission = function() {
+        const ops = window.operationMissions || [];
+        document.getElementById('operation-output').innerText = ops[Math.floor(Math.random() * ops.length)] || '';
+    };
+
+    window.ToolsApp.renderCrisisSimulator = function(c) {
+        c.innerHTML += toolShell('tool-crisis', 'fas fa-triangle-exclamation', 'Simulador de Crise Real', 'Escolha uma reação e veja o impacto.', `
+            <p class="tool-helper">Cenário: princípio de incêndio em área com pessoas nervosas e fumaça baixa.</p>
+            <div class="pro-choice-grid">
+                <button onclick="ToolsApp.answerCrisis(1)">Entrar sozinho para resolver rápido</button>
+                <button onclick="ToolsApp.answerCrisis(2)">Isolar, orientar saída e acionar apoio</button>
+                <button onclick="ToolsApp.answerCrisis(3)">Esperar alguém assumir</button>
+            </div>
+            <div id="crisis-output" class="pro-result">Sua análise aparecerá aqui.</div>
+        `);
+    };
+    window.ToolsApp.answerCrisis = function(option) {
+        const messages = {
+            1: 'Risco alto: agir sozinho pode criar nova vítima. Faltou controle de cena.',
+            2: 'Melhor decisão: priorizou pessoas, isolamento, comunicação e apoio.',
+            3: 'Risco operacional: demora aumenta dano e pânico. Assuma comunicação e acione suporte.'
+        };
+        document.getElementById('crisis-output').innerHTML = messages[option];
+    };
+
+    window.ToolsApp.renderAchievementWallet = function(c) {
+        const completed = toolStore.get('gateBombeiroCompletedModules_v3', []);
+        const certs = toolStore.get('tool_certificates_v1', []).length;
+        const portfolio = toolStore.get('tool_portfolio_v1', []).length;
+        c.innerHTML += toolShell('tool-wallet', 'fas fa-medal', 'Carteira de Conquistas', 'Seu painel de evolução e orgulho profissional.', `
+            <div class="pro-badges">
+                <span><i class="fas fa-check"></i> ${completed.length} módulos</span>
+                <span><i class="fas fa-certificate"></i> ${certs} certificados</span>
+                <span><i class="fas fa-briefcase"></i> ${portfolio} portfólio</span>
+                <span><i class="fas fa-star"></i> Bravo Charlie</span>
+            </div>
+        `);
+    };
+
+    window.ToolsApp.renderAdminAnnouncements = function(c) {
+        const u = getUser();
+        const isAdmin = u.isAdmin === true;
+        c.innerHTML += toolShell('tool-announcements', 'fas fa-bullhorn', 'Canal de Avisos Importantes', 'Vagas, oportunidades e recados enviados pelo administrador.', `
+            ${isAdmin ? `
+                <div class="admin-tool-panel">
+                    <div class="pro-grid">
+                        ${input('ann-title', 'Título', 'Vaga, oportunidade ou recado')}
+                        <label class="pro-field"><span>Enviar para</span><select id="ann-target"><option value="all">Todos</option><option value="company">Turma</option><option value="status">Status</option><option value="course">Curso</option><option value="email">Aluno por e-mail</option></select></label>
+                        ${input('ann-target-value', 'Valor do público', 'Ex: Turma A, premium, BC, email')}
+                        ${input('ann-expire', 'Expira em', '', 'date')}
+                        ${textarea('ann-message', 'Mensagem', 'Escreva o comunicado...', 4)}
+                    </div>
+                    ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.publishAnnouncement()"><i class="fas fa-paper-plane"></i> Publicar aviso</button>`)}
+                </div>
+            ` : ''}
+            <div id="ann-list" class="pro-list"></div>
+        `, 'tool-card-featured');
+    };
+    function announcementMatches(a, u) {
+        if (a.expire && new Date(a.expire + 'T23:59:59') < new Date()) return false;
+        const value = (a.targetValue || '').toLowerCase();
+        if (a.target === 'company') return (u.company || '').toLowerCase() === value;
+        if (a.target === 'status') return (u.status || '').toLowerCase() === value;
+        if (a.target === 'course') return (u.courseType || 'BC').toLowerCase() === value;
+        if (a.target === 'email') return (u.email || '').toLowerCase() === value;
+        return true;
+    }
+    async function getAnnouncements() {
+        const db = window.__fbDB || window.fbDB;
+        if (db) {
+            try {
+                const snap = await db.collection('announcements').orderBy('createdAt', 'desc').limit(30).get();
+                const items = [];
+                snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+                return items;
+            } catch (e) {}
+        }
+        return toolStore.get('tool_announcements_v1', []);
+    }
+    window.ToolsApp.publishAnnouncement = async function() {
+        const item = {
+            id: String(Date.now()),
+            title: toolValue('ann-title'),
+            message: toolValue('ann-message'),
+            target: toolValue('ann-target') || 'all',
+            targetValue: toolValue('ann-target-value'),
+            expire: toolValue('ann-expire'),
+            readBy: {},
+            createdAtLocal: new Date().toISOString()
+        };
+        if (!item.title || !item.message) return ToolsApp.toast('Preencha título e mensagem', 'info');
+        const db = window.__fbDB || window.fbDB;
+        if (db && window.firebase) {
+            try {
+                await db.collection('announcements').add({ ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: getUser().uid || null });
+            } catch (e) {
+                const local = toolStore.get('tool_announcements_v1', []);
+                local.unshift(item);
+                toolStore.set('tool_announcements_v1', local);
+            }
+        } else {
+            const local = toolStore.get('tool_announcements_v1', []);
+            local.unshift(item);
+            toolStore.set('tool_announcements_v1', local);
+        }
+        document.getElementById('ann-title').value = '';
+        document.getElementById('ann-message').value = '';
+        ToolsApp.toast('Aviso publicado');
+        ToolsApp.refreshAnnouncements();
+    };
+    window.ToolsApp.refreshAnnouncements = async function() {
+        const list = document.getElementById('ann-list');
+        if (!list) return;
+        const u = getUser();
+        const read = toolStore.get('tool_announcement_reads_v1', {});
+        const all = await getAnnouncements();
+        const visible = all.filter(a => u.isAdmin || announcementMatches(a, u));
+        list.innerHTML = visible.length ? visible.map(a => {
+            const count = a.readBy ? Object.keys(a.readBy).length : 0;
+            const wasRead = read[a.id] || (u.uid && a.readBy && a.readBy[u.uid]);
+            return `<div class="announcement-item ${wasRead ? 'read' : ''}"><strong>${a.title}</strong><p>${a.message}</p><small>${a.target === 'all' ? 'Todos' : `${a.target}: ${a.targetValue || '-'}`} ${u.isAdmin ? `| ${count} leitura(s)` : ''}</small>${!u.isAdmin ? `<button onclick="ToolsApp.confirmAnnouncementRead('${a.id}')"><i class="fas fa-check"></i> Confirmar leitura</button>` : ''}</div>`;
+        }).join('') : '<div class="pro-empty">Nenhum aviso disponível.</div>';
+    };
+    window.ToolsApp.confirmAnnouncementRead = async function(id) {
+        const u = getUser();
+        const read = toolStore.get('tool_announcement_reads_v1', {});
+        read[id] = new Date().toISOString();
+        toolStore.set('tool_announcement_reads_v1', read);
+        const db = window.__fbDB || window.fbDB;
+        if (db && u.uid) {
+            try {
+                const key = `readBy.${u.uid}`;
+                await db.collection('announcements').doc(id).update({ [key]: new Date().toISOString() });
+            } catch (e) {}
+        }
+        ToolsApp.toast('Leitura confirmada');
+        ToolsApp.refreshAnnouncements();
+    };
+
+    window.ToolsApp.renderSuggestionBox = function(c) {
+        c.innerHTML += toolShell('tool-suggestions', 'fas fa-inbox', 'Caixa de Sugestões dos Alunos', 'Canal direto para ideias, dúvidas e melhorias.', `
+            <div class="pro-grid">${input('sug-title', 'Assunto', 'Ideia, dúvida ou pedido')}${textarea('sug-message', 'Mensagem', 'Escreva sua sugestão...', 4)}</div>
+            ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.sendSuggestion()"><i class="fas fa-paper-plane"></i> Enviar sugestão</button>`)}
+            <div id="suggestion-list" class="pro-list"></div>
+        `);
+    };
+    window.ToolsApp.sendSuggestion = async function() {
+        const u = getUser();
+        const item = { id: String(Date.now()), title: toolValue('sug-title'), message: toolValue('sug-message'), userName: u.name || 'Aluno', email: u.email || '', createdAtLocal: new Date().toISOString() };
+        if (!item.title || !item.message) return ToolsApp.toast('Preencha assunto e mensagem', 'info');
+        const db = window.__fbDB || window.fbDB;
+        if (db && window.firebase) {
+            try { await db.collection('suggestions').add({ ...item, uid: u.uid || null, createdAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+            catch (e) {
+                const local = toolStore.get('tool_suggestions_v1', []);
+                local.unshift(item);
+                toolStore.set('tool_suggestions_v1', local);
+            }
+        } else {
+            const local = toolStore.get('tool_suggestions_v1', []);
+            local.unshift(item);
+            toolStore.set('tool_suggestions_v1', local);
+        }
+        document.getElementById('sug-title').value = '';
+        document.getElementById('sug-message').value = '';
+        ToolsApp.toast('Sugestão enviada');
+        ToolsApp.refreshSuggestions();
+    };
+    window.ToolsApp.refreshSuggestions = async function() {
+        const list = document.getElementById('suggestion-list');
+        if (!list) return;
+        const u = getUser();
+        let items = toolStore.get('tool_suggestions_v1', []);
+        const db = window.__fbDB || window.fbDB;
+        if (db && u.isAdmin) {
+            try {
+                const snap = await db.collection('suggestions').orderBy('createdAt', 'desc').limit(20).get();
+                items = [];
+                snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+            } catch (e) {}
+        }
+        const visible = u.isAdmin ? items : items.filter(i => i.email === u.email);
+        list.innerHTML = visible.length ? visible.map(i => `<div class="pro-list-row"><span><strong>${i.title}</strong><small>${u.isAdmin ? `${i.userName || 'Aluno'} - ${i.email || ''}` : 'Enviada'}</small><p>${i.message}</p></span></div>`).join('') : `<div class="pro-empty">${u.isAdmin ? 'Nenhuma sugestão recebida.' : 'Suas sugestões aparecerão aqui.'}</div>`;
     };
 
 })();
