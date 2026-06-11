@@ -12255,3 +12255,30 @@ body.command-panel-open {
         border-radius: 0.85rem !important;
     }
 }
+
+/* === PWA IOS SAFE AREA LANDING V106 === */
+@media (max-width: 768px) {
+    #landing-hero nav {
+        padding-top: calc(0.85rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: calc(4.75rem + env(safe-area-inset-top, 0px)) !important;
+        align-items: flex-start !important;
+    }
+
+    #landing-hero nav > div {
+        margin-top: 0 !important;
+    }
+
+    #landing-hero section:first-of-type {
+        padding-top: calc(5.5rem + env(safe-area-inset-top, 0px)) !important;
+        min-height: 100dvh !important;
+    }
+
+    #intro-carousel-wrapper {
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        box-sizing: border-box !important;
+    }
+
+    #intro-carousel-wrapper .intro-nav-arrow {
+        top: calc(50% + (env(safe-area-inset-top, 0px) / 2)) !important;
+    }
+}
