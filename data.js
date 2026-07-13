@@ -1748,13 +1748,13 @@ const moduleContent = {
         content: `
             <section class="survival-landing">
                 <div class="survival-landing-content">
-                    <span><i class="fas fa-heart-pulse"></i> Treino de pressão</span>
+                    <span><i class="fas fa-heart-pulse"></i> Treino de pressão 2.0</span>
                     <h3>Modo Sobrevivência</h3>
-                    <p>Responda perguntas aleatórias do curso, mantenha suas vidas e tente superar seu próprio recorde.</p>
+                    <p>Responda perguntas do curso em sequência, acumule bônus por acertos seguidos e tente bater seu recorde operacional.</p>
                     <div class="survival-rules-grid">
                         <div><i class="fas fa-heart"></i><strong>3 vidas</strong><small>Errou, perde uma.</small></div>
-                        <div><i class="fas fa-shuffle"></i><strong>Banco aleatório</strong><small>Questões de todo o curso.</small></div>
-                        <div><i class="fas fa-trophy"></i><strong>Recorde pessoal</strong><small>Volte para melhorar.</small></div>
+                        <div><i class="fas fa-bolt"></i><strong>Bônus de sequência</strong><small>Acertos seguidos valem mais.</small></div>
+                        <div><i class="fas fa-ranking-star"></i><strong>Nível operacional</strong><small>Recruta ao Elite.</small></div>
                     </div>
                     <button id="start-survival-btn" class="action-button pulse-button text-xl px-8 py-4 bg-red-600 hover:bg-red-700 border-red-800">
                         <i class="fas fa-play mr-2"></i> INICIAR DESAFIO

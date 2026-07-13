@@ -12,9 +12,13 @@
     if (!firebase.apps.length) firebase.initializeApp(config);
     window.__fbAuth = firebase.auth();
     window.__fbDB = firebase.firestore();
+    window.__fbStorage = firebase.storage ? firebase.storage() : null;
+    window.__fbAuth.languageCode = 'pt_BR';
     
-    // Mantem a senha salva pelo navegador, mas exige login ao abrir/recarregar a plataforma.
-    window.__fbAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+    // Mantem a sessão ativa ao atualizar a página ou reabrir o app no mesmo dispositivo.
+    window.__fbAuthReady = window.__fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
+        console.warn('Não foi possível confirmar a persistência local da sessão:', error);
+    });
   };
 
   // --- 2. VALIDAÇÃO DE CPF OPERACIONAL ---
@@ -171,48 +175,71 @@
     const expiredModal = document.getElementById('expired-modal');
     let unsubscribe = null;
 
-    window.__fbAuth.onAuthStateChanged(async (user) => {
+    const finishAuthRestore = () => {
+        document.body.classList.remove('auth-restoring');
+        document.body.removeAttribute('data-auth-restoring');
+    };
+
+    const startAuthObserver = () => window.__fbAuth.onAuthStateChanged(async (user) => {
       if (user) {
         unsubscribe = window.__fbDB.collection('users').doc(user.uid).onSnapshot((doc) => {
-            if (!doc.exists) return; 
+            if (!doc.exists) {
+                finishAuthRestore();
+                return;
+            } 
             
             const userData = doc.data();
             const hoje = new Date();
-            const validade = new Date(userData.acesso_ate);
+            const validade = userData.acesso_ate ? new Date(userData.acesso_ate) : null;
+            const status = String(userData.status || '').toLowerCase();
+            const isPrivileged =
+                status === 'premium' ||
+                userData.isAdmin === true ||
+                userData.isManager === true ||
+                userData.role === 'admin' ||
+                userData.courseType === 'GESTOR';
 
-            // Validação de expiração de plano
-            if (hoje > validade) {
-                if(expiredModal) {
-                    expiredModal.classList.add('show');
-                    if(loginOverlay) loginOverlay.classList.add('show');
-                }
-                return; 
+            if (validade && !Number.isNaN(validade.getTime()) && hoje > validade && !isPrivileged) {
+                finishAuthRestore();
+                if (expiredModal) expiredModal.classList.add('show');
+                if (loginOverlay) loginOverlay.classList.add('show');
+                return;
             }
 
             // Controle rígido de concorrência (derruba login duplicado)
             const localSession = localStorage.getItem('my_session_id');
             if (!localSession) {
                 localStorage.setItem('my_session_id', userData.current_session_id);
+                finishAuthRestore();
                 onLoginSuccess(user, userData);
             } else if (localSession !== userData.current_session_id) {
+                finishAuthRestore();
                 alert("🚨 Alerta de Segurança: Esta conta foi acessada em outro dispositivo. Desconectando este terminal por segurança.");
                 localStorage.removeItem('my_session_id');
                 window.FirebaseCourse.signOutUser();
                 window.location.reload();
             } else {
+                finishAuthRestore();
                 onLoginSuccess(user, userData);
             }
+        }, (error) => {
+            console.error('Erro ao restaurar dados da sessão:', error);
+            finishAuthRestore();
         });
       } else {
         if (unsubscribe) unsubscribe();
         localStorage.removeItem('my_session_id');
+        finishAuthRestore();
         
-        // Só joga a tela de login se o app ainda não tiver sido inicializado totalmente
-        if (document.body.getAttribute('data-app-ready') !== 'true') {
+        // Só mostra o login quando o aluno realmente pediu acesso. A escuta pode
+        // ficar ativa desde a capa para restaurar sessões sem abrir modal antes.
+        if (window.PBC_LOGIN_REQUESTED === true && document.body.getAttribute('data-app-ready') !== 'true') {
             if(loginModal) loginModal.classList.add('show');
             if(loginOverlay) loginOverlay.classList.add('show');
         }
       }
     });
+
+    Promise.resolve(window.__fbAuthReady).finally(startAuthObserver);
   };
 })();

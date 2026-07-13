@@ -1098,6 +1098,10 @@
         return toolStore.get('tool_announcements_v1', []);
     }
     window.ToolsApp.publishAnnouncement = async function() {
+        const u = getUser();
+        if (!isInstructorAdminUser(u)) {
+            return ToolsApp.toast('Apenas o administrador pode publicar avisos', 'info');
+        }
         const target = toolValue('ann-target') || 'all';
         const targetValue = toolValue('ann-target-value');
         if (target !== 'all' && !targetValue) return ToolsApp.toast('Informe o filtro do público', 'info');
@@ -1115,7 +1119,7 @@
         const db = window.__fbDB || window.fbDB;
         if (db && window.firebase) {
             try {
-                await db.collection('announcements').add({ ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: getUser().uid || null });
+                await db.collection('announcements').add({ ...item, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: u.uid || null });
             } catch (e) {
                 const local = toolStore.get('tool_announcements_v1', []);
                 local.unshift(item);
@@ -1908,6 +1912,7 @@ Olá, sou ${name}. Atuo/estou em formação na área de ${role}, com foco em pos
         window.premiumCrisisScenarios = {
             fire: {
                 title: 'Princípio de incêndio em local com público',
+                meta: 'Prioridade: vida, isolamento e comunicação.',
                 options: [
                     ['Entrar sozinho para resolver rápido', 'danger', 'Risco alto. Agir sozinho pode criar nova vítima e quebrar a cadeia de segurança.'],
                     ['Isolar, orientar saída, acionar apoio e avaliar extintor com rota de fuga', 'success', 'Melhor decisão. Priorizou pessoas, comunicação, apoio e segurança operacional.'],
@@ -1916,6 +1921,7 @@ Olá, sou ${name}. Atuo/estou em formação na área de ${role}, com foco em pos
             },
             faint: {
                 title: 'Pessoa desmaia em ambiente com curiosos ao redor',
+                meta: 'Prioridade: cena segura, avaliação inicial e suporte.',
                 options: [
                     ['Afastar curiosos, avaliar responsividade e acionar suporte', 'success', 'Conduta adequada. Protege cena, vítima e organiza o atendimento.'],
                     ['Dar água imediatamente', 'danger', 'Inadequado. Pessoa inconsciente ou confusa pode aspirar. Primeiro avalie segurança e responsividade.'],
@@ -1924,16 +1930,51 @@ Olá, sou ${name}. Atuo/estou em formação na área de ${role}, com foco em pos
             },
             conflict: {
                 title: 'Visitante agressivo tenta entrar em área restrita',
+                meta: 'Prioridade: postura, distância e registro.',
                 options: [
                     ['Discutir no mesmo tom', 'danger', 'Escala o conflito. Profissionalismo exige distância, clareza e apoio.'],
                     ['Manter distância, comunicar regra, chamar apoio e registrar', 'success', 'Melhor resposta. Une segurança, postura e rastreabilidade.'],
                     ['Ignorar para evitar problema', 'warning', 'Pode gerar falha de segurança. O correto é comunicar e acionar apoio.']
                 ]
+            },
+            gas: {
+                title: 'Odor forte de GLP em área de alimentação',
+                meta: 'Prioridade: eliminar ignição, evacuar e acionar equipe técnica.',
+                options: [
+                    ['Acender luzes para enxergar melhor', 'danger', 'Risco crítico. Interruptores podem gerar faísca. Controle fontes de ignição e isole.'],
+                    ['Isolar a área, impedir chamas/faíscas, ventilar se seguro e chamar apoio técnico', 'success', 'Resposta profissional. Reduziu risco de explosão e preservou a cena.'],
+                    ['Borrifar aromatizador para disfarçar o cheiro', 'danger', 'Conduta insegura. O problema precisa ser tratado, não mascarado.']
+                ]
+            },
+            vehicle: {
+                title: 'Colisão com vítima presa e trânsito ativo',
+                meta: 'Prioridade: segurança da cena, sinalização e acionamento.',
+                options: [
+                    ['Abrir a porta e puxar a vítima imediatamente', 'danger', 'Risco alto de agravar lesões. Sem risco iminente, estabilize a cena e acione resgate.'],
+                    ['Sinalizar, afastar curiosos, avaliar riscos e acionar suporte especializado', 'success', 'Boa decisão. Cena controlada antes do atendimento evita novas vítimas.'],
+                    ['Focar apenas em filmar para registrar', 'danger', 'Totalmente inadequado. Registro nunca vem antes de segurança e socorro.']
+                ]
+            },
+            confined: {
+                title: 'Trabalhador passa mal em espaço confinado',
+                meta: 'Prioridade: não virar segunda vítima.',
+                options: [
+                    ['Entrar rapidamente para retirar a pessoa', 'danger', 'Risco extremo. Espaço confinado exige equipe, equipamento e atmosfera controlada.'],
+                    ['Isolar, acionar resgate especializado e impedir entrada não autorizada', 'success', 'Conduta correta. Segurança do socorrista vem antes da entrada.'],
+                    ['Pedir para outro colega entrar com uma corda', 'warning', 'Ainda é inseguro. Sem procedimento e equipamento adequado, há risco de múltiplas vítimas.']
+                ]
             }
         };
-        c.innerHTML += toolShell('tool-crisis', 'fas fa-triangle-exclamation', 'Simulador de Crise Real', 'Treine decisão sob pressão com feedback imediato.', `
+        c.innerHTML += toolShell('tool-crisis', 'fas fa-triangle-exclamation', 'Simulador de Crise Real', 'Treine decisão sob pressão com feedback imediato e visão operacional.', `
             <div class="pro-grid">
-                <label class="pro-field"><span>Cenário</span><select id="crisis-scenario"><option value="fire">Incêndio com público</option><option value="faint">Mal súbito</option><option value="conflict">Controle de acesso</option></select></label>
+                <label class="pro-field"><span>Cenário</span><select id="crisis-scenario">
+                    <option value="fire">Incêndio com público</option>
+                    <option value="faint">Mal súbito</option>
+                    <option value="conflict">Controle de acesso</option>
+                    <option value="gas">Vazamento de GLP</option>
+                    <option value="vehicle">Acidente veicular</option>
+                    <option value="confined">Espaço confinado</option>
+                </select></label>
             </div>
             ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.loadCrisisScenario()"><i class="fas fa-play"></i> Carregar cenário</button>`)}
             <div id="crisis-stage" class="premium-crisis-stage"></div>
@@ -1946,6 +1987,7 @@ Olá, sou ${name}. Atuo/estou em formação na área de ${role}, com foco em pos
         const scenario = window.premiumCrisisScenarios?.[toolValue('crisis-scenario') || 'fire'];
         document.getElementById('crisis-stage').innerHTML = `
             <strong>${premiumEscape(scenario.title)}</strong>
+            <p>${premiumEscape(scenario.meta || 'Decida com segurança, comunicação e controle de cena.')}</p>
             <div class="pro-choice-grid">${scenario.options.map((o, index) => `<button onclick="ToolsApp.answerCrisis(${index})">${premiumEscape(o[0])}</button>`).join('')}</div>`;
         document.getElementById('crisis-output').innerHTML = 'Escolha uma ação para receber o feedback.';
     };

@@ -29,7 +29,7 @@
       }
     </script>
 
-    <link rel="stylesheet" href="style.css?v=107">
+    <link rel="stylesheet" href="style.css?v=214">
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -38,6 +38,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 </head>
@@ -947,22 +948,6 @@
         <button class="acc-btn" id="acc-spacing"><i class="fas fa-text-width"></i> Espaçamento</button>
     </div>
 
-    <div id="trial-floating-notify" class="hidden fixed right-4 bg-white dark:bg-gray-800 border-l-4 border-yellow-500 text-gray-800 dark:text-white p-4 rounded-r shadow-2xl z-50 flex items-center gap-4 animate-slide-in max-w-sm" style="bottom: 160px;">
-        <div class="trial-notify-icon" aria-hidden="true">
-            <i class="fas fa-crown"></i>
-        </div>
-        <div class="trial-notify-copy">
-            <p class="font-bold text-sm" id="trial-title-text">Seu acesso termina em breve</p>
-            <p class="text-xs text-gray-600 dark:text-gray-400"><span id="trial-days-left"></span> restantes.</p>
-        </div>
-        <button id="trial-subscribe-btn" type="button" onclick="document.getElementById('expired-modal').classList.add('show'); document.getElementById('name-modal-overlay').classList.add('show');" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-2 px-3 rounded transition-colors">
-            ASSINAR
-        </button>
-        <button id="close-trial-notify" type="button" onclick="sessionStorage.setItem('trial_notice_dismissed', 'true'); document.getElementById('trial-floating-notify')?.classList.add('hidden'); document.getElementById('trial-days-left').textContent = '';" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 opacity-0 pointer-events-none sidebar-overlay lg:hidden"></div>
     
     <div id="off-canvas-sidebar" class="fixed top-0 left-0 h-full w-4/5 max-w-sm z-50 transform -translate-x-full transition-transform duration-300 ease-in-out">
@@ -1006,10 +991,6 @@
                             <i class="fas fa-download mr-2"></i> Instalar App
                         </button>
 
-                        <button id="header-subscribe-btn" class="subscribe-elite-btn">
-                            <i class="fas fa-gem"></i> <span>ASSINAR</span>
-                        </button>
-                        
                         <button id="home-button-desktop" title="Voltar ao Início" class="elite-icon-btn home-elite-btn">
                             <i class="fas fa-home"></i>
                         </button>
@@ -1036,9 +1017,6 @@
                             <i class="fas fa-chalkboard-teacher"></i>
                         </button>
 
-                        <button id="mobile-subscribe-btn" class="mobile-subscribe-elite-btn">
-                            <i class="fas fa-gem"></i>
-                        </button>
                         <button id="mobile-menu-button" class="text-gray-900 dark:text-white text-2xl hover:text-orange-500 transition-colors">
                             <i class="fas fa-bars"></i>
                         </button>
@@ -1133,6 +1111,12 @@
 
                         <span class="text-gray-600">|</span>
 
+                        <button id="footer-subscribe-btn" class="text-xs text-sky-300 hover:text-sky-200 underline transition flex items-center">
+                            <i class="fas fa-gem mr-1"></i> Assinar
+                        </button>
+
+                        <span class="text-gray-600">|</span>
+
                         <button id="reset-progress" class="text-xs text-red-500 hover:text-red-400 underline transition flex items-center">
                             <i class="fas fa-trash-alt mr-1"></i> Resetar
                         </button>
@@ -1209,8 +1193,14 @@
                     <label class="text-sm font-bold text-orange-500 ml-1 uppercase tracking-wider">Senha</label>
                     <div class="relative mt-1">
                         <i class="fas fa-lock absolute left-4 top-3.5 text-gray-400 text-lg"></i>
-                        <input type="password" id="password-input" name="password" autocomplete="current-password" class="w-full pl-12 p-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 transition-all outline-none text-base" placeholder="••••••••">
+                        <input type="password" id="password-input" name="password" autocomplete="current-password" class="w-full pl-12 pr-12 p-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-500 transition-all outline-none text-base" placeholder="••••••••">
+                        <button id="toggle-password-visibility" type="button" class="password-visibility-toggle" aria-label="Mostrar senha" aria-pressed="false">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
+                    <button id="forgot-password-button" type="button" class="forgot-password-link">
+                        <i class="fas fa-key"></i> Esqueci minha senha
+                    </button>
                 </div>
             </div>
             
@@ -1271,24 +1261,40 @@
                 <i class="fab fa-pix"></i>
                 <div>
                     <strong>Vai pagar pelo PIX?</strong>
-                    <span>Copie a chave ou use o QR Code. Depois envie o comprovante para mim no WhatsApp para que eu faça a liberação do acesso.</span>
+                    <span>Copie a chave e pague o valor exibido no plano escolhido. Depois envie o comprovante para mim no WhatsApp para que eu faça a liberação do acesso.</span>
                 </div>
             </div>
             <div class="payment-card-option-note">
                 <i class="fas fa-credit-card"></i>
                 <span>Também é possível pagar no cartão ou pelo link de pagamento: clique no botão <strong>Assinar</strong> do plano escolhido.</span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="payment-coupon-box">
+                <div>
+                    <strong><i class="fas fa-ticket"></i> Tem cupom da sua turma?</strong>
+                    <span>Digite o cupom recebido para liberar a condição especial enquanto ele estiver dentro do prazo.</span>
+                </div>
+                <div class="payment-coupon-actions">
+                    <input id="payment-coupon-input" type="text" placeholder="Ex: TURM@B10" autocomplete="off">
+                    <button type="button" onclick="applyPaymentCoupon()"><i class="fas fa-check"></i> Aplicar</button>
+                    <button type="button" class="ghost" onclick="clearPaymentCoupon()"><i class="fas fa-rotate-left"></i></button>
+                </div>
+                <p id="payment-coupon-feedback">Valores oficiais exibidos. Cupom válido libera uma condição especial por tempo limitado.</p>
+            </div>
+            <div class="payment-plans-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <div class="payment-plan-card bg-gray-800 rounded-xl border border-gray-700 hover:border-blue-500 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
                     <div class="p-5 text-center bg-gray-800/50 border-b border-gray-700">
                         <span class="plan-top-label">Entrada econômica</span>
                         <h3 class="text-xl font-bold text-blue-400">MENSAL</h3>
-                        <div class="mt-3"><span class="text-sm text-gray-400">R$</span><span class="text-4xl font-extrabold text-white">29,90</span></div>
+                        <div class="payment-price-block mt-3">
+                            <span class="payment-cross-price hidden" data-plan-cross-price="monthly">R$ 39,90</span>
+                            <div><span class="text-sm text-gray-400">R$</span><span data-plan-price-value="monthly" class="text-4xl font-extrabold text-white">39,90</span></div>
+                            <small data-plan-price-note="monthly">Preço oficial</small>
+                        </div>
                     </div>
                     <div class="p-5 flex-grow flex flex-col items-center">
-                        <img src="./assets/img/29,99.jpeg" class="w-32 h-32 object-cover rounded-lg mb-4 border-2 border-blue-500/30" alt="QR Code Mensal">
+                        <img src="https://drive.google.com/thumbnail?id=1v92-mrluN_slfyW3H9dqSws-KezoNWQg&amp;sz=w1000" class="w-32 h-32 object-cover rounded-lg mb-4 border-2 border-blue-500/30" alt="QR Code para pagamento">
                         <ul class="text-sm text-gray-300 space-y-2 mb-6 text-left w-full pl-4"><li><i class="fas fa-check text-blue-500 mr-2"></i> Acesso por 30 dias</li><li><i class="fas fa-check text-blue-500 mr-2"></i> Conteúdo Completo</li><li><i class="fas fa-ban text-blue-500 mr-2"></i> Sem renovação automática</li></ul>
-                        <a href="https://pay.infinitepay.io/pixmedeiros/VC1D-7jMqYZwKN-29,99" target="_blank" class="w-full block text-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors mt-auto"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</a>
+                        <button type="button" onclick="alert('Link do cartão para R$ 39,90 ainda precisa ser gerado na InfinitePay. Use PIX ou gere o novo link do cartão.')" class="w-full block text-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors mt-auto"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</button>
                         <div class="pix-highlight-box">
                             <span><i class="fab fa-pix"></i> Chave PIX / celular</span>
                             <strong>61998300711</strong>
@@ -1303,13 +1309,17 @@
                     <div class="p-5 text-center bg-gradient-to-b from-gray-800 to-gray-700 border-b border-gray-600">
                         <span class="plan-top-label">Mais escolhido</span>
                         <h3 class="text-xl font-bold text-orange-500">SEMESTRAL</h3>
-                        <div class="mt-3"><span class="text-sm text-gray-400">R$</span><span class="text-5xl font-extrabold text-white">49,90</span></div>
-                        <p class="text-xs text-orange-300 mt-1">Economia Gigante!</p>
+                        <div class="payment-price-block mt-3">
+                            <span class="payment-cross-price hidden" data-plan-cross-price="semester">R$ 59,90</span>
+                            <div><span class="text-sm text-gray-400">R$</span><span data-plan-price-value="semester" class="text-5xl font-extrabold text-white">59,90</span></div>
+                            <small data-plan-price-note="semester">Preço oficial</small>
+                        </div>
+                        <p class="text-xs text-orange-300 mt-1">Mais escolhido</p>
                     </div>
                     <div class="p-5 flex-grow flex flex-col items-center">
-                        <img src="./assets/img/49,99.jpeg" class="w-36 h-36 object-cover rounded-lg mb-4 border-2 border-orange-500" alt="QR Code Semestral">
+                        <img src="https://drive.google.com/thumbnail?id=1v92-mrluN_slfyW3H9dqSws-KezoNWQg&amp;sz=w1000" class="w-36 h-36 object-cover rounded-lg mb-4 border-2 border-orange-500" alt="QR Code para pagamento">
                         <ul class="text-sm text-gray-300 space-y-2 mb-6 text-left w-full pl-4"><li><i class="fas fa-check text-orange-500 mr-2"></i> Acesso por 6 meses</li><li><i class="fas fa-check text-orange-500 mr-2"></i> Vídeos e Fotos Liberados</li><li><i class="fas fa-ban text-orange-500 mr-2"></i> Sem renovação automática</li></ul>
-                        <a href="https://pay.infinitepay.io/pixmedeiros/VC1D-6jVuG1yMV1-49,99" target="_blank" class="w-full block text-center bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-lg transition-all shadow-lg mt-auto animate-pulse"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</a>
+                        <button type="button" onclick="alert('Link do cartão para R$ 59,90 ainda precisa ser gerado na InfinitePay. Use PIX ou gere o novo link do cartão.')" class="w-full block text-center bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-lg transition-all shadow-lg mt-auto animate-pulse"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</button>
                         <div class="pix-highlight-box featured">
                             <span><i class="fab fa-pix"></i> Chave PIX / celular</span>
                             <strong>61998300711</strong>
@@ -1323,18 +1333,52 @@
                     <div class="p-5 text-center bg-gray-800/50 border-b border-gray-700">
                         <span class="plan-top-label">Melhor prazo</span>
                         <h3 class="text-xl font-bold text-green-400">ANUAL</h3>
-                        <div class="mt-3"><span class="text-sm text-gray-400">R$</span><span class="text-4xl font-extrabold text-white">69,90</span></div>
+                        <div class="payment-price-block mt-3">
+                            <span class="payment-cross-price hidden" data-plan-cross-price="annual">R$ 89,90</span>
+                            <div><span class="text-sm text-gray-400">R$</span><span data-plan-price-value="annual" class="text-4xl font-extrabold text-white">89,90</span></div>
+                            <small data-plan-price-note="annual">Preço oficial</small>
+                        </div>
                         <p class="text-xs text-green-300 mt-1">Melhor Custo-Benefício</p>
                     </div>
                     <div class="p-5 flex-grow flex flex-col items-center">
-                        <img src="./assets/img/69,99.jpeg" class="w-32 h-32 object-cover rounded-lg mb-4 border-2 border-green-500/30" alt="QR Code Anual">
+                        <img src="https://drive.google.com/thumbnail?id=1v92-mrluN_slfyW3H9dqSws-KezoNWQg&amp;sz=w1000" class="w-32 h-32 object-cover rounded-lg mb-4 border-2 border-green-500/30" alt="QR Code para pagamento">
                         <ul class="text-sm text-gray-300 space-y-2 mb-6 text-left w-full pl-4"><li><i class="fas fa-check text-green-500 mr-2"></i> Acesso por 1 ANO</li><li><i class="fas fa-check text-green-500 mr-2"></i> Todo o Conteúdo</li><li><i class="fas fa-star text-yellow-500 mr-2"></i> Prioridade no Suporte</li><li><i class="fas fa-ban text-green-500 mr-2"></i> Sem renovação automática</li></ul>
-                        <a href="https://pay.infinitepay.io/pixmedeiros/VC1D-6jVuclBoT3-69,99" target="_blank" class="w-full block text-center bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-colors mt-auto"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</a>
+                        <button type="button" onclick="alert('Link do cartão para R$ 89,90 ainda precisa ser gerado na InfinitePay. Use PIX ou gere o novo link do cartão.')" class="w-full block text-center bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-colors mt-auto"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</button>
                         <div class="pix-highlight-box">
                             <span><i class="fab fa-pix"></i> Chave PIX / celular</span>
                             <strong>61998300711</strong>
                             <button type="button" onclick="window.copyPixKey('61998300711')"><i class="fas fa-copy"></i> Copiar chave PIX</button>
                             <small>Após pagar, envie o comprovante para liberação do acesso.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-plan-card lifetime bg-gray-800 rounded-xl border border-yellow-500/60 hover:border-yellow-400 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden flex flex-col">
+                    <div class="absolute top-0 right-0 bg-gradient-to-r from-yellow-500 to-orange-500 text-gray-950 text-xs font-black px-3 py-1 rounded-bl-lg">OFERTA ESPECIAL</div>
+                    <div class="p-5 text-center bg-gradient-to-b from-yellow-500/15 to-gray-800 border-b border-yellow-500/40">
+                        <span class="plan-top-label">Acesso permanente</span>
+                        <h3 class="text-xl font-bold text-yellow-300">VITALÍCIO</h3>
+                        <div class="payment-price-block mt-3">
+                            <span class="payment-cross-price hidden" data-plan-cross-price="lifetime">R$ 197,00</span>
+                            <div><span class="text-sm text-gray-400">R$</span><span data-plan-price-value="lifetime" class="text-4xl font-extrabold text-white">197,00</span></div>
+                            <small data-plan-price-note="lifetime">Preço oficial</small>
+                        </div>
+                        <p class="text-xs text-yellow-200 mt-1">Pague uma vez e mantenha seu acesso</p>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col items-center">
+                        <img src="https://drive.google.com/thumbnail?id=1v92-mrluN_slfyW3H9dqSws-KezoNWQg&amp;sz=w1000" class="w-32 h-32 object-cover rounded-lg mb-4 border-2 border-yellow-500/50" alt="QR Code para pagamento">
+                        <ul class="text-sm text-gray-300 space-y-2 mb-6 text-left w-full pl-4">
+                            <li><i class="fas fa-infinity text-yellow-400 mr-2"></i> Acesso permanente à plataforma</li>
+                            <li><i class="fas fa-book-open text-yellow-400 mr-2"></i> Apostila e materiais liberados</li>
+                            <li><i class="fas fa-gem text-yellow-400 mr-2"></i> Biblioteca premium e novidades</li>
+                            <li><i class="fas fa-ban text-yellow-400 mr-2"></i> Sem renovação automática</li>
+                        </ul>
+                        <button type="button" onclick="alert('Link do cartão para R$ 197,00 ainda precisa ser gerado na InfinitePay. Use PIX ou gere o novo link do cartão.')" class="w-full block text-center bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-gray-950 font-black py-3 rounded-lg transition-colors mt-auto"><i class="fas fa-credit-card mr-2"></i> ASSINAR / CARTÃO</button>
+                        <div class="pix-highlight-box lifetime">
+                            <span><i class="fab fa-pix"></i> Chave PIX / celular</span>
+                            <strong>61998300711</strong>
+                            <button type="button" onclick="window.copyPixKey('61998300711')"><i class="fas fa-copy"></i> Copiar chave PIX</button>
+                            <small>Após pagar, envie o comprovante para liberação do acesso vitalício.</small>
                         </div>
                     </div>
                 </div>
@@ -1435,7 +1479,7 @@
             <div>
                 <span><i class="fas fa-chalkboard-teacher"></i> Modo aula</span>
                 <h2>Painel do Instrutor</h2>
-                <p>Ferramentas rápidas para conduzir aula, acompanhar presença e publicar avisos.</p>
+                <p>Ferramentas rápidas para conduzir aula, criar cupons e publicar avisos.</p>
             </div>
             <button id="close-instructor-modal" class="instructor-close-btn" title="Fechar painel"><i class="fas fa-times"></i></button>
         </div>
@@ -1444,7 +1488,7 @@
                 <div>
                     <span>Central do Medeiros</span>
                     <h3>Comande a aula sem sair da plataforma</h3>
-                    <p>Use cronômetro, sorteio, chamada, roteiro e comunicado rápido em uma única tela.</p>
+                    <p>Use cronômetro, sorteio, cupons por turma e mensagens no app em uma única tela.</p>
                 </div>
                 <div class="instructor-clock">
                     <strong id="instructor-clock-time">--:--</strong>
@@ -1472,40 +1516,123 @@
                     <div id="instructor-student-result" class="instructor-result">Aguardando sorteio.</div>
                 </article>
 
-                <article class="instructor-tool-card">
-                    <div class="instructor-card-title"><i class="fas fa-clipboard-list"></i><div><strong>Chamada rápida</strong><span>Monte uma lista simples durante a aula.</span></div></div>
-                    <div class="instructor-inline">
-                        <label class="instructor-field grow"><span>Aluno presente</span><input id="instructor-attendance-name" placeholder="Nome do aluno"></label>
-                        <button class="instructor-primary" onclick="addInstructorAttendance()"><i class="fas fa-plus"></i> Adicionar</button>
+                <article class="instructor-tool-card instructor-coupon-card">
+                    <div class="coupon-manager-head">
+                        <div class="instructor-card-title"><i class="fas fa-ticket"></i><div><strong>Gestor de cupons</strong><span>Controle campanhas por turma com início, fim e valores especiais.</span></div></div>
+                        <div class="coupon-manager-values">
+                            <span>Preço oficial</span>
+                            <strong>39,90 / 59,90 / 89,90 / 197,00</strong>
+                        </div>
                     </div>
-                    <div id="instructor-attendance-list" class="instructor-list"></div>
-                    <button class="instructor-ghost full" onclick="copyInstructorAttendance()"><i class="fas fa-copy"></i> Copiar chamada</button>
-                </article>
 
-                <article class="instructor-tool-card">
-                    <div class="instructor-card-title"><i class="fas fa-bolt"></i><div><strong>Pergunta relâmpago</strong><span>Use para recuperar atenção da turma.</span></div></div>
-                    <button class="instructor-primary full" onclick="generateInstructorQuestion()"><i class="fas fa-wand-magic-sparkles"></i> Gerar pergunta</button>
-                    <div id="instructor-question-result" class="instructor-result">Clique para gerar uma pergunta rápida.</div>
-                </article>
-
-                <article class="instructor-tool-card">
-                    <div class="instructor-card-title"><i class="fas fa-route"></i><div><strong>Roteiro da aula</strong><span>Salvo apenas neste dispositivo.</span></div></div>
-                    <label class="instructor-field"><span>Plano rápido</span><textarea id="instructor-class-plan" rows="7" placeholder="Abertura, conteúdo, prática, simulado, recado final..."></textarea></label>
-                    <div class="instructor-inline">
-                        <button class="instructor-primary" onclick="saveInstructorPlan()"><i class="fas fa-save"></i> Salvar roteiro</button>
-                        <button class="instructor-ghost" onclick="copyInstructorPlan()"><i class="fas fa-copy"></i> Copiar</button>
+                    <div class="coupon-manager-stats">
+                        <div><span>Mensal com cupom</span><strong>R$ 29,90</strong></div>
+                        <div><span>Semestral com cupom</span><strong>R$ 49,90</strong></div>
+                        <div><span>Anual com cupom</span><strong>R$ 69,90</strong></div>
+                        <div><span>Vitalício com cupom</span><strong>R$ 149,90</strong></div>
                     </div>
+
+                    <div class="coupon-manager-form">
+                        <label class="instructor-field coupon-code-field"><span>Nome do cupom</span><input id="instructor-coupon-code" placeholder="TURM@B10"></label>
+                        <label class="instructor-field"><span>Começa em</span><input id="instructor-coupon-start" type="datetime-local"></label>
+                        <label class="instructor-field"><span>Termina em</span><input id="instructor-coupon-end" type="datetime-local"></label>
+                        <button class="instructor-primary coupon-create-btn" onclick="saveInstructorCoupon()"><i class="fas fa-plus"></i> Criar cupom</button>
+                    </div>
+
+                    <div class="coupon-manager-footer">
+                        <div><i class="fas fa-circle-info"></i> O aluno aplica o cupom na tela de planos. Fora do prazo, o sistema bloqueia automaticamente.</div>
+                    </div>
+
+                    <div id="instructor-coupon-list" class="instructor-coupon-list">Carregando cupons...</div>
                 </article>
 
                 <article class="instructor-tool-card instructor-announcement-card">
-                    <div class="instructor-card-title"><i class="fas fa-bullhorn"></i><div><strong>Comunicado rápido</strong><span>Campo direto para você publicar vagas, oportunidades e recados.</span></div></div>
+                    <div class="instructor-card-title"><i class="fas fa-bullhorn"></i><div><strong>Mensagem no app</strong><span>Envie avisos para um aluno, uma turma ou todos.</span></div></div>
                     <label class="instructor-field"><span>Título</span><input id="instructor-ann-title" placeholder="Ex: Vaga disponível hoje"></label>
                     <label class="instructor-field"><span>Mensagem</span><textarea id="instructor-ann-message" rows="4" placeholder="Escreva o aviso para os alunos..."></textarea></label>
                     <div class="instructor-inline">
-                        <label class="instructor-field grow"><span>Enviar para</span><select id="instructor-ann-target"><option value="all">Todos</option><option value="company">Turma</option><option value="status">Status</option><option value="course">Curso</option><option value="email">Aluno por e-mail</option></select></label>
-                        <label class="instructor-field grow"><span>Filtro</span><input id="instructor-ann-target-value" placeholder="Turma, status, curso ou e-mail"></label>
+                        <label class="instructor-field grow"><span>Enviar para</span><select id="instructor-ann-target" onchange="updateInstructorAnnouncementTarget()"><option value="all">Todos os alunos</option><option value="company">Turma</option><option value="student">Aluno individual</option><option value="status">Status</option><option value="course">Curso</option></select></label>
+                        <label class="instructor-field grow"><span>Filtro</span><input id="instructor-ann-target-value" list="instructor-ann-target-options" oninput="previewInstructorAnnouncementAudience()" placeholder="Selecione o público"></label>
                     </div>
-                    <button class="instructor-primary full" onclick="publishInstructorAnnouncement()"><i class="fas fa-paper-plane"></i> Publicar aviso</button>
+                    <datalist id="instructor-ann-target-options"></datalist>
+                    <div id="instructor-ann-helper" class="instructor-message-helper">Todos os alunos ativos receberão a mensagem dentro do app.</div>
+                    <div id="instructor-ann-preview" class="instructor-message-preview">Carregando alunos para envio...</div>
+                    <button class="instructor-primary full" onclick="publishInstructorAnnouncement()"><i class="fas fa-paper-plane"></i> Enviar mensagem</button>
+                </article>
+
+                <article class="instructor-tool-card instructor-voice-card admin-voice-panel">
+                    <div class="admin-voice-title">
+                        <div>
+                            <span><i class="fas fa-comments"></i> Voz do Aluno</span>
+                            <strong>NPS, comentários e sinais de satisfação</strong>
+                        </div>
+                        <small>Dados enviados pela tela inicial do aluno</small>
+                    </div>
+                    <div id="instructor-voice-content" class="admin-voice-content">
+                        <div class="admin-voice-empty">Abra o painel do instrutor para carregar os feedbacks.</div>
+                    </div>
+                </article>
+
+                <article class="instructor-tool-card instructor-academic-card">
+                    <div class="instructor-card-title"><i class="fas fa-file-excel"></i><div><strong>Gestão de notas por turma</strong><span>Importe e atualize várias turmas com conferência prévia.</span></div></div>
+                    <p class="instructor-soft-note">Selecione uma ou várias planilhas. Use a turma no nome do arquivo, como <strong>B07.xlsx</strong>, ou mantenha uma coluna chamada <strong>Turma</strong>.</p>
+                    <div class="academic-import-benefits">
+                        <span><i class="fas fa-shield-halved"></i> Campos vazios não apagam notas</span>
+                        <span><i class="fas fa-users"></i> Validação por turma</span>
+                        <span><i class="fas fa-clock-rotate-left"></i> Histórico e desfazer</span>
+                    </div>
+                    <input type="file" id="academic-grades-file-input" class="hidden" accept=".xlsx,.xls,.csv" multiple onchange="importAcademicGradesFromFile(this)">
+                    <button type="button" id="academic-import-grades-btn" class="instructor-primary full" onclick="document.getElementById('academic-grades-file-input')?.click()">
+                        <i class="fas fa-file-circle-plus"></i> Selecionar planilhas de notas
+                    </button>
+                    <div id="academic-import-grades-report" class="admin-import-grades-report hidden"></div>
+                    <div class="academic-import-history-shell">
+                        <div class="academic-import-history-title"><span><i class="fas fa-clock-rotate-left"></i> Histórico de importações</span><small>Últimas operações</small></div>
+                        <div id="academic-import-history" class="academic-import-history"></div>
+                    </div>
+                    <section class="manual-grade-section">
+                        <div class="manual-grade-head">
+                            <div>
+                                <span><i class="fas fa-pen-to-square"></i> Lançamento manual</span>
+                                <strong>Atualize as notas de um aluno</strong>
+                                <small>Campos vazios preservam o que já foi lançado.</small>
+                            </div>
+                            <div id="manual-grade-summary" class="manual-grade-summary">
+                                <span>Média final</span><strong>Em análise</strong><em>Aguardando aluno</em>
+                            </div>
+                        </div>
+                        <div class="manual-grade-student-grid">
+                            <label class="instructor-field"><span>Turma</span><select id="manual-grade-company" onchange="populateManualGradeStudents(true)"><option value="">Todas as turmas</option></select></label>
+                            <label class="instructor-field"><span>Aluno</span><input id="manual-grade-student" list="manual-grade-students" onchange="loadManualStudentGrades()" placeholder="Digite nome, CPF ou e-mail"></label>
+                            <datalist id="manual-grade-students"></datalist>
+                        </div>
+                        <div class="manual-grade-inputs">
+                            <label><span>Relações Humanas</span><input id="manual-grade-rh" type="number" min="0" max="10" step="0.1" inputmode="decimal" oninput="updateManualAcademicSummary()" placeholder="0 a 10"></label>
+                            <label><span>Legislação</span><input id="manual-grade-legislacao" type="number" min="0" max="10" step="0.1" inputmode="decimal" oninput="updateManualAcademicSummary()" placeholder="0 a 10"></label>
+                            <label><span>Salvamento</span><input id="manual-grade-salvamento" type="number" min="0" max="10" step="0.1" inputmode="decimal" oninput="updateManualAcademicSummary()" placeholder="0 a 10"></label>
+                            <label><span>Prevenção e Incêndio</span><input id="manual-grade-pci" type="number" min="0" max="10" step="0.1" inputmode="decimal" oninput="updateManualAcademicSummary()" placeholder="0 a 10"></label>
+                            <label><span>Atendimento Pré-Hospitalar</span><input id="manual-grade-aph" type="number" min="0" max="10" step="0.1" inputmode="decimal" oninput="updateManualAcademicSummary()" placeholder="0 a 10"></label>
+                        </div>
+                        <button type="button" id="manual-grade-save-btn" class="instructor-primary full" onclick="saveManualStudentGrades()"><i class="fas fa-floppy-disk"></i> Salvar notas do aluno</button>
+                        <div id="manual-grade-result" class="manual-grade-result"><i class="fas fa-circle-info"></i> Selecione uma turma e um aluno para começar.</div>
+                    </section>
+                </article>
+
+                <article class="instructor-tool-card instructor-certificate-card">
+                    <div class="certificate-manager-head">
+                        <div class="instructor-card-title"><i class="fas fa-certificate"></i><div><strong>Certificado do aluno</strong><span>Vincule o PDF e disponibilize no perfil individual.</span></div></div>
+                        <div class="certificate-manager-badge"><i class="fas fa-user-shield"></i><span>Entrega individual e segura</span></div>
+                    </div>
+                    <div class="certificate-manager-form">
+                        <label class="instructor-field"><span>Filtrar por turma</span><select id="instructor-certificate-company" onchange="populateInstructorCertificateStudents(true)"><option value="">Todas as turmas</option></select></label>
+                        <label class="instructor-field"><span>Aluno</span><input id="instructor-certificate-student" list="instructor-certificate-students" placeholder="Digite nome, CPF ou e-mail"></label>
+                        <datalist id="instructor-certificate-students"></datalist>
+                        <label class="instructor-field certificate-link-field"><span>Link do PDF do certificado</span><input id="instructor-certificate-url" type="url" placeholder="Cole aqui o link do PDF para salvar instantaneamente"></label>
+                        <button type="button" id="instructor-certificate-link-btn" class="instructor-secondary certificate-link-btn" onclick="saveInstructorCertificateLink()">
+                            <i class="fas fa-link"></i> Vincular certificado
+                        </button>
+                    </div>
+                    <div id="instructor-certificate-result" class="instructor-message-preview">Cole o link do PDF hospedado para liberar o certificado no perfil do aluno.</div>
                 </article>
             </div>
         </div>
@@ -1520,7 +1647,6 @@
         </div>
         
         <div class="p-4 bg-gray-100 overflow-y-auto flex-grow">
-
             <div class="mb-6 relative">
                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
                 <input type="text" id="admin-search-input" class="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-orange-500 transition-all" placeholder="Filtrar por nome, CPF, telefone, e-mail, status ou turma...">
@@ -1577,9 +1703,23 @@
 
     <div id="reset-modal" class="modal"><div class="p-4"><i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i><h2 class="text-2xl font-bold mb-2">Resetar Progresso?</h2><div class="flex justify-center gap-4"><button id="cancel-reset-button" class="action-button bg-gray-500">Cancelar</button><button id="confirm-reset-button" class="action-button bg-red-600">Confirmar</button></div></div></div>
     <div id="reset-modal-overlay" class="modal-overlay"></div>
+    <div id="password-reset-modal" class="modal password-reset-modal" role="dialog" aria-modal="true" aria-label="Redefinir senha">
+        <button id="close-password-reset-modal" type="button" class="password-reset-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+        <div class="password-reset-icon"><i class="fas fa-key"></i></div>
+        <h2>Redefinir senha</h2>
+        <p>Digite o e-mail cadastrado na plataforma. Você receberá uma mensagem oficial para criar uma nova senha com segurança.</p>
+        <label for="password-reset-email">E-mail cadastrado</label>
+        <input id="password-reset-email" type="email" autocomplete="email" placeholder="seu@email.com">
+        <small>Confira também a caixa de spam ou lixo eletrônico caso o e-mail demore alguns minutos.</small>
+        <button id="send-password-reset-button" type="button" class="action-button password-reset-send">
+            <i class="fas fa-paper-plane"></i> Enviar link de redefinição
+        </button>
+        <p id="password-reset-feedback" class="password-reset-feedback"></p>
+    </div>
+    <div id="password-reset-modal-overlay" class="modal-overlay"></div>
     <div id="congratulations-modal" class="modal"><div class="p-4"><i class="fas fa-trophy text-4xl text-yellow-500 mb-4"></i><h2 class="text-2xl font-bold mb-2">Parabéns!</h2><button id="close-congrats" class="action-button">Fechar</button></div></div>
     <div id="modal-overlay" class="modal-overlay"></div>
-    <div id="achievement-modal" class="modal"><div id="ach-modal-icon-container" class="mb-4"></div><h2 class="text-2xl font-bold mb-2">Conquista!</h2><p id="ach-modal-title" class="mb-6">...</p><button id="close-ach-modal" class="action-button">Continuar</button></div>
+    <div id="achievement-modal" class="modal" role="dialog" aria-modal="true" aria-label="Conquista desbloqueada"><div id="ach-modal-icon-container" class="mb-4"></div><h2 class="text-2xl font-bold mb-2">Conquista desbloqueada!</h2><p id="ach-modal-title" class="mb-6">...</p><button id="close-ach-modal" class="action-button" type="button" onclick="window.closeAchievementModal?.()">Continuar</button></div>
     <div id="achievement-modal-overlay" class="modal-overlay"></div>
 
     <nav id="bottom-nav" class="md:hidden fixed bottom-0 left-0 w-full z-40 bg-white dark:bg-gray-800 shadow-lg border-t dark:border-gray-700">
@@ -1606,8 +1746,33 @@
     <script src="quizzes.js" defer></script>
     <script src="data.js" defer></script>
     <script src="course.js" defer></script>
-<script src="tools_logic.js?v=107" defer></script> <script src="firebase-init.js?v=107" defer></script>
-    <script src="app_final.js?v=107" defer></script>
+    <script src="js/app-utils.js?v=214" defer></script>
+    <script src="js/data/module-media-assets.js?v=214" defer></script>
+    <script src="js/data/student-resources.js?v=214" defer></script>
+    <script src="js/library-manager.js?v=214" defer></script>
+    <script src="js/feedback-manager.js?v=214" defer></script>
+    <script src="js/student-experience.js?v=214" defer></script>
+    <script src="js/student-pages.js?v=214" defer></script>
+    <script src="js/course-navigation.js?v=214" defer></script>
+    <script src="js/training-modes.js?v=214" defer></script>
+    <script src="js/narrated-audio.js?v=214" defer></script>
+    <script src="js/module-media-renderer.js?v=214" defer></script>
+    <script src="js/module-loader.js?v=214" defer></script>
+    <script src="js/academic-core.js?v=214" defer></script>
+    <script src="js/student-profile-renderers.js?v=214" defer></script>
+    <script src="js/instructor-announcements.js?v=214" defer></script>
+    <script src="js/certificates.js?v=214" defer></script>
+    <script src="js/academic-import-manager.js?v=214" defer></script>
+    <script src="js/manual-grades.js?v=214" defer></script>
+    <script src="js/payment-manager.js?v=214" defer></script>
+    <script src="js/auth-ui.js?v=214" defer></script>
+    <script src="js/coupon-manager.js?v=214" defer></script>
+    <script src="js/instructor-panel.js?v=214" defer></script>
+    <script src="js/admin-panel.js?v=214" defer></script>
+    <script src="js/manager-panel.js?v=214" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<script src="tools_logic.js?v=214" defer></script> <script src="firebase-init.js?v=214" defer></script>
+    <script src="app_final.js?v=214" defer></script>
     <div id="iam-ai-widget" class="iam-ai-widget hidden" aria-live="polite">
         <section id="iam-ai-panel" class="iam-ai-panel" aria-label="IAM - Inteligência Artificial Medeiros">
             <header class="iam-ai-header">
@@ -1635,11 +1800,11 @@
         </button>
     </div>
                <div id="manager-fab" class="hidden fixed top-24 right-4 z-[9999] group animate-fade-in-up">
-    <button onclick="if((window.__fbDB || window.fbDB) && typeof openManagerPanel === 'function'){ openManagerPanel(); } else { alert('Aguarde o carregamento do sistema...'); }" 
+    <button onclick="if((window.__fbDB || window.fbDB) && typeof window.openManagerPanel === 'function'){ window.openManagerPanel(); } else { alert('Aguarde o carregamento do sistema...'); }" 
             class="manager-elite-btn">
         <i class="fas fa-briefcase"></i>
     </button>
-    <span class="absolute right-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs font-bold px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">
+    <span class="manager-fab-tooltip absolute right-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs font-bold px-3 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">
         Painel Gestor
     </span>
 </div>
