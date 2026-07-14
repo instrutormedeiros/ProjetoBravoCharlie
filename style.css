@@ -20,39 +20,34 @@
     --brand-dark: #111827;
 }
 
-/* === SESSION RESTORE GUARD V214 === */
+/* === SESSION RESTORE GUARD V215 === */
 body.auth-restoring:not([data-app-ready="true"]) {
-    overflow: hidden;
+    overflow: auto !important;
 }
 
 body.auth-restoring:not([data-app-ready="true"])::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 99998;
-    background:
-        radial-gradient(circle at 20% 20%, rgba(14, 116, 255, 0.22), transparent 34%),
-        linear-gradient(135deg, rgba(2, 6, 23, 0.96), rgba(15, 23, 42, 0.98));
-    backdrop-filter: blur(10px);
+    content: none;
+    display: none;
 }
 
 body.auth-restoring:not([data-app-ready="true"])::after {
-    content: "Restaurando sua sessão...";
+    content: "Restaurando sessão...";
     position: fixed;
-    left: 50%;
-    top: 50%;
-    z-index: 99999;
-    transform: translate(-50%, -50%);
-    min-width: min(82vw, 360px);
-    padding: 1.15rem 1.35rem;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 5rem));
+    z-index: 80;
+    max-width: min(82vw, 280px);
+    padding: 0.75rem 1rem;
     border: 1px solid rgba(147, 197, 253, 0.4);
-    border-radius: 22px;
-    background: rgba(15, 23, 42, 0.9);
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.86);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
     color: #f8fafc;
-    font-weight: 900;
+    font-size: 0.9rem;
+    font-weight: 800;
     letter-spacing: 0.02em;
     text-align: center;
+    pointer-events: none;
 }
 
 .dark {

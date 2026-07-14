@@ -3,6 +3,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('auth-restoring');
     document.body.setAttribute('data-auth-restoring', 'true');
+    window.setTimeout(() => {
+        if (document.body.classList.contains('auth-restoring')) {
+            document.body.classList.remove('auth-restoring');
+            document.body.removeAttribute('data-auth-restoring');
+        }
+    }, 2800);
     // ============================================================
 // SISTEMA TÁTICO DE BUSCA EM TEMPO REAL (BLINDADO)
 // ============================================================
