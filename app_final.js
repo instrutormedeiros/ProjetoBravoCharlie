@@ -630,6 +630,7 @@ function init() {
     
     // ---> ADICIONE ISSO AQUI:
     setTimeout(initScrollReveal, 100); // Inicia os observadores de animação
+    setTimeout(() => window.enableLandingTapAccess?.(), 150);
     
         setupProtection();
         setupTheme();
@@ -2069,10 +2070,23 @@ window.enterSystem = function() {
         }
     }, 800); // Tempo sincronizado com a transição (0.8s)
 }
+
+window.enableLandingTapAccess = function() {
+    const landing = document.getElementById('landing-hero');
+    if (!landing || landing.dataset.tapAccessReady === 'true') return;
+    landing.dataset.tapAccessReady = 'true';
+
+    landing.addEventListener('click', (event) => {
+        if (!document.body.classList.contains('landing-active')) return;
+        if (event.target.closest('button, a, input, select, textarea, details, summary, #extra-courses-scroll')) return;
+        window.enterSystem?.();
+    });
+};
 // --- SISTEMA DE ANIMAÇÃO E NOTEBOOK (COM DICA MOBILE) ---
 function initScrollReveal() {
     const laptop = document.getElementById('laptop-lid');
     const heroContainer = document.getElementById('landing-hero');
+    window.enableLandingTapAccess?.();
     const tapHint = document.getElementById('notebook-tap-hint');
 
     // Função Unificada: Abre o notebook e esconde a dica

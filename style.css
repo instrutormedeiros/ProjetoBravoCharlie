@@ -5372,7 +5372,8 @@ body.focus-mode #main-wrapper { padding-bottom: 2rem; }
 
 /* Quando a landing está ativa: o BODY NÃO rola */
 body.landing-active {
-    overflow: hidden;          /* o corpo não rola, só a capa */
+    overflow-y: auto !important;
+    touch-action: pan-y;
     padding-bottom: 0 !important;
 }
 
@@ -5452,7 +5453,7 @@ details[open] summary ~ * {
     
     transform: translateY(0);
     touch-action: pan-y; 
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 #intro-carousel-wrapper .intro-nav-arrow {
