@@ -553,6 +553,7 @@ document.body.addEventListener('input', (e) => {
     let deferredPrompt;
     const installBtn = document.getElementById('install-app-btn');
     const installBtnMobile = document.getElementById('install-app-btn-mobile');
+    const installBtnFooter = document.getElementById('install-app-footer-btn');
     const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
 
     if (isIos) {
@@ -570,6 +571,7 @@ document.body.addEventListener('input', (e) => {
     window.addEventListener('appinstalled', () => {
         if(installBtn) installBtn.classList.add('hidden');
         if(installBtnMobile) installBtnMobile.classList.add('hidden');
+        if(installBtnFooter) installBtnFooter.classList.add('is-installed');
         deferredPrompt = null;
     });
 
@@ -601,12 +603,13 @@ document.body.addEventListener('input', (e) => {
             }
             deferredPrompt = null;
         } else {
-            alert("Para instalar:\nProcure o ícone de instalação na barra de endereço ou menu.");
+            alert("Instalar o app:\n\nSe o botão automático não aparecer, abra o menu do navegador e toque em 'Instalar app' ou 'Adicionar à tela inicial'.\n\nSe você já instalou, abra pelo ícone Bravo Charlie na tela do seu celular.");
         }
     }
 
     if(installBtn) installBtn.addEventListener('click', triggerInstall);
     if(installBtnMobile) installBtnMobile.addEventListener('click', triggerInstall);
+    if(installBtnFooter) installBtnFooter.addEventListener('click', triggerInstall);
 
     if (typeof moduleContent === 'undefined' || typeof moduleCategories === 'undefined') {
     console.warn("⚠️ Conteúdo do curso ainda não carregado. Mantendo apenas a capa.");
