@@ -1636,41 +1636,20 @@ window.PBC_CREATE_MANAGER_PANEL({
 
         prevButton?.addEventListener('click', () => {
             if (!currentModuleId) return;
-            
-            // Detecta prefixo correto (module ou sp_module)
-            let prefix = 'module';
-            let n = 0;
-
-            if (currentModuleId.startsWith('sp_module')) {
-                prefix = 'sp_module';
-                n = parseInt(currentModuleId.replace('sp_module', ''));
-            } else {
-                n = parseInt(currentModuleId.replace('module', ''));
-            }
-
-            if(n > 1) {
-                loadModuleContent(`${prefix}${n-1}`);
+            const visibleIds = getVisibleModuleIds(currentUserData);
+            const currentIndex = visibleIds.indexOf(currentModuleId);
+            if (currentIndex > 0) {
+                loadModuleContent(visibleIds[currentIndex - 1]);
             }
             nextButton?.classList.remove('blinking-button');
         });
 
         nextButton?.addEventListener('click', () => {
             if (!currentModuleId) return;
-            
-            // Detecta prefixo correto
-            let prefix = 'module';
-            let n = 0;
-
-            if (currentModuleId.startsWith('sp_module')) {
-                prefix = 'sp_module';
-                n = parseInt(currentModuleId.replace('sp_module', ''));
-            } else {
-                n = parseInt(currentModuleId.replace('module', ''));
-            }
-
-            // Usa totalModules (que já é filtrado por curso no login)
-            if(n < totalModules) {
-                loadModuleContent(`${prefix}${n+1}`);
+            const visibleIds = getVisibleModuleIds(currentUserData);
+            const currentIndex = visibleIds.indexOf(currentModuleId);
+            if (currentIndex >= 0 && currentIndex < visibleIds.length - 1) {
+                loadModuleContent(visibleIds[currentIndex + 1]);
             }
             nextButton?.classList.remove('blinking-button');
         });

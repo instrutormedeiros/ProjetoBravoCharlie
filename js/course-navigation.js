@@ -372,17 +372,11 @@
                  return;
             }
             
-            // Lógica Híbrida: Detecta se é SP ou BC para extrair o número corretamente
-            let n = 0;
-            if (getCurrentModuleId().startsWith('sp_module')) {
-                n = parseInt(getCurrentModuleId().replace('sp_module', ''));
-            } else {
-                n = parseInt(getCurrentModuleId().replace('module', ''));
-            }
+            const visibleIds = getVisibleModuleIds(getCurrentUserData());
+            const currentIndex = visibleIds.indexOf(getCurrentModuleId());
 
-            // Bloqueia se for o primeiro (1) ou o último (getTotalModules())
-            prevModule.disabled = (n <= 1);
-            nextModule.disabled = (n >= getTotalModules()); 
+            prevModule.disabled = currentIndex <= 0;
+            nextModule.disabled = currentIndex < 0 || currentIndex >= visibleIds.length - 1;
         }
 
         function bindModuleSearchHandlers() {
