@@ -38,6 +38,26 @@
             const btnLogin = document.getElementById('login-button');
             const btnSignup = document.getElementById('signup-button');
 
+            const showAuthFeedback = (message, type = 'info') => {
+                if (!feedback) return;
+                feedback.textContent = message;
+                feedback.className = `auth-feedback auth-feedback-${type}`;
+            };
+
+            const getFriendlyAuthError = (error, fallback) => {
+                const raw = String(error?.code || error?.message || error || '').toLowerCase();
+                if (raw.includes('invalid_login_credentials') || raw.includes('invalid-credential') || raw.includes('wrong-password') || raw.includes('user-not-found')) {
+                    return 'E-mail ou senha incorretos. Confira os dados e tente novamente.';
+                }
+                if (raw.includes('too-many-requests')) {
+                    return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.';
+                }
+                if (raw.includes('network')) {
+                    return 'Falha de conexão. Verifique sua internet e tente novamente.';
+                }
+                return fallback;
+            };
+
             if (loginGroup && !loginGroup.classList.contains('hidden')) {
                 courseField?.classList.add('hidden');
                 nameField?.classList.add('hidden');
@@ -125,7 +145,10 @@
                 if (authTitle) authTitle.textContent = 'Criar Nova Conta';
                 if (authMsg) authMsg.textContent = 'Cadastre-se para o Período de Experiência.';
                 passwordInput?.setAttribute('autocomplete', 'new-password');
-                if (feedback) feedback.textContent = '';
+                if (feedback) {
+                    feedback.textContent = '';
+                    feedback.className = 'auth-feedback';
+                }
             });
 
             btnShowLogin?.addEventListener('click', () => {
@@ -139,36 +162,30 @@
                 if (authTitle) authTitle.textContent = 'Acesso ao Sistema';
                 if (authMsg) authMsg.textContent = 'Acesso Restrito';
                 passwordInput?.setAttribute('autocomplete', 'current-password');
-                if (feedback) feedback.textContent = '';
+                if (feedback) {
+                    feedback.textContent = '';
+                    feedback.className = 'auth-feedback';
+                }
             });
 
             btnLogin?.addEventListener('click', async () => {
                 const email = emailInput?.value || '';
                 const password = passwordInput?.value || '';
                 if (!email || !password) {
-                    if (feedback) {
-                        feedback.textContent = 'Preencha e-mail e senha.';
-                        feedback.className = 'text-center text-sm mt-4 font-semibold text-red-500';
-                    }
+                    showAuthFeedback('Preencha e-mail e senha.', 'error');
                     return;
                 }
-                if (feedback) {
-                    feedback.textContent = 'Entrando...';
-                    feedback.className = 'text-center text-sm mt-4 text-blue-400 font-semibold';
-                }
+                showAuthFeedback('Entrando...', 'info');
                 try {
                     if (!window.FirebaseCourse?.signInWithEmail) {
                         throw new Error('Sistema de login ainda não carregou. Aguarde alguns segundos e tente novamente.');
                     }
                     localStorage.removeItem('my_session_id');
                     await window.FirebaseCourse.signInWithEmail(email, password);
-                    if (feedback) feedback.textContent = 'Verificando...';
+                    showAuthFeedback('Verificando...', 'info');
                     storeLoginCredential(email, password);
                 } catch (error) {
-                    if (feedback) {
-                        feedback.className = 'text-center text-sm mt-4 text-red-400 font-semibold';
-                        feedback.textContent = error.message || 'Erro ao entrar. Verifique seus dados.';
-                    }
+                    showAuthFeedback(getFriendlyAuthError(error, 'Não consegui entrar. Confira seus dados e tente novamente.'), 'error');
                 }
             });
 
@@ -182,28 +199,19 @@
                 const cpf = cpfInput?.value || '';
 
                 if (!name || !email || !password || !cpf || !phone) {
-                    if (feedback) {
-                        feedback.textContent = 'Todos os campos obrigatórios devem ser preenchidos.';
-                        feedback.className = 'text-center text-sm mt-4 font-semibold text-red-500';
-                    }
+                    showAuthFeedback('Todos os campos obrigatórios devem ser preenchidos.', 'error');
                     return;
                 }
-                if (feedback) {
-                    feedback.textContent = 'Criando conta...';
-                    feedback.className = 'text-center text-sm mt-4 text-blue-400 font-semibold';
-                }
+                showAuthFeedback('Criando conta...', 'info');
                 try {
                     if (!window.FirebaseCourse?.signUpWithEmail) {
                         throw new Error('Sistema de cadastro ainda não carregou. Aguarde alguns segundos e tente novamente.');
                     }
                     await window.FirebaseCourse.signUpWithEmail(name, email, password, cpf, company, phone, courseType);
-                    if (feedback) feedback.textContent = 'Sucesso! Iniciando...';
+                    showAuthFeedback('Sucesso! Iniciando...', 'success');
                     storeLoginCredential(email, password);
                 } catch (error) {
-                    if (feedback) {
-                        feedback.className = 'text-center text-sm mt-4 text-red-400 font-semibold';
-                        feedback.textContent = error.message || 'Erro ao criar conta.';
-                    }
+                    showAuthFeedback(getFriendlyAuthError(error, 'Não consegui criar a conta. Confira os dados e tente novamente.'), 'error');
                 }
             });
         }

@@ -2590,6 +2590,62 @@ h3,
     -webkit-text-fill-color: #ffffff !important;
     text-decoration: underline;
 }
+#name-prompt-modal .auth-feedback {
+    min-height: 2.75rem;
+    margin: 0.9rem 0 0 !important;
+    padding: 0.78rem 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border-radius: 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1.35;
+    font-weight: 850;
+    text-align: center;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.46);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    overflow-wrap: anywhere;
+}
+#name-prompt-modal .auth-feedback:empty {
+    opacity: 0;
+    padding: 0;
+    min-height: 0;
+    border: 0;
+    margin-top: 0 !important;
+}
+#name-prompt-modal .auth-feedback::before {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}
+#name-prompt-modal .auth-feedback-info {
+    color: #bfdbfe !important;
+    background: rgba(37, 99, 235, 0.13);
+    border-color: rgba(96, 165, 250, 0.32);
+}
+#name-prompt-modal .auth-feedback-info::before {
+    content: "\f110";
+    color: #60a5fa;
+}
+#name-prompt-modal .auth-feedback-error {
+    color: #fee2e2 !important;
+    background: rgba(127, 29, 29, 0.42);
+    border-color: rgba(248, 113, 113, 0.42);
+}
+#name-prompt-modal .auth-feedback-error::before {
+    content: "\f06a";
+    color: #fb7185;
+}
+#name-prompt-modal .auth-feedback-success {
+    color: #dcfce7 !important;
+    background: rgba(22, 101, 52, 0.34);
+    border-color: rgba(74, 222, 128, 0.35);
+}
+#name-prompt-modal .auth-feedback-success::before {
+    content: "\f058";
+    color: #4ade80;
+}
 #password-reset-modal-overlay.show {
     z-index: 30060 !important;
 }
@@ -16043,6 +16099,21 @@ html:not(.dark) #name-prompt-modal #show-login-button {
 html:not(.dark) #name-prompt-modal #open-payment-login-btn {
     color: #86efac !important;
     -webkit-text-fill-color: #86efac !important;
+}
+
+html:not(.dark) #name-prompt-modal .auth-feedback-info {
+    color: #bfdbfe !important;
+    -webkit-text-fill-color: #bfdbfe !important;
+}
+
+html:not(.dark) #name-prompt-modal .auth-feedback-error {
+    color: #fee2e2 !important;
+    -webkit-text-fill-color: #fee2e2 !important;
+}
+
+html:not(.dark) #name-prompt-modal .auth-feedback-success {
+    color: #dcfce7 !important;
+    -webkit-text-fill-color: #dcfce7 !important;
 }
 
 html:not(.dark) #name-prompt-modal input,
