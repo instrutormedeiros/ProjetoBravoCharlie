@@ -3670,7 +3670,7 @@ const QUIZ_DATA = {
         },
         {
             id: 'm35-q10',
-            question: 'Na letra "D" (Déficit Neurológico), uma pontuação $\le8$ na Escala de Glasgow indica:',
+            question: 'Na letra "D" (Déficit Neurológico), uma pontuação ≤ 8 na Escala de Glasgow indica:',
             options: {
                 a: 'Vítima estável e alerta.',
                 b: 'Trauma leve.',

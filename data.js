@@ -1082,7 +1082,7 @@ const moduleContent = {
                         <tr><td>1</td><td>nada</td></tr>
                     </tbody>
                 </table>
-                <p>Quanto menor a pontuação, pior o quadro neurológico. Glasgow $\le8$ = possível coma e risco de morte.</p>
+                <p>Quanto menor a pontuação, pior o quadro neurológico. Glasgow ≤ 8 = possível coma e risco de morte.</p>
             </div>
 
             <div class="key-concept">
@@ -1120,7 +1120,7 @@ const moduleContent = {
             </ul>
             <p><strong>BIZU MÁXIMO:</strong></p>
             <p><strong>Trauma</strong> = XABCDE + Exame Secundário + Mecanismo do Trauma + AMPLE</p>
-            <p><strong>Clínico</strong> = XABCDE + Sinais Vitais + SAMPLE/OPQRST + Exame Direcionado</p>` 
+            <p><strong>Clínico</strong> = XABCDE + Sinais Vitais + SAMPLE + Exame Direcionado</p>` 
     },
     'module36': { 
         id: "module36", 
@@ -1245,11 +1245,11 @@ const moduleContent = {
             </div>
             <div class="key-concept">
                 <h5>RCP em Crianças (1 ano até puberdade)</h5>
-                <p>1 mão (1 socorrista) ou 2 mãos (2 socorristas). Profundidade $\approx4-5$ cm (1/3 do tórax). Frequência 100-120/min. Relação: <strong>30:2 (1 soc) / 15:2 (2 soc)</strong>.</p>
+                <p>1 mão (1 socorrista) ou 2 mãos (2 socorristas). Profundidade aproximadamente 4 a 5 cm (1/3 do tórax). Frequência 100-120/min. Relação: <strong>30:2 (1 soc) / 15:2 (2 soc)</strong>.</p>
             </div>
             <div class="key-concept">
                 <h5>RCP em Lactentes (0-1 ano)</h5>
-                <p>2 dedos (1 soc) ou técnica dos 2 polegares envolvendo o tórax (2 soc). Profundidade $\approx4$ cm (1/3 do tórax). Frequência 100-120/min. Relação: <strong>30:2 (1 soc) / 15:2 (2 soc)</strong>. Ventilação boca-nariz com ar suficiente apenas para elevar o tórax.</p>
+                <p>2 dedos (1 soc) ou técnica dos 2 polegares envolvendo o tórax (2 soc). Profundidade aproximadamente 4 cm (1/3 do tórax). Frequência 100-120/min. Relação: <strong>30:2 (1 soc) / 15:2 (2 soc)</strong>. Ventilação boca-nariz com ar suficiente apenas para elevar o tórax.</p>
             </div>
             <div class="key-concept">
                 <h5>RCP em Idosos</h5>

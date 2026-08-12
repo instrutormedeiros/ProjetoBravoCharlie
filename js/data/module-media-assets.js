@@ -414,6 +414,66 @@
         module25: {
             title: 'PCI - Módulo 25',
             source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/PCI.-.Modulo.25.m4a'
+        },
+        module26: {
+            title: 'APH - Módulo 26',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.26.m4a'
+        },
+        module27: {
+            title: 'APH - Módulo 27',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.27.m4a'
+        },
+        module28: {
+            title: 'APH - Módulo 28',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.28.m4a'
+        },
+        module29: {
+            title: 'APH - Módulo 29',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.29.m4a'
+        },
+        module30: {
+            title: 'APH - Módulo 30',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.30.m4a'
+        },
+        module31: {
+            title: 'APH - Módulo 31',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.31.m4a'
+        },
+        module32: {
+            title: 'APH - Módulo 32',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.32.m4a'
+        },
+        module33: {
+            title: 'APH - Módulo 33',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.33.m4a'
+        },
+        module34: {
+            title: 'APH - Módulo 34',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.34.m4a'
+        },
+        module35: {
+            title: 'APH - Módulo 35',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.35.m4a'
+        },
+        module36: {
+            title: 'APH - Módulo 36',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.36.m4a'
+        },
+        module37: {
+            title: 'APH - Módulo 37',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.37.m4a'
+        },
+        module38: {
+            title: 'APH - Módulo 38',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.38.m4a'
+        },
+        module39: {
+            title: 'APH - Módulo 39',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.39.m4a'
+        },
+        module40: {
+            title: 'APH - Módulo 40',
+            source: 'https://github.com/instrutormedeiros/bravocharlie/releases/download/audios-v1/APH.-.Modulo.40.m4a'
         }
     };
 })(window);
