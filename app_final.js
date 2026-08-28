@@ -1315,6 +1315,7 @@ const moduleLoader = window.PBC_CREATE_MODULE_LOADER({
     setupQuizListeners,
     setupConcludeButtonListener,
     setupNotesListener,
+    loadModuleNote: (...args) => window.loadModuleNote?.(...args),
     updateActiveModuleInList,
     updateNavigationButtons,
     updateBreadcrumbs,
@@ -1499,12 +1500,57 @@ window.PBC_CREATE_MANAGER_PANEL({
     
     function setupNotesListener(id) {
         const notesTextarea = document.getElementById(`notes-module-${id}`);
-        if (notesTextarea) {
-            notesTextarea.addEventListener('keyup', () => {
-                localStorage.setItem('note-' + id, notesTextarea.value);
-            });
-        }
+        const status = document.getElementById(`notes-save-state-${id}`);
+        if (!notesTextarea) return;
+        let saveTimer = null;
+        const setStatus = (type, message) => {
+            if (!status) return;
+            status.className = `notes-save-state ${type || ''}`.trim();
+            status.innerHTML = message;
+        };
+        notesTextarea.addEventListener('input', () => {
+            localStorage.setItem('note-' + id, notesTextarea.value);
+            setStatus('saving', '<i class="fas fa-spinner fa-spin"></i> Salvando anotações...');
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(async () => {
+                try {
+                    await window.saveModuleNoteToCloud?.(id, notesTextarea.value);
+                    setStatus('saved', '<i class="fas fa-cloud-check"></i> Anotações sincronizadas.');
+                } catch (error) {
+                    console.error('Erro ao salvar anotação:', error);
+                    setStatus('error', '<i class="fas fa-circle-exclamation"></i> Salvo neste aparelho. A nuvem será tentada novamente.');
+                }
+            }, 700);
+        });
     }
+
+    window.loadModuleNote = async function(id) {
+        const localNote = localStorage.getItem('note-' + id) || '';
+        try {
+            const uid = currentUserData?.uid || window.currentUser?.uid;
+            const db = window.__fbDB || window.fbDB;
+            if (!uid || !db) return localNote;
+            const snap = await db.collection('users').doc(uid).get();
+            const cloudNote = snap.exists ? snap.data()?.moduleNotes?.[id] : '';
+            if (typeof cloudNote === 'string') {
+                if (cloudNote !== localNote) localStorage.setItem('note-' + id, cloudNote);
+                return cloudNote;
+            }
+        } catch (error) {
+            console.warn('Não foi possível carregar anotação da nuvem:', error);
+        }
+        return localNote;
+    };
+
+    window.saveModuleNoteToCloud = async function(id, note) {
+        const uid = currentUserData?.uid || window.currentUser?.uid;
+        const db = window.__fbDB || window.fbDB;
+        if (!uid || !db) return;
+        await db.collection('users').doc(uid).set({
+            moduleNotes: { [id]: String(note ?? '') },
+            last_notes_update: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+    };
 
     function goToHomePage() {
         studentPages.goToStudentHome();
@@ -1676,9 +1722,9 @@ document.getElementById('btn-biometric-login')?.addEventListener('click', () => 
     window.FirebaseCourse?.loginWithBiometrics?.();
 });
 
-// --- NOVO: Botão Manual de Salvar Progresso (Rodapé) ---
-document.getElementById('manual-sync-btn')?.addEventListener('click', async () => {
-    const btn = document.getElementById('manual-sync-btn');
+async function handleManualProgressSave(buttonId) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
     const originalText = btn.innerHTML;
     
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
@@ -1693,7 +1739,11 @@ document.getElementById('manual-sync-btn')?.addEventListener('click', async () =
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
-});
+}
+
+// --- Botões manuais de Salvar Progresso ---
+document.getElementById('manual-sync-btn')?.addEventListener('click', () => handleManualProgressSave('manual-sync-btn'));
+document.getElementById('module-save-progress-btn')?.addEventListener('click', () => handleManualProgressSave('module-save-progress-btn'));
             // --- ADICIONE ISTO NO FINAL DA FUNÇÃO addEventListeners ---
         
         // Botão manual do Tour (Garante que funcione mesmo clicando várias vezes)

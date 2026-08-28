@@ -28,10 +28,18 @@
         const setupQuizListeners = deps.setupQuizListeners || (() => {});
         const setupConcludeButtonListener = deps.setupConcludeButtonListener || (() => {});
         const setupNotesListener = deps.setupNotesListener || (() => {});
+        const loadModuleNote = deps.loadModuleNote || (async id => localStorage.getItem('note-' + id) || '');
         const updateActiveModuleInList = deps.updateActiveModuleInList || (() => {});
         const updateNavigationButtons = deps.updateNavigationButtons || (() => {});
         const updateBreadcrumbs = deps.updateBreadcrumbs || (() => {});
         const closeSidebar = deps.closeSidebar || (() => {});
+
+        function escapeTextareaValue(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
 
         async function loadModuleContent(id) {
             const contentArea = getContentArea();
@@ -67,6 +75,7 @@
             activeNarratedAudio.pause();
             activeNarratedAudio.currentTime = 0;
         }
+        window.hideNarratedFloatingAudio?.();
         if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
         resetLessonAudioPlayer();
         clearSimuladoTimer();
@@ -231,7 +240,7 @@
         }
         // --- FIM BLOCO DRIVE LINK ---
 
-                const savedNote = localStorage.getItem('note-' + id) || '';
+                const savedNote = await loadModuleNote(id);
 
                 let allQuestions = null;
                 try { allQuestions = await loadQuestionBank(id); } catch(error) { console.error(error); }
@@ -268,7 +277,7 @@
                 }
 
                 html += moduleMediaHtml;
-                html += `<div class="module-complete-panel"><div><strong>Terminou esta aula?</strong><span>Marque como concluída para atualizar seu progresso.</span></div><button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button></div><div class="notes-panel"><h4><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4><p>Suas notas para este módulo. Elas são salvas automaticamente no seu navegador.</p><textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${savedNote}</textarea></div>`;
+                html += `<div class="module-complete-panel"><div><strong>Terminou esta aula?</strong><span>Marque como concluída para atualizar seu progresso.</span></div><button class="action-button conclude-button" data-module="${id}">Concluir Módulo</button></div><div class="notes-panel"><h4><i class="fas fa-pencil-alt mr-2"></i>Anotações Pessoais</h4><p>Suas notas são salvas automaticamente na nuvem deste aluno e também ficam protegidas neste aparelho.</p><textarea id="notes-module-${id}" class="notes-textarea" placeholder="Digite suas anotações aqui...">${escapeTextareaValue(savedNote)}</textarea><div id="notes-save-state-${id}" class="notes-save-state"><i class="fas fa-cloud-check"></i> Anotações sincronizadas.</div></div>`;
 
                 contentArea.innerHTML = html;
                 setupQuizListeners();

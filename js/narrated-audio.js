@@ -7,6 +7,8 @@
         const driveDownloadUrl = deps.driveDownloadUrl || (value => value);
         const shouldPreloadNarratedAudioViaFetch = deps.shouldPreloadNarratedAudioViaFetch || (() => false);
         const resetLessonAudioPlayer = deps.resetLessonAudioPlayer || (() => {});
+        let floatingDismissedForModule = null;
+        let floatingScrollBound = false;
 
         function getModuleNarratedAudioAsset(id) {
             return moduleNarratedAudioAssets[id] || null;
@@ -23,6 +25,64 @@
             return document.getElementById('narrated-lesson-audio');
         }
 
+        function getMainNarratedAudioPlayer() {
+            return document.querySelector('.narrated-audio-player');
+        }
+
+        function isMainNarratedAudioVisible() {
+            const player = getMainNarratedAudioPlayer();
+            if (!player) return false;
+            const rect = player.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+            return rect.top >= 0 && rect.bottom <= viewportHeight;
+        }
+
+        function ensureFloatingNarratedAudioPlayer() {
+            let player = document.getElementById('narrated-floating-player');
+            if (player) return player;
+
+            player = document.createElement('aside');
+            player.id = 'narrated-floating-player';
+            player.className = 'narrated-floating-player';
+            player.setAttribute('aria-label', 'Controle flutuante da aula narrada');
+            player.innerHTML = `
+                <button type="button" class="narrated-floating-close" onclick="window.closeNarratedFloatingAudio()" aria-label="Ocultar player flutuante">
+                    <i class="fas fa-xmark"></i>
+                </button>
+                <div class="narrated-floating-main">
+                    <button type="button" class="narrated-floating-play" onclick="window.toggleNarratedLessonAudio()" aria-label="Reproduzir ou pausar aula narrada">
+                        <i id="narrated-floating-play-icon" class="fas fa-play"></i>
+                    </button>
+                    <div class="narrated-floating-copy">
+                        <strong id="narrated-floating-title">Aula narrada</strong>
+                        <span><span id="narrated-floating-current">0:00</span> / <span id="narrated-floating-duration">--:--</span></span>
+                    </div>
+                </div>
+                <div class="narrated-floating-actions">
+                    <button type="button" onclick="window.seekNarratedLessonAudio(-15)" title="Voltar 15 segundos"><i class="fas fa-rotate-left"></i><span>15s</span></button>
+                    <input id="narrated-floating-progress" type="range" min="0" max="100" value="0" step="0.1" oninput="window.scrubNarratedLessonAudio(this.value)" aria-label="Progresso do áudio flutuante">
+                    <button type="button" onclick="window.seekNarratedLessonAudio(15)" title="Avançar 15 segundos"><span>15s</span><i class="fas fa-rotate-right"></i></button>
+                </div>
+            `;
+            document.body.appendChild(player);
+            return player;
+        }
+
+        function updateFloatingNarratedAudioVisibility(audio) {
+            const player = ensureFloatingNarratedAudioPlayer();
+            const moduleId = audio?.dataset?.module || '';
+            const hasStarted = audio?.dataset?.hasStarted === 'true';
+            const shouldShow = Boolean(
+                audio &&
+                moduleId &&
+                hasStarted &&
+                !audio.ended &&
+                floatingDismissedForModule !== moduleId &&
+                !isMainNarratedAudioVisible()
+            );
+            player.classList.toggle('show', shouldShow);
+        }
+
         function updateNarratedLessonAudioUi() {
             const audio = getNarratedLessonAudioElement();
             if (!audio) return;
@@ -31,14 +91,27 @@
             const current = document.getElementById('narrated-audio-current');
             const duration = document.getElementById('narrated-audio-duration');
             const progress = document.getElementById('narrated-audio-progress');
+            const floatingPlayer = ensureFloatingNarratedAudioPlayer();
+            const floatingPlayIcon = document.getElementById('narrated-floating-play-icon');
+            const floatingTitle = document.getElementById('narrated-floating-title');
+            const floatingCurrent = document.getElementById('narrated-floating-current');
+            const floatingDuration = document.getElementById('narrated-floating-duration');
+            const floatingProgress = document.getElementById('narrated-floating-progress');
             const durationValue = Number.isFinite(audio.duration) ? audio.duration : 0;
             const progressValue = durationValue ? Math.min(100, Math.max(0, (audio.currentTime / durationValue) * 100)) : 0;
+            const playerTitle = audio.closest('.narrated-audio-player')?.querySelector('.narrated-audio-head strong')?.textContent?.trim();
 
             if (playIcon) playIcon.className = audio.paused ? 'fas fa-play' : 'fas fa-pause';
             if (playText) playText.textContent = audio.paused ? 'Ouvir aula' : 'Pausar';
             if (current) current.textContent = formatNarratedAudioTime(audio.currentTime);
             if (duration) duration.textContent = durationValue ? formatNarratedAudioTime(durationValue) : '--:--';
             if (progress && document.activeElement !== progress) progress.value = String(progressValue);
+            if (floatingPlayIcon) floatingPlayIcon.className = audio.paused ? 'fas fa-play' : 'fas fa-pause';
+            if (floatingTitle) floatingTitle.textContent = playerTitle || 'Aula narrada';
+            if (floatingCurrent) floatingCurrent.textContent = formatNarratedAudioTime(audio.currentTime);
+            if (floatingDuration) floatingDuration.textContent = durationValue ? formatNarratedAudioTime(durationValue) : '--:--';
+            if (floatingProgress && document.activeElement !== floatingProgress) floatingProgress.value = String(progressValue);
+            if (floatingPlayer) updateFloatingNarratedAudioVisibility(audio);
         }
 
         function renderNarratedLessonAudioHtml(moduleId, moduleTitle) {
@@ -54,7 +127,7 @@
                             <strong>${escapeHtml(asset.title || moduleTitle || 'Áudio da aula')}</strong>
                         </div>
                     </div>
-                    <audio id="narrated-lesson-audio" preload="metadata" data-source="${escapeHtml(audioSrc)}"></audio>
+                    <audio id="narrated-lesson-audio" preload="metadata" data-module="${escapeHtml(moduleId)}" data-source="${escapeHtml(audioSrc)}"></audio>
                     <div class="narrated-audio-controls">
                         <button type="button" class="narrated-skip-btn" onclick="window.seekNarratedLessonAudio(-15)" title="Voltar 15 segundos">
                             <i class="fas fa-rotate-left"></i><span>15s</span>
@@ -118,11 +191,19 @@
             const audio = getNarratedLessonAudioElement();
             if (!audio || audio.dataset.bound === 'true') return;
             audio.dataset.bound = 'true';
+            audio.dataset.hasStarted = '';
+            floatingDismissedForModule = null;
+            ensureFloatingNarratedAudioPlayer().classList.remove('show');
             const status = document.getElementById('narrated-audio-status');
             ['loadedmetadata', 'durationchange', 'timeupdate', 'play', 'pause', 'ended'].forEach(eventName => {
                 audio.addEventListener(eventName, updateNarratedLessonAudioUi);
             });
+            audio.addEventListener('play', () => {
+                audio.dataset.hasStarted = 'true';
+                updateNarratedLessonAudioUi();
+            });
             audio.addEventListener('ended', () => {
+                audio.dataset.hasStarted = '';
                 audio.currentTime = 0;
                 updateNarratedLessonAudioUi();
             });
@@ -132,7 +213,23 @@
                     status.innerHTML = '<i class="fas fa-circle-exclamation"></i> Não consegui preparar este áudio. Recarregue a página e tente novamente.';
                 }
             });
+            if (!floatingScrollBound) {
+                floatingScrollBound = true;
+                window.addEventListener('scroll', () => updateNarratedLessonAudioUi(), { passive: true });
+                window.addEventListener('resize', () => updateNarratedLessonAudioUi());
+            }
             updateNarratedLessonAudioUi();
+        };
+
+        window.closeNarratedFloatingAudio = function() {
+            const audio = getNarratedLessonAudioElement();
+            floatingDismissedForModule = audio?.dataset?.module || floatingDismissedForModule;
+            document.getElementById('narrated-floating-player')?.classList.remove('show');
+        };
+
+        window.hideNarratedFloatingAudio = function() {
+            floatingDismissedForModule = null;
+            document.getElementById('narrated-floating-player')?.classList.remove('show');
         };
 
         async function ensureNarratedLessonAudioSource(audio) {
@@ -199,6 +296,7 @@
                 }
                 if (audio.paused) {
                     await ensureNarratedLessonAudioSource(audio);
+                    audio.dataset.hasStarted = 'true';
                     await audio.play();
                 }
                 else audio.pause();
