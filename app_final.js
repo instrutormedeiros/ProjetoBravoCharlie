@@ -18,10 +18,13 @@ const {
     escapeHtml,
     escapeJsString,
     toDateFromFirestore,
+    hasActivePlatformAccess,
+    getPlatformAccessStatus,
     formatAdminDateTime,
     getAdminCreatedDateInfo,
     userMatchesSearch
 } = window.PBC_APP_UTILS;
+window.hasActivePlatformAccess = hasActivePlatformAccess;
 
 const {
     ACADEMIC_GRADES_SHEET_ID,
@@ -346,7 +349,7 @@ document.body.addEventListener('input', (e) => {
     }
 
     function hasIamPremiumAccess() {
-        return currentUserData?.status === 'premium' || currentUserData?.isAdmin === true || currentUserData?.isManager === true || currentUserData?.role === 'admin' || currentUserData?.courseType === 'GESTOR' || isInstructorAdmin(currentUserData);
+        return hasActivePlatformAccess(currentUserData);
     }
 
     window.openIamPremiumGate = function() {
@@ -765,6 +768,8 @@ setTimeout(() => {
     }
 
     function openLoginPromptModal() {
+        document.body.classList.remove('access-expired-hard-lock');
+        document.body.removeAttribute('data-access-blocked');
         closeBlockingLoginModals();
         disableIntroBlockingLayer();
         const loginModal = document.getElementById('name-prompt-modal');
@@ -782,6 +787,35 @@ setTimeout(() => {
         });
     }
 
+    function blockExpiredPlatformAccess(userData) {
+        const status = getPlatformAccessStatus(userData);
+        const loginModal = document.getElementById('name-prompt-modal');
+        const loginOverlay = document.getElementById('name-modal-overlay');
+        const expiredModal = document.getElementById('expired-modal');
+        const expiredText = document.getElementById('expired-text-msg');
+        const closePaymentBtn = document.getElementById('close-payment-modal-btn');
+
+        document.body.removeAttribute('data-app-ready');
+        document.body.classList.remove('auth-restoring');
+        document.body.removeAttribute('data-auth-restoring');
+        document.body.classList.add('access-expired-hard-lock');
+        document.body.setAttribute('data-access-blocked', status.reason || 'expired');
+
+        window.hideNarratedFloatingAudio?.();
+        loginModal?.classList.remove('show');
+        loginOverlay?.classList.add('show');
+        expiredModal?.classList.add('show');
+        closePaymentBtn?.setAttribute('aria-hidden', 'true');
+
+        if (expiredText) {
+            const dateText = status.expiry
+                ? ` Seu acesso venceu em ${status.expiry.toLocaleDateString('pt-BR')}.`
+                : ' Seu acesso não tem uma validade ativa cadastrada.';
+            expiredText.textContent = `${dateText} Escolha um plano para continuar usando a plataforma.`;
+        }
+        setTimeout(() => window.refreshPaymentCouponDisplay?.(), 50);
+    }
+
     function onLoginSuccess(user, userData) {
         // Remove capa e libera scroll
         hideIntroExperience();
@@ -792,6 +826,13 @@ setTimeout(() => {
             currentUserData = userData;
         }
         if (isInstructorAdmin(currentUserData)) currentUserData.isAdmin = true;
+
+        if (!hasActivePlatformAccess(currentUserData)) {
+            blockExpiredPlatformAccess(currentUserData);
+            return;
+        }
+        document.body.classList.remove('access-expired-hard-lock');
+        document.body.removeAttribute('data-access-blocked');
 
         checkTrialStatus(currentUserData?.acesso_ate);
 

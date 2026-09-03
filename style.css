@@ -2526,6 +2526,16 @@ h3,
     z-index: 30060 !important;
     pointer-events: auto !important;
 }
+body.access-expired-hard-lock #main-wrapper {
+    display: none !important;
+}
+body.access-expired-hard-lock #expired-modal #close-payment-modal-btn {
+    display: none !important;
+}
+body.access-expired-hard-lock #name-modal-overlay.show {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 #name-prompt-modal.show {
     z-index: 30050 !important;
     pointer-events: auto !important;

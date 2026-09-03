@@ -70,6 +70,10 @@
         }
 
         function closePaymentModal() {
+            if (document.body.classList.contains('access-expired-hard-lock')) {
+                showAppToast('Acesso vencido', 'Escolha um plano para continuar usando a plataforma.', 'warning');
+                return;
+            }
             const expiredModal = document.getElementById('expired-modal');
             const loginModalOverlay = document.getElementById('name-modal-overlay');
             const loginModal = document.getElementById('name-prompt-modal');

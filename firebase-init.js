@@ -189,18 +189,29 @@
             } 
             
             const userData = doc.data();
-            const hoje = new Date();
-            const validade = userData.acesso_ate ? new Date(userData.acesso_ate) : null;
-            const status = String(userData.status || '').toLowerCase();
-            const isPrivileged =
-                status === 'premium' ||
-                userData.isAdmin === true ||
-                userData.isManager === true ||
-                userData.role === 'admin' ||
-                userData.courseType === 'GESTOR';
+            const accessActive = typeof window.hasActivePlatformAccess === 'function'
+                ? window.hasActivePlatformAccess(userData)
+                : (() => {
+                    const utils = window.PBC_APP_UTILS || {};
+                    if (typeof utils.hasActivePlatformAccess === 'function') return utils.hasActivePlatformAccess(userData);
+                    const validade = userData.acesso_ate ? new Date(userData.acesso_ate) : null;
+                    const isPrivileged = userData.isAdmin === true || userData.isManager === true || userData.role === 'admin' || userData.courseType === 'GESTOR';
+                    return isPrivileged || (validade && !Number.isNaN(validade.getTime()) && validade >= new Date());
+                })();
 
-            if (validade && !Number.isNaN(validade.getTime()) && hoje > validade && !isPrivileged) {
+            if (!accessActive) {
                 finishAuthRestore();
+                document.body.classList.add('access-expired-hard-lock');
+                document.body.setAttribute('data-access-blocked', 'expired');
+                document.body.removeAttribute('data-app-ready');
+                const expiredText = document.getElementById('expired-text-msg');
+                if (expiredText) {
+                    const accessInfo = window.PBC_APP_UTILS?.getPlatformAccessStatus?.(userData);
+                    const dateText = accessInfo?.expiry
+                        ? `Seu acesso venceu em ${accessInfo.expiry.toLocaleDateString('pt-BR')}.`
+                        : 'Seu acesso não tem uma validade ativa cadastrada.';
+                    expiredText.textContent = `${dateText} Escolha um plano para continuar usando a plataforma.`;
+                }
                 if (expiredModal) expiredModal.classList.add('show');
                 if (loginOverlay) loginOverlay.classList.add('show');
                 return;

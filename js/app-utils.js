@@ -38,6 +38,61 @@
         return Number.isNaN(date.getTime()) ? null : date;
     }
 
+    function toAccessExpiryDate(value) {
+        const date = toDateFromFirestore(value);
+        if (!date) return null;
+        if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+            date.setHours(23, 59, 59, 999);
+        }
+        return date;
+    }
+
+    function isPrivilegedAccess(user) {
+        const email = normalizeSearchText(user?.email);
+        return !!user && (
+            user.isAdmin === true ||
+            user.isManager === true ||
+            normalizeSearchText(user.role) === 'admin' ||
+            normalizeSearchText(user.courseType) === 'gestor' ||
+            email === 'coordenadormedeiros@gmail.com'
+        );
+    }
+
+    function isLifetimeAccess(user) {
+        if (!user) return false;
+        if (user.lifetimeAccess === true || user.acessoVitalicio === true || user.isLifetime === true) return true;
+        const accessText = [
+            user.planType,
+            user.plan,
+            user.accessType,
+            user.subscriptionType,
+            user.paymentPlan,
+            user.subscriptionPlan,
+            user.statusLabel
+        ].map(normalizeSearchText).join(' ');
+        return /\b(vitalicio|vitalicia|vital|permanente|lifetime)\b/.test(accessText);
+    }
+
+    function hasActivePlatformAccess(user, now = new Date()) {
+        if (!user) return false;
+        if (isPrivilegedAccess(user) || isLifetimeAccess(user)) return true;
+        const status = normalizeSearchText(user.status);
+        if (status === 'expirado' || status === 'cancelado' || status === 'bloqueado') return false;
+        const expiry = toAccessExpiryDate(user.acesso_ate);
+        if (!expiry) return false;
+        return expiry.getTime() >= now.getTime();
+    }
+
+    function getPlatformAccessStatus(user, now = new Date()) {
+        if (!user) return { active: false, reason: 'missing-user', expiry: null };
+        if (isPrivilegedAccess(user)) return { active: true, reason: 'privileged', expiry: null };
+        if (isLifetimeAccess(user)) return { active: true, reason: 'lifetime', expiry: null };
+        const expiry = toAccessExpiryDate(user.acesso_ate);
+        if (!expiry) return { active: false, reason: 'missing-expiry', expiry: null };
+        if (expiry.getTime() < now.getTime()) return { active: false, reason: 'expired', expiry };
+        return { active: true, reason: 'date-active', expiry };
+    }
+
     function formatAdminDateTime(value) {
         const date = toDateFromFirestore(value);
         if (!date) return 'Não registrado';
@@ -94,6 +149,11 @@
         escapeHtml,
         escapeJsString,
         toDateFromFirestore,
+        toAccessExpiryDate,
+        isPrivilegedAccess,
+        isLifetimeAccess,
+        hasActivePlatformAccess,
+        getPlatformAccessStatus,
         formatAdminDateTime,
         getAdminCreatedDateInfo,
         userMatchesSearch

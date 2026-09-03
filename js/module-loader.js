@@ -61,7 +61,10 @@
             if (num >= cat.range[0] && num <= cat.range[1]) { moduleCategory = cat; break; }
         }
         const isPremiumContent = moduleCategory && moduleCategory.isPremium;
-        const userIsNotPremium = !currentUserData || currentUserData.status !== 'premium';
+        const userHasPremiumAccess = typeof window.hasActivePlatformAccess === 'function'
+            ? window.hasActivePlatformAccess(currentUserData)
+            : currentUserData?.status === 'premium';
+        const userIsNotPremium = !userHasPremiumAccess;
 
         // Verifica bloqueio premium
         if (isPremiumContent && userIsNotPremium) { renderPremiumLockScreen(moduleContent[id].title); return; }

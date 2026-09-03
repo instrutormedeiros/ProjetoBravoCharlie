@@ -78,7 +78,11 @@
             
             for (const k in moduleCategories) {
                 const cat = moduleCategories[k];
-                const isLocked = cat.isPremium && (!getCurrentUserData() || getCurrentUserData().status !== 'premium');
+                const currentUser = getCurrentUserData();
+                const hasActiveAccess = typeof window.hasActivePlatformAccess === 'function'
+                    ? window.hasActivePlatformAccess(currentUser)
+                    : currentUser?.status === 'premium';
+                const isLocked = cat.isPremium && !hasActiveAccess;
                 const lockIcon = isLocked ? '<i class="fas fa-lock text-xs ml-2 text-yellow-500"></i>' : '';
                 
                 // --- CÁLCULO DE CONTADORES ---

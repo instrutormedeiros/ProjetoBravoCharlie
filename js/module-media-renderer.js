@@ -81,6 +81,7 @@
 
         function hasPremiumMediaAccess() {
             const currentUserData = getCurrentUserData();
+            if (typeof window.hasActivePlatformAccess === 'function') return window.hasActivePlatformAccess(currentUserData);
             return currentUserData?.status === 'premium' || currentUserData?.isAdmin === true || currentUserData?.isManager === true;
         }
 
