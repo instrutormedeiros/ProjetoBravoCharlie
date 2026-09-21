@@ -31,6 +31,13 @@
             if (classMatch) return `B${String(Number(classMatch[1])).padStart(2, '0')}`;
             return normalized.replace(/[^A-Z0-9]/g, '');
         }
+
+        function deriveAcademicSituationFromGrades(grades = [], importedSituation = '') {
+            const values = grades.map(parseAcademicGradeValue);
+            if (values.some(value => value !== null && value < 7)) return 'Recuperação';
+            if (values.length && values.every(value => value !== null)) return 'Aprovado';
+            return String(importedSituation || '').toLowerCase().includes('aprov') ? '' : importedSituation;
+        }
         
         function inferAcademicCompanyFromFileName(fileName = '') {
             const normalized = String(fileName || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -84,7 +91,10 @@
         
                     const average = averageRow[col] || '';
                     const averageNumber = Number(String(average).replace(',', '.').replace(/[^\d.]/g, ''));
-                    const derivedSituation = situationRow[col] || (!Number.isNaN(averageNumber) && average ? (averageNumber >= 7 ? 'Aprovado' : 'Recuperação') : '');
+                    const derivedSituation = deriveAcademicSituationFromGrades(
+                        [rhRow[col], legislationRow[col], rescueRow[col], fireRow[col], aphRow[col]],
+                        situationRow[col]
+                    );
         
                     records.push({
                         nome: name,
@@ -157,7 +167,10 @@
         
                 const average = averageRow[col] || '';
                 const averageNumber = Number(String(average).replace(',', '.').replace(/[^\d.]/g, ''));
-                const derivedSituation = situationRow[col] || (!Number.isNaN(averageNumber) && average ? (averageNumber >= 7 ? 'Aprovado' : 'Recuperação') : '');
+                const derivedSituation = deriveAcademicSituationFromGrades(
+                    [rhRow[col], legislationRow[col], rescueRow[col], fireRow[col], aphRow[col]],
+                    situationRow[col]
+                );
         
                 records.push({
                     nome: name,
@@ -279,6 +292,7 @@
                 subjects[subject.id] = getAcademicCell(row, subject.keys);
             });
             const importedAverage = getAcademicCell(row, ['mediafinal', 'media', 'mediafinaldocurso', 'notafinal', 'resultadofinal', 'final']);
+            const importedSituation = getAcademicCell(row, ['situacao', 'status']);
             return {
                 name: getAcademicCell(row, ['nome', 'nomecompleto']),
                 phone: getAcademicCell(row, ['telefone', 'celular', 'whatsapp']),
@@ -290,7 +304,7 @@
                 company: getAcademicCell(row, ['turma', 'empresa', 'company']),
                 subjects,
                 average: importedAverage || calculateAcademicAverage(subjects),
-                situation: getAcademicCell(row, ['situacao', 'status']),
+                situation: deriveAcademicSituationFromGrades(Object.values(subjects), importedSituation),
                 source: 'Planilha oficial de notas'
             };
         }

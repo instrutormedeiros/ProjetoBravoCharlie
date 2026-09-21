@@ -43,7 +43,7 @@
             }
 
             const averageDisplay = record.average || calculateAcademicAverage(record.subjects) || 'Em breve';
-            const finalSituation = deriveAcademicSituation(averageDisplay, record.situation || 'Em análise');
+            const finalSituation = deriveAcademicSituation(averageDisplay, record.situation || 'Em análise', record.subjects);
             const subjectRows = ACADEMIC_GRADE_SUBJECTS.map(subject => {
                 const rawNote = record.subjects?.[subject.id];
                 const note = hasAcademicValue(rawNote) ? rawNote : 'Em breve';

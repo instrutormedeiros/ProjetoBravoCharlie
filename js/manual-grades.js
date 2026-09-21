@@ -115,9 +115,9 @@
             const subjects = getManualGradeSubjects();
             const average = calculateAcademicAverage(subjects);
             const filled = Object.values(subjects).filter(hasAcademicValue).length;
-            const situation = average ? deriveAcademicSituation(average) : `${filled}/5 notas`;
+            const situation = average ? deriveAcademicSituation(average, 'Em análise', subjects) : `${filled}/5 notas`;
             summary.innerHTML = `<span>Média final</span><strong>${escapeHtml(average || 'Em análise')}</strong><em>${escapeHtml(situation)}</em>`;
-            summary.classList.toggle('recovery', Boolean(average) && deriveAcademicSituation(average) === 'Recuperação');
+            summary.classList.toggle('recovery', Boolean(average) && deriveAcademicSituation(average, 'Em análise', subjects) === 'Recuperação');
         };
         
         window.loadManualStudentGrades = function() {

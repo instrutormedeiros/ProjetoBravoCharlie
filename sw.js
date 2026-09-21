@@ -1,7 +1,7 @@
 /* sw.js — Service Worker V40 (Styled footer)
    - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v225';
+const CACHE_NAME = 'pbc-static-v232';
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
@@ -18,18 +18,18 @@ const PRECACHE_URLS = [
   '/js/library-manager.js?v=225',
   '/js/feedback-manager.js?v=225',
   '/js/student-experience.js?v=225',
-  '/js/student-pages.js?v=225',
+  '/js/student-pages.js?v=232',
   '/js/course-navigation.js?v=225',
-  '/js/training-modes.js?v=225',
+  '/js/training-modes.js?v=231',
   '/js/narrated-audio.js?v=225',
   '/js/module-media-renderer.js?v=225',
   '/js/module-loader.js?v=225',
-  '/js/academic-core.js?v=225',
-  '/js/student-profile-renderers.js?v=225',
+  '/js/academic-core.js?v=232',
+  '/js/student-profile-renderers.js?v=232',
   '/js/instructor-announcements.js?v=225',
   '/js/certificates.js?v=225',
-  '/js/academic-import-manager.js?v=225',
-  '/js/manual-grades.js?v=225',
+  '/js/academic-import-manager.js?v=232',
+  '/js/manual-grades.js?v=232',
   '/js/payment-manager.js?v=225',
   '/js/auth-ui.js?v=225',
   '/js/coupon-manager.js?v=225',

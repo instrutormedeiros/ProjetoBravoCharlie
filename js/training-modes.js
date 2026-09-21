@@ -865,9 +865,10 @@ function finishSimulado(moduleId) {
     contentArea.innerHTML = finalHtml;
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    if (!completedModules.includes(moduleId)) {
-        completedModules.push(moduleId);
-        localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(completedModules));
+    if (!getCompletedModules().includes(moduleId)) {
+        const nextCompletedModules = [...getCompletedModules(), moduleId];
+        setCompletedModules(nextCompletedModules);
+        localStorage.setItem('gateBombeiroCompletedModules_v3', JSON.stringify(nextCompletedModules));
         
         // ADICIONADO: Salva no banco de dados
         saveProgressToCloud();

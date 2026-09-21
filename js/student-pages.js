@@ -404,7 +404,7 @@ window.renderStudentProfilePage = function(profileUserData = getCurrentUserData(
     const savedPhoto = isAdminPreview ? '' : (localStorage.getItem('user_profile_pic') || '');
     const academicRecord = profileData?.academicRecord || null;
     const academicStatusLabel = academicRecord
-        ? deriveAcademicSituation(academicRecord.average || calculateAcademicAverage(academicRecord.subjects), academicRecord.situation || 'Em análise')
+        ? deriveAcademicSituation(academicRecord.average || calculateAcademicAverage(academicRecord.subjects), academicRecord.situation || 'Em análise', academicRecord.subjects)
         : 'Aguardando lançamento';
     const academicHtml = renderStudentAcademicHtml(academicRecord);
     const formatCpf = (value) => {

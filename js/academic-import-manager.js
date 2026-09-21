@@ -55,7 +55,15 @@
             return `${company}|name:${name}`;
         }
         
-        function deriveAcademicSituation(average, fallback = 'Em análise') {
+        function deriveAcademicSituation(average, fallback = 'Em análise', subjects = null) {
+            if (subjects && typeof subjects === 'object') {
+                const subjectValues = ACADEMIC_GRADE_SUBJECTS
+                    .map(subject => String(subjects[subject.id] ?? '').replace(',', '.').replace(/[^\d.]/g, ''))
+                    .map(value => value ? Number(value) : Number.NaN);
+                if (subjectValues.some(value => Number.isFinite(value) && value < 7)) return 'Recuperação';
+                if (subjectValues.every(value => Number.isFinite(value))) return 'Aprovado';
+                return fallback === 'Aprovado' ? 'Em análise' : (fallback || 'Em análise');
+            }
             const numericText = String(average ?? '').replace(',', '.').replace(/[^\d.]/g, '');
             const numeric = numericText ? Number(numericText) : Number.NaN;
             if (!Number.isFinite(numeric) || !hasAcademicValue(average)) return fallback || 'Em análise';
@@ -78,7 +86,7 @@
                 ? incoming.average
                 : (calculatedAverage || existing.average || '');
             const situation = hasAcademicValue(average)
-                ? deriveAcademicSituation(average, incoming.situation || existing.situation || 'Em análise')
+                ? deriveAcademicSituation(average, incoming.situation || existing.situation || 'Em análise', subjects)
                 : (incoming.situation || existing.situation || 'Em análise');
         
             return {
