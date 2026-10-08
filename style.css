@@ -19475,3 +19475,55 @@ html:not(.dark) #expired-modal .pix-highlight-box button:hover,
         font-size: 0.88rem;
     }
 }
+.bc-acervo { color: #172b46; }
+.bc-acervo-header { padding: 12px 0 28px; }
+.bc-acervo-header > span { color: #087f99; font-weight: 700; font-size: 14px; }
+.bc-acervo-header h2 { margin: 10px 0; font-size: 30px; line-height: 1.2; }
+.bc-acervo-header p, .bc-map-heading p { color: #536579; font-size: 17px; line-height: 1.6; }
+.bc-map-section { padding: 28px 0; border-top: 2px solid #0b90ac; border-bottom: 1px solid #d9e4ef; }
+.bc-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+.bc-library-tag { display: inline-block; color: #09667a; background: #d9f6f2; padding: 5px 10px; border-radius: 4px; font-size: 13px; font-weight: 700; }
+.bc-map-heading h3 { font-size: 24px; line-height: 1.35; margin: 10px 0 8px; }
+.bc-library-outline { flex-shrink: 0; display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid #a5c8d8; border-radius: 6px; font-weight: 700; color: #066b8a; }
+.bc-map-cover { display: block; overflow: hidden; border-radius: 8px; border: 1px solid #bdd9e6; background: #fff; box-shadow: 0 8px 24px #17344b0c; }
+.bc-map-cover img { display: block; width: 100%; height: auto; max-height: 390px; object-fit: contain; background: #fff; padding: 12px; }
+.bc-map-caption { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: #086a87; color: #fff; padding: 18px 22px; }
+.bc-acervo a { text-decoration: none; }
+.bc-acervo .bc-map-caption strong { display: block; font-size: 20px; color: #fff !important; }
+.bc-map-caption small { display: block; margin-top: 5px; font-size: 14px; color: #d4edf2; }
+.bc-map-open { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; white-space: nowrap; }
+.bc-library-bonuses { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 18px; }
+.bc-library-bonuses a { display: flex; align-items: center; gap: 14px; min-height: 86px; padding: 18px; border: 1px solid #d6e4ee; border-radius: 8px; background: #fff; }
+.bc-library-bonuses a > i:first-child { font-size: 24px; color: #09849a; width: 30px; text-align: center; flex-shrink: 0; }
+.bc-library-bonuses strong { display: block; font-size: 17px; }
+.bc-library-bonuses small { display: block; font-size: 14px; line-height: 1.5; color: #536579; margin-top: 4px; }
+.bc-bonus-arrow { margin-left: auto; color: #577080; font-size: 13px; }
+.bc-library-collections { padding: 30px 0; }
+.bc-library-collections > h3 { font-size: 22px; margin-bottom: 18px; }
+.bc-collection-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.bc-collection { --collection-color: #156bc3; display: flex; flex-direction: column; padding: 24px; border: 1px solid #d4e0ed; border-top: 3px solid var(--collection-color); border-radius: 8px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+.bc-collection-livros { --collection-color: #158466; }
+.bc-collection-gibis { --collection-color: #c34775; }
+.bc-collection-videos { --collection-color: #ba5426; }
+.bc-collection-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 8px; background: #f0f5f9; color: var(--collection-color); font-size: 23px; }
+.bc-collection h4 { font-size: 21px; margin: 18px 0 10px; }
+.bc-collection p { color: #536579; font-size: 16px; line-height: 1.6; margin-bottom: 22px; }
+.bc-collection-action { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--collection-color); font-weight: 700; font-size: 15px; }
+.bc-acervo a:hover { box-shadow: 0 5px 18px #17344b18; }
+.bc-acervo a:focus-visible { outline: 3px solid #158cd3; outline-offset: 4px; }
+.dark .bc-acervo { color: #f1f5f9; }
+.dark .bc-acervo-header p, .dark .bc-map-heading p, .dark .bc-library-bonuses small, .dark .bc-collection p { color: #c3cfdb; }
+.dark .bc-library-bonuses a, .dark .bc-collection { background: #182330; border-color: #3d5062; }
+.dark .bc-collection { border-top-color: var(--collection-color); }
+.dark .bc-collection-icon { background: #263746; }
+.dark .bc-library-outline { color: #87daf0; }
+.dark .bc-collection-action { color: #e5edf5; }
+@media (max-width: 640px) {
+    .bc-acervo-header h2 { font-size: 26px; }
+    .bc-map-heading { flex-direction: column; align-items: flex-start; gap: 14px; }
+    .bc-map-heading h3 { font-size: 22px; }
+    .bc-map-cover img { padding: 4px; }
+    .bc-map-caption { flex-direction: column; align-items: flex-start; padding: 16px; }
+    .bc-library-bonuses, .bc-collection-grid { grid-template-columns: minmax(0,1fr); }
+    .bc-collection { padding: 22px; }
+}

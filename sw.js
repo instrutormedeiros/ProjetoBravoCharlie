@@ -1,11 +1,11 @@
 /* sw.js — Service Worker V40 (Styled footer)
    - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v238';
+const CACHE_NAME = 'pbc-static-v239';
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
-  '/style.css?v=235',
+  '/style.css?v=239',
   '/tools_logic.js?v=233',
   '/firebase-init.js?v=237',
   '/app_final.js?v=236',
@@ -18,7 +18,7 @@ const PRECACHE_URLS = [
   '/js/library-manager.js?v=225',
   '/js/feedback-manager.js?v=225',
   '/js/student-experience.js?v=225',
-  '/js/student-pages.js?v=235',
+  '/js/student-pages.js?v=239',
   '/js/course-navigation.js?v=225',
   '/js/training-modes.js?v=233',
   '/js/narrated-audio.js?v=225',

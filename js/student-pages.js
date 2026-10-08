@@ -249,59 +249,52 @@ function getSearchItems() {
 }
 
 window.renderStudentLibraryPage = function() {
-    const items = getLibraryItems();
+    if (!hasActivePlatformAccess(getCurrentUserData())) {
+        window.renderStudentProfilePage?.();
+        return;
+    }
+    const collections = [
+        ['Concursos públicos', 'Disciplinas, apostilas e questões para sua preparação.', 'fa-landmark', '1hABmJ7oNKpW9CSw70MAPNg4ZZudd0F8Y', 'concursos'],
+        ['Livros', 'Leituras sobre liderança, produtividade e desenvolvimento pessoal.', 'fa-book-open', '1t2oNM6fqcN1iZf2nbqjWu1JMrqFslZM1', 'livros'],
+        ['Gibis', 'Histórias ilustradas para uma pausa de leitura.', 'fa-comment-dots', '1O04VepyPqNEC3MNpbF8EgzEN-zi04_qo', 'gibis'],
+        ['Vídeos', 'Incêndios, prevenção, riscos e segurança no trabalho.', 'fa-circle-play', '10zW1seDyUU6pJDOwYO0wkOD85FoLCndj', 'videos']
+    ];
+    const bonuses = [
+        ['Sinais vitais', 'Mapas extras para revisão', 'fa-heart-pulse', '17AOku-yeOE78flWjJ-jlpJE7y7PDa3i-'],
+        ['Guia essencial', 'Primeiros socorros', 'fa-book-medical', '1O1FiI_MRoNwlOe8wQdqGqQMyjvTfA_aC'],
+        ['Cartões de bolso', 'Referências para consulta', 'fa-id-card', '1MyzUNT2h8Itqp0i0sS4DpZdL0RyIuzqv'],
+        ['Fluxogramas', 'Atendimento em emergências', 'fa-diagram-project', '1ZEdBd5S8AYljvAI0ehFjFPAlhk7dBD5s']
+    ];
     setCurrentModuleId(null);
     document.getElementById('module-nav')?.classList.add('hidden');
     setPageHtml(`
-        <section class="student-page-shell">
-            <div class="student-page-hero">
-                <span><i class="fas fa-folder-open"></i> Biblioteca organizada</span>
-                <h2>Materiais, slides, podcasts e infográficos</h2>
-                <p>Um espaço único para revisar os materiais extras que já foram adicionados à plataforma.</p>
-                <div class="student-page-hero-actions">
-                    <button type="button" onclick="window.renderOperationalGlossaryPage?.()"><i class="fas fa-book-medical"></i> Abrir glossário operacional</button>
-                    <button type="button" onclick="window.openGlobalSearch?.()"><i class="fas fa-search"></i> Buscar material</button>
+        <section class="student-page-shell bc-acervo">
+            <header class="bc-acervo-header">
+                <span><i class="fas fa-layer-group"></i> Conhecimento além da aula</span>
+                <h2>Biblioteca Bravo Charlie</h2>
+                <p>Explore, revise e leve novos conhecimentos para sua formação.</p>
+            </header>
+            <section class="bc-map-section" aria-labelledby="bc-maps-title">
+                <div class="bc-map-heading">
+                    <div><span class="bc-library-tag">Em destaque</span><h3 id="bc-maps-title">Mapas Visuais de Primeiros Socorros</h3><p>Do primeiro atendimento às emergências: conhecimento organizado de forma visual.</p></div>
+                    <a class="bc-library-outline" href="https://drive.google.com/drive/folders/1_C7s93c6b1gp_WbZ1Yavoavw8AsAWJHa" target="_blank" rel="noopener noreferrer">Ver coleção <i class="fas fa-arrow-up-right-from-square"></i></a>
                 </div>
-            </div>
-            <div class="library-premium-categories">
-                ${premiumLibraryCategories.map(category => `
-                    <article>
-                        <i class="fas ${category.icon}"></i>
-                        <div>
-                            <span>${category.status}</span>
-                            <strong>${category.title}</strong>
-                            <p>${category.description}</p>
-                        </div>
-                    </article>
-                `).join('')}
-            </div>
-            <div class="student-library-grid">
-                ${items.length ? items.map(item => `
-                    <article class="student-library-card">
-                        <i class="fas ${item.icon}"></i>
-                        <div>
-                            <span>${item.type}</span>
-                            <strong>${escapeHtml(item.title)}</strong>
-                            <button type="button" data-open-module="${item.moduleId}">Abrir aula</button>
-                        </div>
-                    </article>
-                `).join('') : `
-                    <div class="student-empty-state">
-                        <i class="fas fa-folder"></i>
-                        <strong>Biblioteca em construção</strong>
-                        <p>Conforme novos materiais forem cadastrados, eles aparecerão aqui.</p>
-                    </div>
-                `}
-            </div>
+                <a class="bc-map-cover" href="https://drive.google.com/file/d/1AkIWS3gCg4gz3HGnXaDvI7w5b_3Ze7vg/view" target="_blank" rel="noopener noreferrer" aria-label="Abrir PDF Mapas Visuais de Primeiros Socorros">
+                    <img src="assets/img/mapas-primeiros-socorros.png" width="1200" height="849" alt="Sumário ilustrado dos mapas visuais: primeiros minutos, reanimação e atendimento à vítima">
+                    <span class="bc-map-caption"><span><strong>Mapas Visuais</strong><small>113 páginas · PDF completo · 177 MB</small></span><span class="bc-map-open">Abrir material <i class="fas fa-arrow-up-right-from-square"></i></span></span>
+                </a>
+                <div class="bc-library-bonuses">
+                    ${bonuses.map(([title, description, icon, id]) => `<a href="https://drive.google.com/file/d/${id}/view" target="_blank" rel="noopener noreferrer"><i class="fas ${icon}"></i><span><strong>${title}</strong><small>${description}</small></span><i class="fas fa-arrow-up-right-from-square bc-bonus-arrow"></i></a>`).join('')}
+                </div>
+            </section>
+            <section class="bc-library-collections" aria-labelledby="bc-collections-title">
+                <h3 id="bc-collections-title">Explore o acervo</h3>
+                <div class="bc-collection-grid">
+                    ${collections.map(([title, description, icon, id, tone]) => `<a class="bc-collection bc-collection-${tone}" href="https://drive.google.com/drive/folders/${id}" target="_blank" rel="noopener noreferrer"><span class="bc-collection-icon"><i class="fas ${icon}"></i></span><h4>${title}</h4><p>${description}</p><span class="bc-collection-action">Explorar coleção <i class="fas fa-arrow-up-right-from-square"></i></span></a>`).join('')}
+                </div>
+            </section>
         </section>
     `);
-    document.querySelectorAll('[data-open-module]').forEach(button => {
-        button.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            loadModuleContent(button.dataset.openModule || 'module1');
-        });
-    });
     updateBreadcrumbs('Biblioteca');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
