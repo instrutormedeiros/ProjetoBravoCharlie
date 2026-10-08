@@ -16,6 +16,7 @@
         const getVisibleModuleIds = deps.getVisibleModuleIds || (() => []);
         const getLearningStats = deps.getLearningStats || (() => ({ percent: 0, doneCount: 0, total: 0 }));
         const getAccessStatus = deps.getAccessStatus || (() => ({ label: 'Acesso não informado', tone: 'neutral', detail: '' }));
+        const hasActivePlatformAccess = deps.hasActivePlatformAccess || (() => true);
         const getJourneyStepHtml = deps.getJourneyStepHtml || (() => '');
         const getStudentMissionsHtml = deps.getStudentMissionsHtml || (() => '');
         const getImportantNoticeHtml = deps.getImportantNoticeHtml || (() => '');
@@ -397,6 +398,8 @@ window.renderStudentProfilePage = function(profileUserData = getCurrentUserData(
     const isAdminPreview = profileData?.__adminPreview === true && isInstructorAdmin(getCurrentUserData());
     const stats = getLearningStats(profileData, profileData?.completedModules || getCompletedModules());
     const access = getAccessStatus(profileData);
+    const isPostAccess = profileData?.__postAccessPreview === true
+        || (!isAdminPreview && !hasActivePlatformAccess(profileData));
     const userName = profileData?.name || 'Aluno';
     const userInitial = escapeHtml(userName).slice(0, 1).toUpperCase();
     const courseLabel = profileData?.courseType === 'SP' ? 'Segurança Patrimonial' : 'Bombeiro Civil e Brigadista';
@@ -456,6 +459,24 @@ window.renderStudentProfilePage = function(profileUserData = getCurrentUserData(
                     <small><i class="fas fa-lock"></i> A foto fica salva apenas neste dispositivo.</small>
                 </div>
             </div>
+            ${isPostAccess ? `
+                <section class="student-post-access-panel" aria-label="Acesso após vencimento">
+                    <div class="student-post-access-copy">
+                        <span><i class="fas fa-lock-open"></i> Seu perfil continua disponível</span>
+                        <h3>Notas, apostilas e documentos ficam guardados para você</h3>
+                        <p>O período de acesso ao conteúdo terminou, mas você pode consultar seu histórico acadêmico, baixar apostilas e acessar sua declaração ou certificado.</p>
+                        <small><i class="fas fa-circle-info"></i> ${escapeHtml(access.label || 'Acesso ao conteúdo encerrado')}</small>
+                    </div>
+                    <div class="student-post-access-actions">
+                        <button type="button" class="student-post-access-materials" onclick="window.renderCourseHandbooksPage?.()">
+                            <i class="fas fa-file-arrow-down"></i> Acessar apostilas
+                        </button>
+                        <button type="button" class="student-post-access-subscribe" onclick="window.openPaymentModal?.()">
+                            <i class="fas fa-crown"></i> Ver planos e voltar a estudar
+                        </button>
+                    </div>
+                </section>
+            ` : ''}
             <div class="student-profile-details-grid">
                 <article><i class="fas fa-user"></i><span>Nome completo</span><strong>${escapeHtml(userName)}</strong></article>
                 <article><i class="fas fa-envelope"></i><span>E-mail cadastrado</span><strong>${escapeHtml(profileData?.email || 'Não informado')}</strong></article>

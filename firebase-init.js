@@ -200,20 +200,10 @@
                 })();
 
             if (!accessActive) {
+                // O aluno expirado continua autenticado em modo somente leitura:
+                // o callback central monta o perfil e mantém módulos/mídias bloqueados.
                 finishAuthRestore();
-                document.body.classList.add('access-expired-hard-lock');
-                document.body.setAttribute('data-access-blocked', 'expired');
-                document.body.removeAttribute('data-app-ready');
-                const expiredText = document.getElementById('expired-text-msg');
-                if (expiredText) {
-                    const accessInfo = window.PBC_APP_UTILS?.getPlatformAccessStatus?.(userData);
-                    const dateText = accessInfo?.expiry
-                        ? `Seu acesso venceu em ${accessInfo.expiry.toLocaleDateString('pt-BR')}.`
-                        : 'Seu acesso não tem uma validade ativa cadastrada.';
-                    expiredText.textContent = `${dateText} Escolha um plano para continuar usando a plataforma.`;
-                }
-                if (expiredModal) expiredModal.classList.add('show');
-                if (loginOverlay) loginOverlay.classList.add('show');
+                onLoginSuccess(user, userData);
                 return;
             }
 

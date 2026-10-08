@@ -1,14 +1,14 @@
 /* sw.js — Service Worker V40 (Styled footer)
    - Cache-then-network strategy
 */
-const CACHE_NAME = 'pbc-static-v232';
+const CACHE_NAME = 'pbc-static-v238';
 const PRECACHE_URLS = [
   '/', 
   '/index.html',
-  '/style.css?v=225',
-  '/tools_logic.js?v=225',
-  '/firebase-init.js?v=225',
-  '/app_final.js?v=225',
+  '/style.css?v=235',
+  '/tools_logic.js?v=233',
+  '/firebase-init.js?v=237',
+  '/app_final.js?v=236',
   '/data.js',
   '/quizzes.js',
   '/course.js',
@@ -18,12 +18,12 @@ const PRECACHE_URLS = [
   '/js/library-manager.js?v=225',
   '/js/feedback-manager.js?v=225',
   '/js/student-experience.js?v=225',
-  '/js/student-pages.js?v=232',
+  '/js/student-pages.js?v=235',
   '/js/course-navigation.js?v=225',
-  '/js/training-modes.js?v=231',
+  '/js/training-modes.js?v=233',
   '/js/narrated-audio.js?v=225',
   '/js/module-media-renderer.js?v=225',
-  '/js/module-loader.js?v=225',
+  '/js/module-loader.js?v=238',
   '/js/academic-core.js?v=232',
   '/js/student-profile-renderers.js?v=232',
   '/js/instructor-announcements.js?v=225',
@@ -34,7 +34,7 @@ const PRECACHE_URLS = [
   '/js/auth-ui.js?v=225',
   '/js/coupon-manager.js?v=225',
   '/js/instructor-panel.js?v=225',
-  '/js/admin-panel.js?v=225',
+  '/js/admin-panel.js?v=238',
   '/js/manager-panel.js?v=225'
 ];
 

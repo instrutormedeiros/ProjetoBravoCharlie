@@ -580,16 +580,26 @@
     };
     window.ToolsApp.copyToolOutput = copyToolOutput;
     window.ToolsApp.openIamAssistant = function() {
+        if (typeof window.__openIamWidget === 'function') {
+            window.__openIamWidget();
+            return;
+        }
+
         const launcher = document.getElementById('iam-ai-launcher');
         const widget = document.getElementById('iam-ai-widget');
         const panel = document.getElementById('iam-ai-panel');
-        if (widget) widget.classList.remove('hidden');
-        if (panel && widget) {
+        const frame = document.getElementById('iam-ai-frame');
+        if (widget && panel) {
+            widget.classList.remove('hidden');
             widget.classList.add('open');
+            document.body.classList.add('iam-open');
             launcher?.setAttribute('aria-expanded', 'true');
-            return;
+            if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
+                frame.setAttribute('src', frame.dataset.src || 'https://iam-intelig-ncia-artificial-medeiros-801400632400.us-west2.run.app/?embed=true');
+            }
+        } else {
+            ToolsApp.toast('IAM indisponível agora', 'warning');
         }
-        launcher?.click();
     };
 
     function toolShell(id, icon, title, subtitle, body, extraClass = '') {
@@ -1295,6 +1305,7 @@
             ['portfolio', 'Portfólio Profissional', 'Organize experiências e evidências.', 'fas fa-briefcase', 'Carreira', 'renderPortfolio'],
             ['certificates', 'Certificados e Validades', 'Alertas de vencimento.', 'fas fa-certificate', 'Organização', 'renderCertificateTracker'],
             ['posture', 'Mentor de Postura', 'Orientação para situações reais.', 'fas fa-person-rays', 'Carreira', 'renderPostureMentor'],
+            ['student-id', 'Carteirinha Estudantil', 'Identificação com foto, CPF, matrícula, validade e QR Code.', 'fas fa-id-card', 'Identidade', 'renderStudentFunctionalIdCard'],
             ['card', 'Identidade Profissional', 'Cartão digital com foto local.', 'fas fa-address-card', 'Identidade', 'renderDigitalProfessionalCard'],
             ['operation', 'Modo Operação', 'Checklist de missão e plantão.', 'fas fa-tower-observation', 'Treino', 'renderOperationMode'],
             ['crisis', 'Simulador de Crise', 'Decisão sob pressão com feedback.', 'fas fa-triangle-exclamation', 'Treino', 'renderCrisisSimulator'],
@@ -1855,6 +1866,25 @@ Olá, sou ${name}. Atuo/estou em formação na área de ${role}, com foco em pos
             ${actions(`<button class="tool-mini-btn" onclick="ToolsApp.copyProfessionalCard()"><i class="fas fa-share-nodes"></i> Copiar apresentação</button>`)}
             <small class="premium-note">A foto é a mesma do Perfil e fica salva apenas neste dispositivo.</small>
         `);
+    };
+
+    window.ToolsApp.renderStudentFunctionalIdCard = function(c) {
+        c.innerHTML += toolShell('tool-student-id-card', 'fas fa-id-card', 'Carteirinha Estudantil', 'Identificação funcional do aluno com validade, matrícula e QR Code de validação.', `
+            <div id="id-card-container" class="student-id-tool-preview">
+                <div class="loader"></div>
+            </div>
+        `);
+
+        requestAnimationFrame(() => {
+            if (typeof window.renderDigitalID === 'function') {
+                window.renderDigitalID();
+            } else {
+                const container = document.getElementById('id-card-container');
+                if (container) {
+                    container.innerHTML = '<p class="tool-helper text-red-500">Não foi possível carregar a carteirinha agora. Atualize a página e tente novamente.</p>';
+                }
+            }
+        });
     };
 
     window.ToolsApp.renderOperationMode = function(c) {

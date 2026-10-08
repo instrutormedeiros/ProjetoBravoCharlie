@@ -222,6 +222,7 @@
                             <td class="p-3 flex flex-wrap gap-2">
                                 <button onclick="editUserData('${uid}', '${escapeJsString(u.name)}', '${escapeJsString(cpf)}')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Editar Dados"><i class="fas fa-pen"></i></button>
                                 <button onclick="previewStudentProfile('${uid}')" class="bg-sky-500 hover:bg-sky-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Ver como aluno"><i class="fas fa-eye"></i></button>
+                                <button onclick="previewPostAccessProfile('${uid}')" class="bg-amber-500 hover:bg-amber-600 text-white px-2 py-1.5 rounded text-xs shadow" title="Prévia do perfil após vencimento"><i class="fas fa-clock-rotate-left"></i></button>
                                 
                                 <!-- BOTÃO NOVO: ALTERAR CURSO -->
                                 <button onclick="changeUserCourse('${uid}', '${cursoCodigo}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 rounded text-xs shadow" title="Alterar Curso (BC/SP)"><i class="fas fa-graduation-cap"></i></button>
@@ -299,6 +300,40 @@
             } catch (error) {
                 console.error(error);
                 showAppToast('Erro ao abrir visão do aluno', 'Tente novamente pelo painel administrativo.', 'error');
+            }
+        };
+
+        window.previewPostAccessProfile = async function(uid) {
+            if (!isInstructorAdmin(getCurrentUserData())) {
+                showAppToast('Acesso restrito', 'Essa prévia é exclusiva do administrador.', 'warning');
+                return;
+            }
+
+            const db = window.__fbDB || window.fbDB;
+            if (!db || !uid) {
+                showAppToast('Não consegui abrir', 'Banco de dados ou aluno não encontrado.', 'error');
+                return;
+            }
+
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if (!doc.exists) {
+                    showAppToast('Aluno não encontrado', 'Esse cadastro não existe mais no banco.', 'warning');
+                    return;
+                }
+
+                forceCloseCommandPanels();
+                const studentData = {
+                    ...(doc.data() || {}),
+                    uid: doc.id,
+                    __adminPreview: true,
+                    __postAccessPreview: true
+                };
+                window.renderStudentProfilePage?.(studentData);
+                showAppToast('Prévia pós-acesso aberta', 'Esta é a tela que o aluno verá após o vencimento.', 'info');
+            } catch (error) {
+                console.error(error);
+                showAppToast('Erro ao abrir prévia', 'Tente novamente pelo painel administrativo.', 'error');
             }
         };
         

@@ -5,6 +5,7 @@
         const moduleContent = deps.moduleContent || window.moduleContent || {};
         const moduleCategories = deps.moduleCategories || window.moduleCategories || {};
         const getCurrentUserData = deps.getCurrentUserData || (() => null);
+        const getCompletedModules = deps.getCompletedModules || (() => []);
         const setCurrentModuleId = deps.setCurrentModuleId || (() => {});
         const getContentArea = deps.getContentArea || (() => document.getElementById('content-area'));
         const getLoadingSpinner = deps.getLoadingSpinner || (() => document.getElementById('loading-spinner'));
@@ -47,11 +48,13 @@
             const currentUserData = getCurrentUserData();
             if (!contentArea) return;
 
-        if (id === 'module62') {
-            localStorage.removeItem('gateBombeiroLastModule');
-            loadModuleContent('module59');
+        const hasActiveAccess = typeof window.PBC_APP_UTILS?.hasActivePlatformAccess === 'function'
+            && window.PBC_APP_UTILS.hasActivePlatformAccess(currentUserData);
+        if (!hasActiveAccess || document.body.classList.contains('post-access-mode')) {
+            window.renderStudentProfilePage?.(currentUserData);
             return;
         }
+
         if (!id || !moduleContent[id]) return;
         const d = moduleContent[id];
         const num = parseInt(id.replace('module', ''));
@@ -93,14 +96,22 @@
 
             // 1. MODO SIMULADO
             if (d.isSimulado) {
+                const isSimuladoCompleted = Array.isArray(getCompletedModules()) && getCompletedModules().includes(id);
                 contentArea.innerHTML = `
                     <h3 class="text-3xl mb-4 pb-4 border-b text-orange-600 dark:text-orange-500 flex items-center">
                         <i class="${d.iconClass} mr-3"></i> ${d.title}
                     </h3>
                     <div>${d.content}</div>
+                    ${isSimuladoCompleted ? `
+                        <div class="simulado-completed-notice" role="status">
+                            <i class="fas fa-circle-check"></i>
+                            <span><strong>Concluído</strong> Você pode refazer este simulado quantas vezes quiser.</span>
+                        </div>
+                    ` : ''}
                     <div class="text-center mt-8">
                         <button id="start-simulado-btn" class="action-button pulse-button text-xl px-8 py-4">
-                            <i class="fas fa-play mr-2"></i> INICIAR SIMULADO
+                            <i class="fas ${isSimuladoCompleted ? 'fa-rotate-right' : 'fa-play'} mr-2"></i>
+                            ${isSimuladoCompleted ? 'FAZER NOVAMENTE' : 'INICIAR SIMULADO'}
                         </button>
                     </div>
                 `;

@@ -816,6 +816,22 @@ setTimeout(() => {
         setTimeout(() => window.refreshPaymentCouponDisplay?.(), 50);
     }
 
+    function openPostAccessProfile(userData) {
+        document.body.classList.remove('access-expired-hard-lock');
+        document.body.classList.add('post-access-mode');
+        document.body.removeAttribute('data-access-blocked');
+        document.body.setAttribute('data-access-mode', 'readonly');
+        closeBlockingLoginModals();
+        document.getElementById('expired-modal')?.classList.remove('show');
+        document.getElementById('name-modal-overlay')?.classList.remove('show');
+        document.getElementById('sticky-progress-wrapper')?.classList.add('hidden');
+        document.getElementById('module-nav')?.classList.add('hidden');
+        document.getElementById('off-canvas-sidebar')?.classList.remove('open');
+        window.hideNarratedFloatingAudio?.();
+        window.renderStudentProfilePage?.(userData);
+        document.body.setAttribute('data-app-ready', 'true');
+    }
+
     function onLoginSuccess(user, userData) {
         // Remove capa e libera scroll
         hideIntroExperience();
@@ -827,11 +843,22 @@ setTimeout(() => {
         }
         if (isInstructorAdmin(currentUserData)) currentUserData.isAdmin = true;
 
+        const previewMode = new URLSearchParams(window.location.search).get('preview');
+        const canPreviewPostAccess = isInstructorAdmin(currentUserData)
+            || currentUserData?.isManager === true
+            || String(currentUserData?.courseType || '').toUpperCase() === 'GESTOR';
+        if (previewMode === 'post-access' && canPreviewPostAccess) {
+            openPostAccessProfile({ ...currentUserData, __postAccessPreview: true });
+            return;
+        }
+
         if (!hasActivePlatformAccess(currentUserData)) {
-            blockExpiredPlatformAccess(currentUserData);
+            openPostAccessProfile(currentUserData);
             return;
         }
         document.body.classList.remove('access-expired-hard-lock');
+        document.body.classList.remove('post-access-mode');
+        document.body.removeAttribute('data-access-mode');
         document.body.removeAttribute('data-access-blocked');
 
         checkTrialStatus(currentUserData?.acesso_ate);
@@ -1251,6 +1278,7 @@ const studentPages = window.PBC_CREATE_STUDENT_PAGES({
     getVisibleModuleIds,
     getLearningStats,
     getAccessStatus,
+    hasActivePlatformAccess,
     getJourneyStepHtml,
     getStudentMissionsHtml,
     getImportantNoticeHtml,
@@ -1328,11 +1356,13 @@ const {
     renderDigitalID,
     clearSimuladoTimer
 } = trainingModes;
+window.renderDigitalID = renderDigitalID;
 
 const moduleLoader = window.PBC_CREATE_MODULE_LOADER({
     moduleContent,
     moduleCategories,
     getCurrentUserData: () => currentUserData,
+    getCompletedModules: () => completedModules,
     setCurrentModuleId: (id) => { currentModuleId = id; },
     getContentArea: () => contentArea,
     getLoadingSpinner: () => loadingSpinner,
@@ -1975,6 +2005,14 @@ document.getElementById('module-save-progress-btn')?.addEventListener('click', (
             launcher.setAttribute('aria-expanded', 'false');
         };
 
+        const loadIamFrame = () => {
+            if (!frame) return;
+            const currentSrc = frame.getAttribute('src');
+            if (!currentSrc || currentSrc === 'about:blank') {
+                frame.setAttribute('src', frame.dataset.src || 'https://iam-intelig-ncia-artificial-medeiros-801400632400.us-west2.run.app/?embed=true');
+            }
+        };
+
         const openIam = () => {
             if (!hasIamPremiumAccess()) {
                 closeIam();
@@ -1998,8 +2036,11 @@ document.getElementById('module-save-progress-btn')?.addEventListener('click', (
             widget.classList.add('open');
             document.body.classList.add('iam-open');
             launcher.setAttribute('aria-expanded', 'true');
-            if (frame && !frame.src) frame.src = frame.dataset.src || 'https://iam-intelig-ncia-artificial-medeiros-801400632400.us-west2.run.app/';
+            loadIamFrame();
         };
+
+        // Os botões do módulo 59 também precisam passar pelo mesmo fluxo do launcher.
+        window.__openIamWidget = openIam;
 
         launcher.addEventListener('click', () => {
             if (widget.classList.contains('open')) closeIam();

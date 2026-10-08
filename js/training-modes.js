@@ -446,6 +446,61 @@ function renderRPGScene(sceneId, rpgData) {
 }
 
 // === LÓGICA: CARTEIRINHA DIGITAL ===
+function sanitizeIdCardText(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function onlyIdCardDigits(value) {
+    return String(value || '').replace(/\D/g, '');
+}
+
+function formatIdCardCpf(value) {
+    const digits = onlyIdCardDigits(value).slice(0, 11);
+    if (digits.length !== 11) return value || 'Não informado';
+    return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+}
+
+function getIdCardCreatedYear(userData) {
+    const rawDate = userData?.createdAt || userData?.created_at_client || userData?.signup_at || userData?.acesso_ate;
+    const date = rawDate?.toDate ? rawDate.toDate() : new Date(rawDate);
+    if (!Number.isNaN(date.getTime())) return date.getFullYear();
+    return new Date().getFullYear();
+}
+
+function getIdCardEnrollment(userData) {
+    if (userData?.matricula) return String(userData.matricula).toUpperCase();
+    if (userData?.enrollmentNumber) return String(userData.enrollmentNumber).toUpperCase();
+    if (userData?.studentRegistration) return String(userData.studentRegistration).toUpperCase();
+
+    const year = getIdCardCreatedYear(userData);
+    const classCode = String(userData?.company || userData?.turma || 'BC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BC';
+    const explicitNumber = parseInt(userData?.classNumber || userData?.studentNumber || userData?.numeroAluno, 10);
+    const source = userData?.uid || userData?.email || userData?.cpf || userData?.name || `${year}-${classCode}`;
+    const hashedNumber = String(source).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 9999 || 1;
+    const number = Number.isFinite(explicitNumber) && explicitNumber > 0 ? explicitNumber : hashedNumber;
+    return `${year}-${classCode}-${String(number).padStart(4, '0')}`;
+}
+
+function getIdCardValidityLabel(userData) {
+    const accessDate = userData?.acesso_ate?.toDate ? userData.acesso_ate.toDate() : new Date(userData?.acesso_ate);
+    const maxDate = new Date(2027, 2, 31, 23, 59, 59, 999);
+    const chosenDate = !Number.isNaN(accessDate.getTime()) && accessDate < maxDate ? accessDate : maxDate;
+    return chosenDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '').toUpperCase();
+}
+
+function getIdCardPhoto(userData) {
+    return localStorage.getItem('user_profile_pic')
+        || userData?.photoURL
+        || userData?.profilePhoto
+        || userData?.avatarUrl
+        || "https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png";
+}
+
 function renderDigitalID() {
     const currentUserData = getCurrentUserData();
     if (!currentUserData) return;
@@ -453,76 +508,79 @@ function renderDigitalID() {
     const container = document.getElementById('id-card-container');
     if (!container) return;
 
-    const savedPhoto = localStorage.getItem('user_profile_pic');
-    const defaultPhoto = "https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png"; 
-    const currentPhoto = savedPhoto || defaultPhoto;
-
-    const validUntil = new Date(currentUserData.acesso_ate).toLocaleDateString('pt-BR');
-    const statusColor = currentUserData.status === 'premium' ? 'text-yellow-400' : 'text-gray-400';
+    const logoUrl = "https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png";
+    const currentPhoto = getIdCardPhoto(currentUserData);
+    const studentName = currentUserData.name || 'Aluno Bravo Charlie';
+    const cpf = formatIdCardCpf(currentUserData.cpf);
+    const enrollment = getIdCardEnrollment(currentUserData);
+    const validUntil = getIdCardValidityLabel(currentUserData);
+    const classCode = String(currentUserData.company || currentUserData.turma || 'Turma não informada').toUpperCase();
+    const courseLabel = currentUserData.courseType === 'SP' ? 'Segurança Patrimonial' : 'Bombeiro Civil';
+    const validationUrl = `https://projetobravocharlie.com.br/validar-carteirinha.html?matricula=${encodeURIComponent(enrollment)}`;
+    const qrPayload = encodeURIComponent(validationUrl);
     
     container.innerHTML = `
-        <div class="relative w-full max-w-md bg-gradient-card rounded-xl overflow-hidden shadow-2xl text-white font-sans transform transition hover:scale-[1.01] duration-300">
-            <div class="card-shine"></div>
-            <div class="bg-red-700 p-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white p-1 rounded-full">
-                        <img src="https://raw.githubusercontent.com/instrutormedeiros/ProjetoBravoCharlie/refs/heads/main/assets/img/LOGO_QUADRADA.png" class="w-10 h-10 object-cover">
-                    </div>
+        <section class="student-functional-id-card" aria-label="Carteirinha estudantil do aluno">
+            <div class="student-functional-id-bg"></div>
+            <div class="student-functional-id-header">
+                <div class="student-functional-id-brand">
+                    <img src="${logoUrl}" alt="Projeto Bravo Charlie">
                     <div>
-                        <h3 class="font-bold text-sm uppercase tracking-wider">Bombeiro Civil</h3>
-                        <p class="text-[10px] text-red-200">Identificação de Aluno</p>
+                        <strong>Projeto Bravo Charlie</strong>
+                        <span>Carteira de Identificação Estudantil</span>
                     </div>
                 </div>
-                <i class="fas fa-wifi text-white/50 rotate-90"></i>
+                <div class="student-functional-id-chip">Curso profissionalizante</div>
             </div>
-            <div class="p-6 relative z-10">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="flex items-center gap-4">
-                        <div class="relative group cursor-pointer" onclick="document.getElementById('profile-pic-input').click()" title="Clique para alterar a foto">
-                            <div class="w-20 h-20 rounded-lg border-2 border-white/30 overflow-hidden bg-gray-800">
-                                <img id="id-card-photo" src="${currentPhoto}" class="w-full h-full object-cover">
-                            </div>
-                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i class="fas fa-camera text-white"></i>
-                            </div>
-                            <input type="file" id="profile-pic-input" class="hidden" accept="image/*" onchange="window.updateProfilePic(this)">
+
+            <div class="student-functional-id-body">
+                <button type="button" class="student-functional-id-photo" onclick="document.getElementById('id-card-photo-input').click()" title="Clique para alterar a foto">
+                    <img id="id-card-photo" src="${sanitizeIdCardText(currentPhoto)}" alt="Foto do aluno">
+                    <span><i class="fas fa-camera"></i> alterar</span>
+                </button>
+                <input type="file" id="id-card-photo-input" class="hidden" accept="image/*" onchange="window.updateProfilePic(this)">
+
+                <div class="student-functional-id-main">
+                    <small>Nome completo</small>
+                    <h2>${sanitizeIdCardText(studentName)}</h2>
+                    <div class="student-functional-id-grid">
+                        <div>
+                            <span>CPF</span>
+                            <strong>${sanitizeIdCardText(cpf)}</strong>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-400 uppercase mb-1">Nome do Aluno</p>
-                            <h2 class="text-lg font-bold text-white tracking-wide leading-tight max-w-[150px] break-words">${currentUserData.name}</h2>
+                            <span>Matrícula</span>
+                            <strong>${sanitizeIdCardText(enrollment)}</strong>
+                        </div>
+                        <div>
+                            <span>Turma</span>
+                            <strong>${sanitizeIdCardText(classCode)}</strong>
+                        </div>
+                        <div>
+                            <span>Validade</span>
+                            <strong>${sanitizeIdCardText(validUntil)}</strong>
                         </div>
                     </div>
-                    <div class="bg-white p-1 rounded">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUserData.email}" class="w-14 h-14">
+                    <div class="student-functional-id-course">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>${sanitizeIdCardText(courseLabel)} - formação profissionalizante</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">CPF</p>
-                        <p class="font-mono text-sm">${currentUserData.cpf || '000.000.000-00'}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Matrícula</p>
-                        <p class="font-mono text-sm">BC-${Math.floor(Math.random()*10000)}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Válido Até</p>
-                        <p class="font-bold text-green-400 text-sm">${validUntil}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Status</p>
-                        <p class="font-bold text-sm uppercase flex items-center gap-1 ${statusColor}">
-                            <i class="fas fa-star text-xs"></i> ${currentUserData.status || 'Trial'}
-                        </p>
-                    </div>
+
+                <div class="student-functional-id-qr">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${qrPayload}" alt="QR Code de verificação">
+                    <span>Validar carteirinha</span>
                 </div>
             </div>
-            <div class="bg-black/30 p-3 text-center border-t border-white/10">
-                <p class="text-[9px] text-gray-500">Uso pessoal e intransferível. Toque na foto para alterar.</p>
+
+            <div class="student-functional-id-law">
+                <strong>Lei Federal nº 12.933/2013 • Decreto nº 8.537/2015</strong>
+                <span>Válida em todo território nacional como comprovante de matrícula e vínculo em curso profissionalizante. Apresente junto com documento oficial com foto.</span>
             </div>
-        </div>
-        <div class="text-center mt-6">
-            <button onclick="window.print()" class="text-sm text-blue-500 hover:underline"><i class="fas fa-print"></i> Imprimir Carteirinha</button>
+        </section>
+        <div class="student-functional-id-actions">
+            <button type="button" onclick="window.print()"><i class="fas fa-print"></i> Imprimir / salvar carteirinha</button>
+            <p>Validade limitada ao vencimento do acesso premium, com teto em MAR/2027.</p>
         </div>
     `;
 }
@@ -873,8 +931,11 @@ function finishSimulado(moduleId) {
         // ADICIONADO: Salva no banco de dados
         saveProgressToCloud();
         
-        updateProgress();
     }
+
+    // Atualiza o status da lista mesmo quando o aluno refaz o simulado.
+    // A conclusão permanece liberada para novas tentativas.
+    updateProgress();
 }
 
 
